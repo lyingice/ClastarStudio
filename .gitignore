@@ -1,0 +1,9 @@
+# Large local render assets and production workspace
+/renders/
+
+# Local tooling / OS files
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

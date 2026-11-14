@@ -1,0 +1,19 @@
+{
+  "name": "像素工坊 · PIXEL WORKSHOP",
+  "short_name": "像素工坊",
+  "description": "纹理 / 动画 / 方块贴图与调色板工具",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "lang": "zh-CN",
+  "categories": ["graphics", "productivity"],
+  "background_color": "#1a1a1a",
+  "theme_color": "#4c9a2a",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

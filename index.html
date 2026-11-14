@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4c9a2a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>像素工坊 · PIXEL WORKSHOP</title>
+<link rel="stylesheet" href="styles/shell.css">
+<link rel="stylesheet" href="styles/sidebar.css">
+<link rel="stylesheet" href="styles/recolor.css">
+<link rel="stylesheet" href="styles/variants.css">
+<link rel="stylesheet" href="styles/shortcuts.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- 标题栏 -->
+  <header class="titlebar">
+    <div class="brand">
+      <svg class="cube" viewBox="0 0 24 24" shape-rendering="crispEdges">
+        <path d="M12 1 L23 6.5 L12 12 L1 6.5Z" fill="var(--accent2)"/>
+        <path d="M1 6.5 L12 12 L12 23 L1 17.5Z" fill="var(--accentd)"/>
+        <path d="M23 6.5 L12 12 L12 23 L23 17.5Z" fill="var(--accent)"/>
+      </svg>
+      <div class="names"><b>像素工坊</b><i>PIXEL WORKSHOP</i></div>
+    </div>
+    <div class="tb-sep"></div>
+    <span class="chip" id="verChip">v0.12.0</span>
+    <div class="tb-right">
+      <button class="icon-btn" id="btnInfo" data-tip="关于">i</button>
+      <button class="icon-btn" id="btnSet" data-tip="设置 / 数据">⚙</button>
+    </div>
+  </header>
+
+  <!-- 标签页 -->
+  <div class="tabstrip">
+    <div class="tabs" id="tabs"></div>
+    <button class="tab-add" id="tabAdd" data-tip="新建标签页">+</button>
+    <div class="strip-hint" id="stripHint">新建标签页，或点这里回到首页</div>
+  </div>
+
+  <div class="workspace">
+    <button class="rail-tab left" id="railTabLeft" title="展开左侧栏">›</button>
+    <button class="rail-tab right" id="railTabRight" title="展开右侧快捷栏">‹</button>
+
+    <!-- 左栏：模仿 Blockbench 的侧栏面板组 -->
+    <nav class="rail left" id="leftRail">
+      <div class="rail-topbar">
+        <span class="rail-kicker">导航</span>
+        <button class="rail-btn" data-rail="left" title="收起左侧栏 (Ctrl+B)">‹</button>
+      </div>
+      <div class="rail-mobile-tabs" id="railMobileTabs">
+        <button type="button" data-mobile-rail="workspaces" class="on">工作区</button>
+        <button type="button" data-mobile-rail="tools">工具</button>
+        <button type="button" data-mobile-rail="library">库</button>
+      </div>
+
+      <section class="rail-group active" data-rail-group="workspaces">
+        <div class="rail-group-head">
+          <button type="button" class="rail-fold" data-rail-fold="workspaces" aria-expanded="true">
+            <i class="fold-tri">▾</i><b>工作区</b><em class="rail-count" id="wsCount"></em>
+          </button>
+          <button type="button" class="rail-mini" id="wsAdd" title="新建工作区">＋</button>
+        </div>
+        <div class="rail-group-body" data-rail-body="workspaces">
+          <div id="wsList"></div>
+        </div>
+      </section>
+
+      <section class="rail-group" data-rail-group="tools">
+        <div class="rail-group-head">
+          <button type="button" class="rail-fold" data-rail-fold="tools" aria-expanded="true">
+            <i class="fold-tri">▾</i><b>工具</b>
+          </button>
+        </div>
+        <div class="rail-group-body" data-rail-body="tools">
+          <div id="toolList" class="rail-tool-list"></div>
+        </div>
+      </section>
+
+      <section class="rail-group" data-rail-group="library">
+        <div class="rail-group-head">
+          <button type="button" class="rail-fold" data-rail-fold="library" aria-expanded="true">
+            <i class="fold-tri">▾</i><b>库</b>
+          </button>
+        </div>
+        <div class="rail-group-body" data-rail-body="library">
+          <button class="nav sm" id="navRecent" data-tip="跨工作区查看最近打开">
+            <span class="ico" data-icon="grid" data-size="15"></span>最近打开
+          </button>
+          <button class="nav sm" id="navTrash" data-tip="还原或彻底删除内容">
+            <span class="ico" data-icon="trash" data-size="15"></span>回收站
+            <span class="ws-count" id="trashCount"></span>
+          </button>
+        </div>
+      </section>
+
+      <div class="rail-foot">
+        拖入 <b>PNG</b> 新建纹理 · 拖入 <b>ZIP</b> 智能导入资源包<br>
+        右键工作区可重命名 / 删除<br>
+        <span class="rail-shortcut">Ctrl+B 收起 / 展开左侧栏</span>
+      </div>
+    </nav>
+
+    <!-- 主区 -->
+    <main class="content" id="content"></main>
+
+    <!-- 右栏：快捷操作 / 当前工作区 / 最近打开 -->
+    <aside class="rail right" id="rightRail">
+      <div class="rail-topbar">
+        <span class="rail-kicker" id="rightRailKicker">快捷</span>
+        <button class="rail-btn" data-rail="right" title="收起右侧快捷栏 (Ctrl+Shift+B)">›</button>
+      </div>
+
+      <section class="rail-group" data-rail-group="quick-actions">
+        <div class="rail-group-head">
+          <button type="button" class="rail-fold" data-rail-fold="quick-actions" aria-expanded="true">
+            <i class="fold-tri">▾</i><b>快捷操作</b>
+          </button>
+        </div>
+        <div class="rail-group-body" data-rail-body="quick-actions">
+          <button class="nav sm" id="quickNew"><span class="ico" data-icon="plus" data-size="14"></span>新建内容</button>
+          <button class="nav sm" id="quickCat"><span class="ico" data-icon="folder" data-size="14"></span>新建大类别</button>
+          <button class="nav sm" id="quickImport"><span class="ico" data-icon="tex" data-size="14"></span>导入 PNG</button>
+          <button class="nav sm" id="quickZip"><span class="ico" data-icon="folder" data-size="14"></span>导入资源包 ZIP</button>
+          <button class="nav sm" id="quickPack"><span class="ico" data-icon="box" data-size="14"></span>导出资源包</button>
+          <button class="nav sm" id="quickRecolor" data-ext-tool="recolor"><span class="ico" data-icon="brush" data-size="14"></span>一键换色</button>
+          <button class="nav sm" id="quickVariant" data-ext-tool="variant-lab"><span class="ico" data-icon="shape" data-size="14"></span>变种工坊</button>
+        </div>
+      </section>
+
+      <section class="rail-group" data-rail-group="quick-workspace">
+        <div class="rail-group-head">
+          <button type="button" class="rail-fold" data-rail-fold="quick-workspace" aria-expanded="true">
+            <i class="fold-tri">▾</i><b>当前工作区</b>
+          </button>
+        </div>
+        <div class="rail-group-body" data-rail-body="quick-workspace">
+          <div id="quickWorkspace" class="rail-summary">还没有工作区</div>
+        </div>
+      </section>
+
+      <section class="rail-group" data-rail-group="quick-recent">
+        <div class="rail-group-head">
+          <button type="button" class="rail-fold" data-rail-fold="quick-recent" aria-expanded="true">
+            <i class="fold-tri">▾</i><b>最近打开</b>
+          </button>
+          <button type="button" class="rail-mini" id="quickRecentAll" title="查看全部最近打开">›</button>
+        </div>
+        <div class="rail-group-body" data-rail-body="quick-recent">
+          <div id="quickRecent" class="quick-recent"></div>
+        </div>
+      </section>
+
+      <div class="rail-foot" id="rightRailFoot">
+        先选工作区，再用快捷操作开始。<br>
+        <span class="rail-shortcut">Ctrl+Shift+B 收起 / 展开快捷栏</span>
+      </div>
+    </aside>
+
+    <div class="rail-resizer left" id="railResizeLeft" title="拖动调整左侧栏宽度 · 双击重置"></div>
+    <div class="rail-resizer right" id="railResizeRight" title="拖动调整右侧快捷栏宽度 · 双击重置"></div>
+  </div>
+
+  <footer class="statusbar">
+    <span id="sbPath">首页 / <b>纹理仓库</b></span>
+    <span id="sbSel">未选中</span>
+    <div class="right">
+      <span id="sbCount"><b>0</b> 项</span>
+      <span><i class="led"></i>本地</span>
+    </div>
+  </footer>
+</div>
+
+<div class="pv" id="pvModal">
+  <div class="pv-box">
+    <div class="pv-head">
+      <div class="pv-t">
+        <h3 id="pvTitle">方块</h3>
+        <div class="pv-sub" id="pvSub">方块 · 正常展示</div>
+        <p class="pv-note">暂无备注</p>
+      </div>
+      <div class="pv-acts">
+        <button class="btn sm" id="pvReset">重置角度</button>
+        <button class="btn sm pri" id="pvEdit">编辑</button>
+        <button class="btn sm" id="pvClose" title="关闭">✕</button>
+      </div>
+    </div>
+    <div class="pv-host" id="pvHost"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="dlg">
+    <h4 id="dlgTitle">新建</h4>
+    <div class="bd" id="dlgBody"></div>
+    <div class="ft">
+      <button class="btn light" id="dlgCancel">取消</button>
+      <button class="btn pri" id="dlgOk">创建</button>
+    </div>
+  </div>
+</div>
+
+<div id="mMask"></div>
+<nav id="mbar">
+  <button class="btn" id="mLeft">☰ 工作区</button>
+  <button class="btn pri" id="mHome">首页</button>
+  <button class="btn" id="mRight">快捷</button>
+  <button class="btn" id="mSet">设置</button>
+</nav>
+
+<div class="ctx" id="ctx"></div>
+<div class="drop" id="drop"><div class="dz">
+  <div>松手就导入<br><b>PNG / JPG</b> 会按 16×16 采样生成预览<br><b>ZIP</b> 会自动建工作区并按资源包目录分类</div>
+</div></div>
+<input type="file" id="filePick" accept="image/*" hidden>
+<input type="file" id="zipPick" accept=".zip,application/zip" hidden>
+<input type="file" id="dataPick" accept="application/json,.json" hidden>
+
+<div class="toast" id="toast"></div>
+<div class="tip" id="tip"></div>
+<div id="helpPop"></div>
+
+
+
+
+
+
+
+<script src="src/embedded/composite.js"></script>
+<script src="src/embedded/entity.js"></script>
+<script src="src/embedded/ctex.js"></script>
+<script src="src/embedded/block.js"></script>
+<script src="src/embedded/color.js"></script>
+<script src="src/embedded/anim.js"></script>
+<script src="src/shell/archive.js"></script>
+<script src="src/shell/core.js"></script>
+<script src="src/shell/library.js"></script>
+<script src="src/shell/importer.js"></script>
+<script src="src/shell/exporter.js"></script>
+<script src="src/shell/extensions.js"></script>
+<script src="src/shell/shortcuts.js"></script>
+<script src="src/shell/editors.js"></script>
+<script src="src/shell/recolor.js"></script>
+<script src="src/shell/variants.js"></script>
+<script src="src/shell/sidebar.js"></script>
+<script src="src/shell/init.js"></script>
+</body>
+</html>
