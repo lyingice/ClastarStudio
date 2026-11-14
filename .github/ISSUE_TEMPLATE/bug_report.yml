@@ -1,0 +1,59 @@
+name: Bug report
+description: 报告可复现的问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请先确认问题能在最新 main 或最新 Release 上复现，并移除真实个人工作区数据。
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: 例如 v0.12.0
+      placeholder: v0.12.0
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: 环境
+      description: 浏览器、操作系统、是否为 PWA / 移动端
+      placeholder: Chrome 140 / Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 从首页开始的最短操作路径
+      placeholder: |
+        1. 打开...
+        2. 新建...
+        3. 导出...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 控制台 / 错误信息
+      description: 不要粘贴 token、cookie 或个人数据。
+      render: shell
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充信息
+      description: 可附最小复现 ZIP 或单独制作的演示纹理；不要上传真实用户工作区备份。

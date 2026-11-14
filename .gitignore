@@ -7,3 +7,11 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# Internal production notes (kept local)
+/视频介绍制作提示词.md
+
+# Local release/build output
+/dist/
+/release/
+*.log

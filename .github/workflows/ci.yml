@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compile Python entry points
+        run: |
+          python -m py_compile serve.py tools/check_repo.py
+
+      - name: Validate static repository
+        run: python tools/check_repo.py
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check sw.js
+          for f in src/shell/*.js src/embedded/*.js; do
+            node --check "$f"
+          done
+
+      - name: Start server and smoke test homepage
+        run: |
+          python serve.py > /tmp/clastar-server.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8766/ > /tmp/clastar-index.html; then
+              break
+            fi
+            sleep 0.5
+          done
+          grep -q 'PIXEL WORKSHOP' /tmp/clastar-index.html
+          echo "Homepage smoke test passed."
