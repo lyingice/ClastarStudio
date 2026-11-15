@@ -93,6 +93,7 @@ function init(){
   if(typeof PWExtensions !== 'undefined') PWExtensions.init();
   if(typeof PWShortcuts !== 'undefined') PWShortcuts.init();
   if(typeof PWPlugins !== 'undefined') PWPlugins.init();
+  if(typeof PWUpdates !== 'undefined') PWUpdates.init();
   if(typeof setupSidebar === 'function') setupSidebar();
   renderWorkspaces();
   newTab('home', '首页');   // 默认首页标签

@@ -1151,6 +1151,7 @@ function openSettings(){
   $('#dlgTitle').innerHTML = iconSVG('gear', 14) + '设置';
   $('#dlgBody').innerHTML = (typeof PWShortcuts !== 'undefined' ? PWShortcuts.settingsRowHTML() : '') +
     (typeof PWPlugins !== 'undefined' ? PWPlugins.settingsRowHTML() : '') +
+    (typeof PWUpdates !== 'undefined' ? PWUpdates.rowHTML() : '') +
     (typeof PWExtensions !== 'undefined' ? PWExtensions.settingsHTML() : '') +
     themeSectionHTML() + installRowHTML() +
     '<div class="opt" data-set="export"><div class="oi">' + iconSVG('box',16) + '</div>' +
@@ -1170,6 +1171,8 @@ function openSettings(){
   if(scRow && typeof PWShortcuts !== 'undefined') scRow.onclick = () => { closeDialog(); PWShortcuts.openShortcutCenter(); };
   const plRow = body.querySelector('[data-set="plugins"]');
   if(plRow && typeof PWPlugins !== 'undefined') plRow.onclick = () => { closeDialog(); PWPlugins.openPluginCenter(); };
+  const upRow = body.querySelector('[data-set="update"]');
+  if(upRow && typeof PWUpdates !== 'undefined') upRow.onclick = () => PWUpdates.checkAndShow();
   $('#themeCur').onclick = () => $('#setTheme').classList.toggle('open');
   body.querySelector('[data-set="export"]').onclick = () => { closeDialog(); exportData(); };
   body.querySelector('[data-set="import"]').onclick = () => { closeDialog(); $('#dataPick').click(); };
@@ -1208,6 +1211,7 @@ function openAbout(){
     '<b>像素工坊</b> v' + APP_VERSION + '<br>' +
     '纹理 / 动画贴图的收纳与绘制。数据保存在本机浏览器（localStorage），不上传。<br><br>' +
     '常用操作：双击卡片打开编辑器 · 右键重命名 / 删除 / 一键换色 · 拖入 PNG 直接导入 · 编辑器顶栏「保存回仓库」<br><br>' +
+    '0.15.0：彩色渐变叠加支持 2–8 个自定义色标并自动保存 · 设置新增 GitHub 检查更新<br>' +
     '0.14.1：动画播放插帧预览（相邻帧线性混合，跟随 .mcmeta interpolate）<br>' +
     '0.14.0：素材库（原版 / 模组纹理参考、ZIP/JAR 导入、参考图）<br>' +
     '0.13.0：可选插件框架 · 扩展中心 · GitHub / 本地 ZIP 安装 · 机械动力方块扩展<br>' +

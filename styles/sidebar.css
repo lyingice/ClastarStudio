@@ -308,3 +308,8 @@ button,.card,.nav,.tab,.pick-item,.src,.mat{touch-action:manipulation}
 .ext-future{display:flex;flex-direction:column;gap:2px;padding:7px 8px;background:#262626;border:1px dashed #4a4a4a}
 .ext-future b{font-size:10.5px;color:#bbb;font-weight:600}
 .ext-future span{font-size:9.5px;line-height:1.6;color:#888}
+
+/* GitHub 更新状态 */
+.opt[data-update="new"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent), inset 0 1px 0 #ffffff10}
+.opt[data-update="new"] .ot span{color:#b9e3a0}
+.opt[data-update="new"] .sc-manage{background:var(--accent);color:#fff;border-color:var(--accentd)}
