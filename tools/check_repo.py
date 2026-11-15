@@ -14,7 +14,14 @@ required = [
     "LICENSE",
     "src/shell/core.js",
     "src/shell/editors.js",
+    "src/shell/plugins.js",
+    "src/shell/assets.js",
+    "styles/assets.css",
     "src/embedded/anim.js",
+    "plugin.json",
+    "plugins/catalog.json",
+    "plugins/create-texture/manifest.json",
+    "plugins/create-texture/plugin.html",
     "styles/shell.css",
     "icon-192.png",
     "icon-512.png",
@@ -43,10 +50,27 @@ for ref in re.findall(r'(?:src|href)="([^"]+)"', html):
         errors.append(f"index.html references missing local asset: {ref}")
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-if "0.12.0" not in readme:
-    errors.append("README.md does not mention 0.12.0")
+core = (ROOT / "src/shell/core.js").read_text(encoding="utf-8")
+version_match = re.search(r"APP_VERSION\s*=\s*'([^']+)'", core)
+if not version_match:
+    errors.append("src/shell/core.js: APP_VERSION is missing")
+else:
+    version = version_match.group(1)
+    if version not in readme:
+        errors.append(f"README.md does not mention current version {version}")
 if "MIT License" not in readme:
     errors.append("README.md does not link the MIT license")
+
+try:
+    plugin_manifest = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
+    for key in ("id", "name", "version", "entry"):
+        if not plugin_manifest.get(key):
+            errors.append(f"plugin.json: missing {key}")
+    entry = plugin_manifest.get("entry", "")
+    if entry and not (ROOT / entry).is_file():
+        errors.append(f"plugin.json: entry not found: {entry}")
+except Exception as exc:
+    errors.append(f"plugin.json is invalid: {exc}")
 
 if errors:
     print("Repository checks failed:")

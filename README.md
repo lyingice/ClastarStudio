@@ -18,14 +18,14 @@
 - 工作区与作品保存在浏览器 `localStorage`，可随时导出资源包备份。
 - 所有文件都在本地运行，适合个人创作与局域网调试。
 
-当前版本：**v0.12.0**<br>
+当前版本：**v0.14.1**<br>
 运行方式：`python serve.py`，打开 `http://127.0.0.1:8766/`。
 
 ## 功能亮点
 
 ### 一个工作台，六类编辑器
 
-- **纹理 / 动画**：像素画布、图层、帧、调色板、对称、撤销/重做、参照画布、`.mcmeta` 预览与导出。
+- **纹理 / 动画**：像素画布、图层、帧、调色板、对称、撤销/重做、参照画布、`.mcmeta` 预览与导出、播放插帧预览。
 - **方块**：20+ 种模型结构，包括全部同纹理、六面独立、顶/侧/底、柱状、台阶、楼梯、栅栏、墙、玻璃板、植物等；支持多材质、六面映射与 3D 预览。
 - **实体**：人形盔甲 64×32 双层、狼铠、马铠、鹦鹉螺铠、快乐恶魂挽具、鞘翅；包含 UV 分区、材质层、3D 人台与尺寸校验。
 - **复合纹理**：Sedna 8×8 连接图，支持 5 张来源拼接、128×128 整图拆分与重新导出。
@@ -50,6 +50,9 @@
 - **多选导出资源包**：设置资源包名称、命名空间、目标版本与纹理归类，自动生成 `pack.mcmeta`、`pack.png`，动画自动附带 `.mcmeta`。
 - **快捷键中心**：搜索、分组、录制改键、冲突检测、导入/导出配置。
 - **扩展注册表**：工具与编辑器扩展统一定义、启停与持久化。
+- **可选插件 / 扩展中心**：官方可选扩展按需安装，支持 GitHub raw / release ZIP / 本地 ZIP；插件在 sandbox iframe 中运行，经宿主 API 访问仓库。
+- **素材库**：独立存放原版 / 模组纹理，支持 PNG、文件夹、jar/ZIP 导入；按 namespace / 分类浏览，可设为编辑器参考图或复制到工作区。
+- **机械动力方块扩展**：读取 Create jar / 资源包，解析 blockstate / model，按方块族整理多纹理槽、状态、CT 连接图集、动画与滚动纹理，并导入仓库。
 - **PWA / 移动端**：可安装到桌面/主屏幕，触屏布局与安全区适配。
 
 ## 快速开始
@@ -74,11 +77,11 @@ HOST=0.0.0.0 PORT=8766 python serve.py
 
 ## 发行包
 
-从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.12.0 发行包。发行包是可直接运行的静态源码包：
+从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.14.1 发行包。发行包是可直接运行的静态源码包：
 
 ```bash
-unzip ClastarStudio-v0.12.0.zip
-cd ClastarStudio-v0.12.0
+unzip ClastarStudio-v0.14.1.zip
+cd ClastarStudio-v0.14.1
 python serve.py
 ```
 
@@ -86,13 +89,15 @@ python serve.py
 
 ```text
 index.html              应用入口 / 静态壳
+plugin.json             官方可选插件的仓库根清单
 manifest.json           PWA manifest
 sw.js                   PWA 离线缓存
 serve.py                本地静态服务器
+plugins/                官方可选插件包（机械动力方块扩展）
 icon-192.png
 icon-512.png
 src/
-  shell/                工作区、仓库、编辑器桥接、ZIP、换色、变种、快捷键等
+  shell/                工作区、仓库、编辑器桥接、ZIP、换色、变种、快捷键、插件框架、素材库等
   embedded/             六类编辑器的内嵌 base64 文档
 styles/                 应用与工具样式
 docs/                   架构与开发文档
@@ -102,12 +107,42 @@ tools/                  仓库自检脚本
 
 更详细的模块说明见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
+## 素材库
+
+素材库是独立于项目工作区的参考素材工具：
+
+- 入口：左侧「工具 → 素材库」
+- 导入：PNG、文件夹、vanilla / mod jar、资源包 ZIP
+- 自动分类：`assets/<namespace>/textures/<category>`，保留原始路径与 `.mcmeta`
+- 浏览：搜索、原版 / 模组 / 本地 / 收藏筛选、命名空间 / 分类筛选、按名称 / 最近 / 尺寸排序
+- 详情：大图预览、尺寸、路径、来源包、动画标记
+- 操作：
+  - 设为当前 / 最近一次纹理或动画编辑器的参考图
+  - 复制到当前项目工作区
+  - 复制原始路径
+  - 收藏 / 删除
+- 素材库工作区不会出现在项目工作区列表；现有仓库素材选择器会自动读取
+- 数据与项目共用浏览器 localStorage，大量素材建议分批导入或优先使用缩略/参考尺寸
+
+## 可选插件
+
+扩展中心入口在「设置 → 扩展中心」，也可以从左侧「工具」打开已安装的插件。
+
+- 当前官方可选插件：**机械动力方块扩展**（`plugins/create-texture/`）
+- 插件包：`plugin.json`（或 `manifest.json`）+ 自包含 `plugin.html`
+- 安装来源：GitHub 仓库根目录 `plugin.json`、raw 文件地址、release ZIP、本地 ZIP
+- 安装前显示权限；插件运行在 `sandbox` iframe 中，不能直接访问主页面 DOM 或 localStorage
+- 宿主 API 提供仓库读写、ZIP 读取、下载与插件独立存储
+- 插件包由根目录 `plugin.json` 与 `plugins/<id>/` 组成
+- Create 卡片可继续参与多选资源包导出，纹理按原始 `assets/create/textures/...` 路径写入
+
 ## 数据与隐私
 
-- 工作区数据保存在浏览器 `localStorage`，键名前缀为 `pixelWorkshop_`。
-- 应用不包含上传接口、账号系统或云同步。
+- 工作区与素材库数据保存在浏览器 `localStorage`，键名前缀为 `pixelWorkshop_`。
+- 应用不包含上传接口、账号系统或云同步；插件默认 `connect-src 'none'`，不能自行联网。
+- 插件通过宿主 API 访问工作区；安装前会显示所需权限，第三方插件请只安装可信来源。
 - 备份与迁移请使用资源包 ZIP 导出，或在设置中导出/导入 JSON 数据。
-- 清除浏览器站点数据会同时清除本地工作区。
+- 清除浏览器站点数据会同时清除本地工作区、素材库和已安装插件。
 
 ## 兼容性说明
 
@@ -132,6 +167,8 @@ CI 配置见 [.github/workflows/ci.yml](.github/workflows/ci.yml)。
 - 数据是本机浏览器存储，不提供多人协作、云同步或账号体系。
 - 不是 Minecraft 官方产品，也不包含 Minecraft 本体资源。
 - 版本兼容性与资源包格式以实际界面选项为准；提交 issue 时请附版本、浏览器与复现步骤。
+- 插件框架当前以工具页 / 导入器为主；编辑器内部面板、预览渲染器等贡献点尚未开放。
+- 机械动力扩展当前覆盖扫描、分组、CT 识别和导入 MVP，完整 3D 机器预览与整族变种导出仍在后续计划中。
 
 ## 贡献
 
@@ -148,7 +185,7 @@ CI 配置见 [.github/workflows/ci.yml](.github/workflows/ci.yml)。
 <details>
 <summary>English overview</summary>
 
-**Pixel Workshop** is a local-first Minecraft texture workspace that runs entirely in the browser. It combines workspaces, six embedded editors, one-click recoloring, variant generation, smart ZIP import, and multi-select resource-pack export. Data stays in browser `localStorage`; no account or cloud service is required.
+**Pixel Workshop** is a local-first Minecraft texture workspace that runs entirely in the browser. It combines workspaces, six embedded editors, one-click recoloring, variant generation, smart ZIP import, multi-select resource-pack export, and optional sandboxed plugins. Data stays in browser `localStorage`; no account or cloud service is required.
 
 Run with `python serve.py` and open <http://127.0.0.1:8766/>. Source code is released under the MIT License.
 
