@@ -41,7 +41,7 @@ function paintIcons(root){
 /* ============================================================
    数据
    ============================================================ */
-const APP_VERSION = '0.12.0';
+const APP_VERSION = '0.14.1';
 const THEMES = [
   {id:'grass',    name:'草原绿',  c:['#4c9a2a','#6fc244','#2f6b1a']},
   {id:'diamond',  name:'钻石蓝',  c:['#2fa8c9','#5fd2ee','#186f88']},
@@ -114,7 +114,7 @@ function applyTheme(id){
 /* ============================================================
    标签页
    ============================================================ */
-const TAB_ICON = { home:'home', tex:'tex', anim:'anim', ctex:'tex', block:'box', composite:'box', entity:'entity', color:'palette', recolor:'brush', variant:'shape', shortcuts:'keyboard', recent:'grid', trash:'trash' };
+const TAB_ICON = { home:'home', tex:'tex', anim:'anim', ctex:'tex', block:'box', composite:'box', entity:'entity', color:'palette', recolor:'brush', variant:'shape', shortcuts:'keyboard', assets:'grid', plugin:'box', plugins:'grid', recent:'grid', trash:'trash' };
 function newTab(kind, title, payload){
   const id = ++S.seq;
   const t = { id, kind, title: title || (kind === 'home' ? '首页' : '未命名'), payload: payload || null };
@@ -265,7 +265,7 @@ function renderContent(){
     return;
   }
 
-  if(t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts'){
+  if(t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'plugins' || t.kind === 'plugin'){
     document.querySelector('.workspace').classList.add('editing');
     document.body.classList.add('editing');
     repo.classList.remove('on');
@@ -275,7 +275,10 @@ function renderContent(){
     if(!$('#editors > .ed-pane[data-tab="' + t.id + '"]')){
       if(t.kind === 'recolor') mountRecolor(t, eds);
       else if(t.kind === 'variant') mountVariantLab(t, eds);
-      else PWShortcuts.mountCenter(t, eds);
+      else if(t.kind === 'shortcuts') PWShortcuts.mountCenter(t, eds);
+      else if(t.kind === 'assets') PWAssets.mount(t, eds);
+      else if(t.kind === 'plugins') PWPlugins.mountCenter(t, eds);
+      else PWPlugins.mount(t, eds);
     }
     return;
   }
@@ -299,6 +302,8 @@ let RECENT = [];     // 最近打开
 let saveTimer = null;
 
 function uidWs(){ return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function isAssetWorkspace(w){ return !!(w && w.assetLibrary); }
+function projectWorkspaces(){ return WS.filter(w => !w.assetLibrary); }
 function normCard(c){
   const out = {
     id: c.id || ('c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)),
@@ -310,6 +315,9 @@ function normCard(c){
   };
   if(c.block && typeof c.block === 'object') out.block = c.block;
   if(c.composite && typeof c.composite === 'object') out.composite = c.composite;
+  if(c.create && typeof c.create === 'object') out.create = c.create;
+  if(c.ref && typeof c.ref === 'object') out.ref = c.ref;
+  if(c.pluginData && typeof c.pluginData === 'object') out.pluginData = c.pluginData;
   if(c.armor && typeof c.armor === 'object') out.armor = c.armor;
   if(c.ctex && typeof c.ctex === 'object') out.ctex = c.ctex;
   if(c.thumb) out.thumb = c.thumb;
@@ -331,6 +339,7 @@ function loadData(){
     WS = d.ws.map(w => ({
       id: w.id || uidWs(),
       name: w.name || '未命名工作区',
+      assetLibrary: !!w.assetLibrary,
       cats: Array.isArray(w.cats) ? w.cats.map(c => ({
         id: c.id || uidWs(),
         name: c.name || '未命名大类别',
@@ -339,7 +348,8 @@ function loadData(){
       })) : []
     }));
     if(WS.length){
-      S.wsId = (d.wsId && WS.some(w => w.id === d.wsId)) ? d.wsId : WS[0].id;
+      const validWs = (id) => WS.some(w => w.id === id && !w.assetLibrary);
+      S.wsId = (d.wsId && validWs(d.wsId)) ? d.wsId : (WS.find(w => !w.assetLibrary) || {}).id || null;
     }
     if(d.theme && THEMES.some(t => t.id === d.theme)) S.theme = d.theme;
     TRASH = Array.isArray(d.trash) ? d.trash : [];

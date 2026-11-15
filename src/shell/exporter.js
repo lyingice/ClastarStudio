@@ -183,6 +183,20 @@ const PWPack = (() => {
         continue;
       }
 
+      if(c.create && Array.isArray(c.create.slots)){
+        const paths = [];
+        c.create.slots.forEach(slot => {
+          if(!slot || !slot.data || !slot.packPath) return;
+          addFile(files, slot.packPath, PWArchive.dataURLBytes(slot.data), used);
+          pngCount++; paths.push(slot.packPath);
+          if(slot.mcmeta && typeof slot.mcmeta === 'object'){
+            addFile(files, slot.packPath + '.mcmeta', JSON.stringify(slot.mcmeta, null, 2), used);
+          }
+        });
+        report.push({name:c.name, paths});
+        continue;
+      }
+
       if(c.block){
         const textures = (c.block && c.block.textures) || {};
         const keys = Object.keys(textures).filter(k => textures[k] && k !== 'particle');

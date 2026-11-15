@@ -101,10 +101,11 @@ function updateSelBar(){
 function renderWorkspaces(){
   const tc = $('#trashCount');
   if(tc) tc.textContent = TRASH.length ? String(TRASH.length) : '';
+  const projects = projectWorkspaces();
   const wc = $('#wsCount');
-  if(wc) wc.textContent = WS.length ? String(WS.length) : '';
+  if(wc) wc.textContent = projects.length ? String(projects.length) : '';
   const box = $('#wsList'); if(!box) return;
-  box.innerHTML = WS.length ? WS.map(w => `
+  box.innerHTML = projects.length ? projects.map(w => `
     <button class="nav ${w.id === S.wsId ? 'on' : ''}" data-ws="${w.id}">
       <span class="ico">${iconSVG('folder', 16)}</span>
       <span class="ws-name">${esc(w.name)}</span>
@@ -114,7 +115,8 @@ function renderWorkspaces(){
 }
 
 function selectWorkspace(id){
-  if(!WS.some(w => w.id === id)) return;
+  const w = WS.find(w => w.id === id);
+  if(!w || w.assetLibrary) return;
   S.wsId = id; S.sel = null; S.folder = null; S.query = '';
   clearPicks();
   saveSoon(); renderWorkspaces();
@@ -123,7 +125,7 @@ function selectWorkspace(id){
   else { renderContent(); renderStatus(); }
 }
 function newWorkspace(){
-  askName('新建工作区', '新工作区 ' + (WS.length + 1), name => {
+  askName('新建工作区', '新工作区 ' + (projectWorkspaces().length + 1), name => {
     const w = { id: uidWs(), name, cats: [{ id: uidWs(), name: '默认', open: true, cards: [] }] };
     WS.push(w);
     saveData();
@@ -134,7 +136,7 @@ function newWorkspace(){
 function deleteWorkspace(w){
   confirmDialog('删除工作区', `「${w.name}」里的 ${cardCount(w)} 个内容会一起删掉，这个操作不能撤销。`, '删除', () => {
     WS = WS.filter(x => x.id !== w.id);
-    if(S.wsId === w.id){ S.wsId = WS[0] ? WS[0].id : null; clearPicks(); }
+    if(S.wsId === w.id){ S.wsId = (projectWorkspaces()[0] || {}).id || null; clearPicks(); }
     saveData(); renderWorkspaces();
     const t = activeTab();
     if(t && t.kind === 'home') renderContent();
@@ -721,6 +723,10 @@ function openCard(id){
     return;
   }
   if(c.model){ toast('模型编辑器已经移除（原型保留在 model_studio.html）'); return; }
+  if(c.create && typeof PWPlugins !== 'undefined'){
+    PWPlugins.openTool(c.create.pluginId || 'create-texture', c.create.toolId || 'create-blocks', { cardId:c.id });
+    return;
+  }
   if(c.composite){ openCompositePreview(c); return; }
   if(c.block){ openBlockPreview(c); return; }
   if(c.armor){ openArmorPreview(c); return; }

@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "plugins": [
+    {
+      "id": "create-texture",
+      "name": "机械动力方块扩展",
+      "icon": "box",
+      "description": "扫描 Create 模组 jar / 资源包，按方块族整理纹理、状态和连接图集，导入仓库。",
+      "source": "plugin.json"
+    }
+  ]
+}

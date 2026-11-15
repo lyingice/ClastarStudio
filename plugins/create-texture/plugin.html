@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机械动力方块扩展</title>
+<style>
+  :root{
+    --bg:#1a1a1a;--bg2:#242424;--bg3:#303030;--panel:#3a3a3a;
+    --line:#101010;--line2:#1b1b1b;--txt:#f2f2f2;--muted:#9a9a9a;--dim:#7d7d7d;
+    --accent:#4c9a2a;--accent2:#6fc244;--accentd:#2f6b1a;--warn:#f0b35b;--bad:#d85b5b;
+    --mono:ui-monospace,Consolas,"Cascadia Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg);color:var(--txt);overflow:hidden;
+    font:12.5px/1.5 "Segoe UI",system-ui,-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button,input,select{font:inherit;color:inherit}
+  button{cursor:pointer}
+  .app{height:100%;display:flex;flex-direction:column}
+  .tb{flex:0 0 44px;display:flex;align-items:center;gap:9px;padding:0 10px;background:#262626;border-bottom:2px solid var(--line)}
+  .tb .logo{width:24px;height:24px;display:grid;place-items:center;background:var(--accentd);border:2px solid var(--line);color:#fff;font-weight:700;font-size:11px}
+  .tb h1{margin:0;font-size:13px;letter-spacing:.4px}
+  .tb .sub{font-size:9px;letter-spacing:2px;color:var(--dim);margin-top:1px}
+  .tb .right{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{font-size:9.5px;background:#2d2d2d;border:1px solid #151515;padding:2px 6px;color:#bdbdbd}
+  .btn{height:28px;padding:0 9px;background:#454545;border:2px solid var(--line);color:#eee;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .btn:hover{background:#545454}
+  .btn.pri{background:var(--accent);border-color:var(--accentd);color:#fff;font-weight:600}
+  .btn.pri:hover{background:var(--accent2)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.sm{height:24px;font-size:10.5px;padding:0 7px}
+  .layout{flex:1;min-height:0;display:grid;grid-template-columns:288px minmax(0,1fr) 278px;gap:8px;padding:8px;overflow:hidden}
+  .col{min-height:0;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+  .card{background:#2a2a2a;border:2px solid #111;box-shadow:inset 0 1px 0 #ffffff0f;padding:9px;min-width:0}
+  .card h2{margin:0 0 7px;font-size:10.5px;letter-spacing:.9px;color:#ddd;display:flex;align-items:center;gap:6px}
+  .card h2::before{content:'';width:4px;height:11px;background:var(--accent);flex:0 0 auto}
+  .card h2 span{margin-left:auto;font-size:9px;color:#888;font-weight:400;letter-spacing:0}
+  .hint{font-size:9.5px;line-height:1.65;color:#8d8d8d;margin:0}
+  .filebox{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 10px;border:2px dashed #555;background:#232323;cursor:pointer;text-align:center}
+  .filebox:hover{border-color:var(--accent);background:#262b22}
+  .filebox b{font-size:11.5px;color:#eee}
+  .filebox span{font-size:9.5px;color:#888}
+  .filebox input{display:none}
+  .file-name{margin-top:6px;font-size:9.5px;color:#bdbdbd;word-break:break-all;max-height:34px;overflow:hidden}
+  .progress{font-size:9.5px;color:#9fc885;min-height:15px;margin-top:5px;white-space:pre-wrap}
+  .search{width:100%;height:27px;background:#202020;border:1px solid #111;color:#eee;padding:0 7px;outline:none;margin-bottom:5px}
+  .search:focus{border-color:var(--accent)}
+  .chips{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:5px}
+  .chip{height:22px;padding:0 6px;background:#373737;border:1px solid #151515;color:#bbb;font-size:9px}
+  .chip.on{background:var(--accent);border-color:var(--accentd);color:#fff}
+  .family-list{flex:1;min-height:80px;overflow:auto;display:flex;flex-direction:column;gap:3px}
+  .family{display:flex;align-items:flex-start;gap:6px;padding:5px;background:#333;border:1px solid #161616;cursor:pointer;min-width:0}
+  .family:hover{background:#3c3c3c}
+  .family.on{background:#3e4938;border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+  .family input{flex:0 0 auto;width:13px;height:13px;margin:2px 0 0;accent-color:var(--accent)}
+  .family .fi{min-width:0;flex:1}
+  .family b{display:block;font-size:10.5px;color:#eee;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .family span{display:block;font-size:8.5px;color:#8f8f8f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .badges{display:flex;gap:2px;flex-wrap:wrap;margin-top:2px}
+  .badge{font-size:8px;padding:1px 3px;border:1px solid #4b4b4b;background:#292929;color:#bbb}
+  .badge.ct{border-color:#45617a;color:#9dc7e4}
+  .badge.anim{border-color:#6b4c2b;color:#e2b47d}
+  .badge.multi{border-color:#4b5f3c;color:#b5d49e}
+  .detail{flex:1;min-height:0;overflow:auto;padding:10px}
+  .empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:#888;text-align:center;padding:20px}
+  .empty b{color:#ccc;font-size:13px}
+  .empty span{font-size:10px;line-height:1.7}
+  .detail-head{display:flex;align-items:flex-start;gap:9px;margin-bottom:9px}
+  .detail-head h2{margin:0;font-size:16px;letter-spacing:.3px;color:#fff}
+  .detail-head p{margin:3px 0 0;font-size:10px;color:#929292}
+  .detail-stats{display:flex;gap:5px;flex-wrap:wrap;margin:7px 0 9px}
+  .stat{background:#242424;border:1px solid #111;padding:4px 7px;font-size:9.5px;color:#bbb}
+  .stat b{color:#f0f0f0;font-size:11px;margin-right:3px}
+  .state-list{display:flex;gap:3px;flex-wrap:wrap;max-height:48px;overflow:auto;margin-bottom:9px}
+  .state{font-size:8.5px;background:#262626;border:1px solid #151515;padding:2px 4px;color:#a9a9a9;white-space:nowrap}
+  .tex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px}
+  .tex{background:#232323;border:2px solid #111;padding:5px;min-width:0;cursor:pointer}
+  .tex:hover{border-color:var(--accent)}
+  .tex-thumb{height:86px;display:grid;place-items:center;background-color:#1b1b1b;background-image:linear-gradient(45deg,#2a2a2a 25%,transparent 25%,transparent 75%,#2a2a2a 75%),linear-gradient(45deg,#2a2a2a 25%,transparent 25%,transparent 75%,#2a2a2a 75%);background-size:12px 12px;background-position:0 0,6px 6px;overflow:hidden}
+  .tex-thumb img{max-width:100%;max-height:100%;image-rendering:pixelated;display:block}
+  .tex-name{font-size:9px;color:#ccc;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tex-meta{font-size:8px;color:#7f7f7f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ct-preview{width:100%;display:block;image-rendering:pixelated;border:1px solid #111;background:#191919}
+  .field{display:flex;flex-direction:column;gap:3px;font-size:9.5px;color:#aaa;margin-bottom:6px}
+  .field input{height:27px;background:#202020;border:1px solid #111;color:#eee;padding:0 6px;outline:none}
+  .field input:focus{border-color:var(--accent)}
+  .check{display:flex;align-items:center;gap:5px;font-size:10px;color:#bbb;margin:3px 0}
+  .check input{width:13px;height:13px;accent-color:var(--accent);margin:0}
+  .import-actions{display:flex;flex-direction:column;gap:5px;margin-top:7px}
+  .import-actions .btn{width:100%;justify-content:center}
+  .toast{position:fixed;left:50%;bottom:14px;transform:translate(-50%,10px);background:#2b2b2b;border:2px solid #111;color:#fff;padding:6px 12px;font-size:10.5px;opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;max-width:90%;z-index:50;text-align:center}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  .modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
+  .modal.on{display:flex}
+  .modal-box{background:#2e2e2e;border:2px solid #111;max-width:min(760px,100%);max-height:86vh;overflow:auto;padding:13px}
+  .modal-box h3{margin:0 0 5px;font-size:13px}
+  .modal-box p{font-size:10px;color:#999;line-height:1.7;margin:0 0 8px}
+  .modal-box canvas{width:100%;max-height:70vh;object-fit:contain;image-rendering:pixelated;background:#191919}
+  .modal-box .x{float:right;background:#333;border:1px solid #111;height:24px;width:24px}
+  .hq{display:inline-grid;place-items:center;width:15px;height:15px;border:1px solid #666;background:#333;color:#ccc;font-size:9px;cursor:help;margin-left:3px}
+
+  .ramp-list{display:grid;grid-template-columns:1fr 1fr;gap:3px;max-height:192px;overflow:auto;margin-bottom:6px}
+  .ramp{display:flex;align-items:center;gap:4px;background:#333;border:1px solid #161616;padding:3px 4px;cursor:pointer;min-width:0}
+  .ramp:hover{background:#3c3c3c}
+  .ramp.on{background:#3e4938;border-color:var(--accent)}
+  .ramp input{width:12px;height:12px;accent-color:var(--accent);margin:0;flex:0 0 auto}
+  .ramp .rsw{display:flex;height:12px;width:28px;flex:0 0 28px;border:1px solid #111;overflow:hidden}
+  .ramp .rsw i{flex:1}
+  .ramp b{font-size:9px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+  .ramp-editor{display:flex;gap:4px;margin:2px 0 7px}
+  .ramp-editor label{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8px;color:#888}
+  .ramp-editor input[type=color]{width:100%;height:22px;padding:0;border:1px solid #111;background:#222}
+  .ramp-editor input[type=color]::-webkit-color-swatch-wrapper{padding:1px}
+  .ramp-editor input[type=color]::-webkit-color-swatch{border:none}
+  .variant-strip{display:flex;gap:5px;flex-wrap:wrap;margin-top:11px;padding-top:9px;border-top:1px solid #ffffff10}
+  .variant-strip h3{margin:0 0 4px;width:100%;font-size:10px;color:#ccc;font-weight:600}
+  .vthumb{width:84px;background:#232323;border:1px solid #111;padding:3px;text-align:center}
+  .vthumb canvas{width:76px;height:76px;display:block;image-rendering:pixelated;background:#191919}
+  .vthumb span{display:block;font-size:8.5px;color:#aaa;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  @media (max-width:980px){
+    .layout{grid-template-columns:250px minmax(0,1fr)}
+    .col.right{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:700px){
+    body{overflow:auto}
+    .app{height:auto;min-height:100%}
+    .layout{display:flex;flex-direction:column;overflow:visible;padding:7px}
+    .col{overflow:visible}
+    .family-list{max-height:230px}
+    .detail{max-height:none;overflow:visible}
+    .col.right{display:flex}
+    .tb{height:auto;padding:6px 8px;flex-wrap:wrap}
+    .tb .right{width:100%;justify-content:flex-start}
+    .tex-grid{grid-template-columns:repeat(auto-fill,minmax(94px,1fr))}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="tb">
+    <div class="logo">Cr</div>
+    <div><h1>机械动力方块扩展</h1><div class="sub">CREATE BLOCK ADAPTER</div></div>
+    <span class="pill" id="hostState">连接宿主…</span>
+    <div class="right">
+      <span class="pill" id="archiveState">未载入资源包</span>
+      <button class="btn pri" id="importBtn" disabled>导入选中方块族</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="col left">
+      <div class="card">
+        <h2>1 · 读取机械动力</h2>
+        <label class="filebox" id="drop">
+          <input type="file" id="file" accept=".jar,.zip,application/zip,application/java-archive">
+          <b>选择 Create jar / 资源包 ZIP</b>
+          <span>本地读取，不上传</span>
+        </label>
+        <div class="file-name" id="fileName">支持 Create 6.x 的 assets/create 资源结构</div>
+        <div class="progress" id="progress"></div>
+      </div>
+      <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <h2>2 · 方块族 <span id="familyCount">0</span></h2>
+        <input class="search" id="search" placeholder="搜索方块 ID / 分类…" autocomplete="off">
+        <div class="chips" id="chips"></div>
+        <div class="family-list" id="familyList"><div class="hint" style="padding:10px">先载入 Create 资源包。</div></div>
+      </div>
+    </section>
+
+    <section class="col center">
+      <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <div class="detail" id="detail">
+          <div class="empty">
+            <b>没有选中的方块族</b>
+            <span>载入 Create jar 后，左侧会出现按 blockstate/model 归类的方块族。<br>选择后查看纹理槽、状态和连接纹理图集。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="col right">
+      <div class="card">
+        <h2>3 · 导入到仓库</h2>
+        <label class="field">工作区<input id="wsName" value="机械动力"></label>
+        <label class="field">大类别<input id="catName" value="方块"></label>
+        <label class="check"><input type="checkbox" id="importAll"> 导入所有扫描到的方块族</label>
+        <div class="import-actions">
+          <button class="btn pri" id="importBtn2" disabled>导入选中</button>
+          <button class="btn sm" id="clearSel">清空选择</button>
+        </div>
+        <div class="progress" id="importHint">勾选方块族后导入；每个方块族会成为一张 Create 卡片。</div>
+      </div>
+      <div class="card">
+        <h2>4 · 材质变种包</h2>
+        <div class="ramp-list" id="rampList"></div>
+        <div class="ramp-editor" id="rampEditor"></div>
+        <label class="field">目标版本<select id="packFormat">
+          <option value="15">1.20.1（15）</option>
+          <option value="34">1.21.1（34）</option>
+          <option value="69">1.21.9（69）</option>
+        </select></label>
+        <label class="check"><input type="checkbox" id="tileNorm"> CT 每格独立明度拉伸</label>
+        <div class="import-actions">
+          <button class="btn pri" id="exportVariants" disabled>导出变种资源包 ZIP</button>
+        </div>
+        <div class="progress" id="variantHint">勾选方块族与色阶后导出；每个色阶一个资源包，ZIP 内按 packs/&lt;色阶&gt;/ 分目录。</div>
+      </div>
+      <div class="card">
+        <h2>适配说明</h2>
+        <p class="hint">
+          支持：多纹理槽、blockstate 状态族、32/64/128 的 CT 连接图集、动画和滚动纹理标记。<br><br>
+          CT 图集按 16px 小格识别；导入后保留原始 <code>packPath</code> 和方块族元数据。<br><br>
+          这不是完整 3D 机器渲染器；复杂 CTModel / OBJ / 方块实体只做图集预览。
+        </p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="modal-box"><button class="x" id="modalX">×</button><h3 id="modalTitle">预览</h3><p id="modalSub"></p><canvas id="modalCv"></canvas></div></div>
+
+<script>
+(() => {
+  const PLUGIN_ID = 'create-texture';
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const RAMPS = [
+    {id:'iron', name:'铁', colors:['#2b3037','#6a727d','#b6bec8','#f2f6fb']},
+    {id:'steel', name:'钢', colors:['#252d39','#566679','#9bacc1','#e7f0fb']},
+    {id:'copper', name:'铜', colors:['#3a1710','#8f3f25','#d17143','#ffc79e']},
+    {id:'bronze', name:'青铜', colors:['#33240f','#76511e','#b88635','#ead39a']},
+    {id:'gold', name:'金', colors:['#3e2a05','#a2720c','#dfb338','#fff0a6']},
+    {id:'silver', name:'银', colors:['#303841','#7d8b99','#c6d1dc','#ffffff']},
+    {id:'amethyst', name:'紫水晶', colors:['#211333','#5b2d8e','#9b6bd1','#eadcff']},
+    {id:'emerald', name:'绿宝石', colors:['#04251a','#0a6240','#23a268','#b9ffd8']},
+    {id:'ruby', name:'红宝石', colors:['#31070d','#811426','#cc3045','#ffbcc4']},
+    {id:'lapis', name:'青金石', colors:['#0b1738','#163b82','#2d68c4','#a9c9ff']},
+    {id:'wood', name:'木头', colors:['#24160c','#5c3a1d','#9b6736','#dfb47a']},
+    {id:'obsidian', name:'黑曜石', colors:['#09080f','#211b31','#443866','#9183bb']}
+  ];
+  const rampOn = new Set(['iron','copper','gold','amethyst']);
+  let activeRamp = 'iron';
+  let variantToken = 0;
+  const pending = new Map();
+  let seq = 0, hostReady = false, resolveReady;
+  const ready = new Promise(r => { resolveReady = r; });
+  let archive = null;
+  let families = [];
+  let selected = new Set();
+  let current = null;
+  let filter = '全部';
+  let query = '';
+  let storedMode = false;
+  let modelMap = new Map();
+
+  function toast(msg){
+    const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2400);
+  }
+  function setProgress(msg){ const p = $('#progress'); if(p) p.textContent = msg || ''; }
+  function setHostState(msg){ const p = $('#hostState'); if(p) p.textContent = msg; }
+  function setArchiveState(msg){ const p = $('#archiveState'); if(p) p.textContent = msg; }
+  function call(method, params, transfer){
+    return ready.then(() => new Promise((resolve, reject) => {
+      const requestId = ++seq;
+      pending.set(requestId, { resolve, reject });
+      window.parent.postMessage({
+        __pwPluginHost:1, pluginId:PLUGIN_ID, type:'api', requestId, method, params:params || {}
+      }, '*', transfer || []);
+    }));
+  }
+  window.addEventListener('message', e => {
+    const d = e.data;
+    if(!d || d.__pwPluginHost !== 1) return;
+    if(d.type === 'host-ready'){
+      hostReady = true;
+      resolveReady();
+      setHostState('已连接 · ' + (d.plugin ? d.plugin.name : '宿主'));
+      if(d.payload && d.payload.cardId) setTimeout(() => loadCard(d.payload.cardId), 0);
+      return;
+    }
+    if(d.type === 'api-result'){
+      const p = pending.get(d.requestId);
+      if(!p) return;
+      pending.delete(d.requestId);
+      if(d.ok) p.resolve(d.result);
+      else p.reject(new Error(d.error || '宿主 API 失败'));
+      return;
+    }
+    if(d.type === 'navigate' && d.data && d.data.cardId){
+      loadCard(d.data.cardId);
+    }
+  });
+  window.parent.postMessage({ __pwPluginHost:1, pluginId:PLUGIN_ID, type:'ready' }, '*');
+
+  /* ---------------- 文件 / ZIP ---------------- */
+  async function readFile(file){
+    if(!file) return;
+    const buf = await file.arrayBuffer();
+    await readBuffer(buf, file.name, file.size);
+  }
+  async function readBuffer(buf, name, size){
+    storedMode = false;
+    setProgress('读取 ZIP…');
+    $('#fileName').textContent = name + (size ? ' · ' + (size / 1024 / 1024).toFixed(1) + ' MB' : '');
+    try{
+      const res = await call('zip.read', { buffer:buf, name:name }, [buf]);
+      archive = { id:res.archiveId, entries:res.entries, name };
+      setArchiveState(name);
+      setProgress('扫描 blockstate / model…');
+      await scanArchive();
+    }catch(err){
+      console.error(err);
+      setProgress('失败：' + err.message);
+      toast('读取失败：' + err.message);
+    }
+  }
+  async function scanArchive(){
+    const entries = archive.entries;
+    const jsonEntries = entries.filter(e => /^assets\/create\/(blockstates|models\/block)\/.*\.json$/i.test(e.name));
+    if(!jsonEntries.length) throw new Error('没有找到 assets/create 的 blockstate / model');
+    const names = jsonEntries.map(e => e.name);
+    const texts = await call('zip.textBatch', { archiveId:archive.id, names });
+    modelMap = new Map();
+    const blockstates = new Map();
+    for(const [name, text] of Object.entries(texts)){
+      try{
+        const json = JSON.parse(text);
+        if(name.includes('/models/block/')){
+          const key = name.replace(/^assets\/create\/models\//, '').replace(/\.json$/i, '');
+          modelMap.set(key, json);
+        }else if(name.includes('/blockstates/')){
+          const id = name.split('/').pop().replace(/\.json$/i, '');
+          blockstates.set(id, json);
+        }
+      }catch(_){}
+    }
+    const textureEntries = entries.filter(e => /^assets\/create\/textures\/block\/.*\.png$/i.test(e.name));
+    const textureIndex = new Map(textureEntries.map(e => [e.name, e]));
+    const out = [];
+    for(const [id, bs] of blockstates){
+      const modelKeys = new Set();
+      const stateKeys = [];
+      if(bs.variants && typeof bs.variants === 'object'){
+        for(const [state, v] of Object.entries(bs.variants)){
+          stateKeys.push(state || 'default');
+          (Array.isArray(v) ? v : [v]).forEach(x => { if(x && x.model) modelKeys.add(normModelRef(x.model)); });
+        }
+      }
+      if(Array.isArray(bs.multipart)){
+        stateKeys.push('multipart');
+        const walk = arr => arr.forEach(part => {
+          if(part && part.apply && part.apply.model) modelKeys.add(normModelRef(part.apply.model));
+          if(part && Array.isArray(part.when)) {}
+        });
+        walk(bs.multipart);
+      }
+      const slotNames = new Set();
+      const texPaths = new Set();
+      modelKeys.forEach(k => resolveModelTextures(k, slotNames, texPaths));
+      // 模型里没有直接引用、但同族命名约定使用的 CT / 变体纹理
+      const blockBase = id.toLowerCase();
+      for(const e of textureEntries){
+        const base = e.name.split('/').pop().replace(/\.png$/i, '');
+        const nested = e.name.includes('/' + blockBase + '/');
+        if(base === blockBase || base.startsWith(blockBase + '_') || nested){
+          if(isRelatedTexture(base, blockBase)) texPaths.add(e.name);
+        }
+      }
+      if(!texPaths.size) continue;
+      const textures = [...texPaths].map(path => {
+        const base = path.split('/').pop().replace(/\.png$/i, '');
+        const ct = base.endsWith('_connected');
+        const scroll = /_scroll$/.test(base) || /scroll\.png$/i.test(base);
+        const anim = entries.some(x => x.name === path + '.mcmeta');
+        return {
+          path, name:base,
+          slot:base === blockBase ? 'main' : base.slice(blockBase.length).replace(/^_/, '') || 'main',
+          kind: ct ? 'ct' : scroll ? 'scroll' : anim ? 'animation' : 'texture',
+          connected:ct, scroll, animated:anim, grid:null, data:null, mcmeta:null
+        };
+      }).sort((a,b) => {
+        const rank = x => x.kind === 'texture' ? 0 : x.kind === 'ct' ? 1 : x.kind === 'scroll' ? 2 : 3;
+        return rank(a) - rank(b) || a.name.localeCompare(b.name);
+      });
+      out.push({
+        id, blockId:id, category:guessCategory(id),
+        stateKeys:[...new Set(stateKeys)], stateCount:stateKeys.length,
+        modelKeys:[...modelKeys], textures,
+        modelCount:modelKeys.size,
+        hasCT:textures.some(t => t.connected),
+        hasAnim:textures.some(t => t.animated),
+        hasScroll:textures.some(t => t.scroll)
+      });
+    }
+    families = out.sort((a,b) => a.category.localeCompare(b.category,'zh') || a.id.localeCompare(b.id));
+    selected.clear();
+    current = families[0] || null;
+    if(current) selected.add(current.id);
+    renderChips();
+    renderList();
+    refreshVariantUI();
+    if(current) selectFamily(current);
+    else renderDetailEmpty();
+    $('#importBtn').disabled = false;
+    $('#importBtn2').disabled = false;
+    setProgress('扫描完成：' + families.length + ' 个方块族');
+    setArchiveState(archive.name + ' · ' + families.length + ' 族');
+  }
+  function normModelRef(ref){
+    if(typeof ref !== 'string') return '';
+    return ref.replace(/^create:/, '').replace(/^minecraft:.*/, '');
+  }
+  function isRelatedTexture(base, blockBase){
+    const suffixes = ['connected','top','side','bottom','front','back','inner','outer','window','powered','unpowered','on','off','open','closed','lit','scroll','diagonal_scroll','small','medium','large','piston','short','very_short','frame','head','pole','base','wall','edge','end','axis','overlay','still','flowing'];
+    if(base === blockBase) return true;
+    if(!base.startsWith(blockBase + '_')) return false;
+    const rest = base.slice(blockBase.length + 1);
+    return suffixes.some(s => rest === s || rest.endsWith('_' + s) || rest.startsWith(s + '_'));
+  }
+  function resolveModelTextures(key, slotNames, out, seen){
+    seen = seen || new Set();
+    if(!key || seen.has(key)) return;
+    seen.add(key);
+    const m = modelMap.get(key);
+    if(!m) return;
+    const merged = {};
+    if(m.parent){
+      const parentKey = normModelRef(m.parent);
+      if(parentKey) resolveModelTextures(parentKey, slotNames, out, seen);
+      const pm = modelMap.get(parentKey);
+      if(pm && pm.textures) Object.assign(merged, pm.textures);
+    }
+    if(m.textures && typeof m.textures === 'object') Object.assign(merged, m.textures);
+    const resolve = (value, depth) => {
+      if(depth > 4) return null;
+      if(typeof value !== 'string') return null;
+      if(value.startsWith('#')) return resolve(merged[value.slice(1)], depth + 1);
+      return value;
+    };
+    for(const [slot, raw] of Object.entries(merged)){
+      const v = resolve(raw, 0);
+      if(!v || v.startsWith('minecraft:')) continue;
+      const path = texturePath(v);
+      if(!path) continue;
+      slotNames.add(slot);
+      out.add(path);
+    }
+  }
+  function texturePath(v){
+    if(typeof v !== 'string') return null;
+    let p = v.replace(/^create:/, '');
+    if(p.startsWith('block/')) p = p.slice(6);
+    if(p.startsWith('textures/')) p = p.replace(/^textures\//, '');
+    if(!p) return null;
+    return 'assets/create/textures/block/' + p + '.png';
+  }
+  function guessCategory(id){
+    const s = id.toLowerCase();
+    if(/(shaft|cogwheel|gearbox|belt|chassis|bearing|piston|drill|saw|mixer|press|fan|clutch|gearshift|chain|spring|crank|flywheel|millstone|crushing|deployer|arm|pulley|gantry|sticker|clutch)/.test(s)) return 'kinetics';
+    if(/(funnel|chute|vault|packager|postbox|stock|tunnel|requester|redstone|threshold|display|table|desk|bell|crafting|crafter)/.test(s)) return 'logistics';
+    if(/(tank|pipe|pump|valve|spout|faucet|hose|fluid|basin|port|drain|siphon)/.test(s)) return 'fluids';
+    if(/(track|train|station|signal|schedule|observer|controller|door|trapdoor)/.test(s)) return 'trains';
+    if(/(casing|window|bars|girder|ladder|scaffold|copper|tile|shingle|cut|pillar|wall|roof|bracket|frame|glass)/.test(s)) return 'decoration';
+    return 'other';
+  }
+  const CAT_LABEL = {kinetics:'动力',logistics:'物流',fluids:'流体',trains:'列车',decoration:'装饰',other:'其他'};
+
+  /* ---------------- 列表 / 详情 ---------------- */
+  function renderChips(){
+    const cats = ['全部', ...Object.keys(CAT_LABEL).filter(c => families.some(f => f.category === c))];
+    $('#chips').innerHTML = cats.map(c => `<button class="chip${filter === c ? ' on' : ''}" data-cat="${c}">${c === '全部' ? '全部' : (CAT_LABEL[c] || c)}</button>`).join('');
+  }
+  function visibleFamilies(){
+    const q = query.trim().toLowerCase();
+    return families.filter(f => (filter === '全部' || f.category === filter) &&
+      (!q || f.id.toLowerCase().includes(q) || CAT_LABEL[f.category].includes(q)));
+  }
+  function renderList(){
+    const list = visibleFamilies();
+    $('#familyCount').textContent = families.length;
+    const box = $('#familyList');
+    if(!list.length){ box.innerHTML = '<div class="hint" style="padding:10px">没有匹配的方块族。</div>'; return; }
+    box.innerHTML = list.map(f => {
+      const badges = [
+        f.hasCT ? '<i class="badge ct">CT</i>' : '',
+        f.hasAnim ? '<i class="badge anim">动画</i>' : '',
+        f.textures.length > 3 ? '<i class="badge multi">多槽</i>' : ''
+      ].join('');
+      return `<div class="family${current && current.id === f.id ? ' on' : ''}" data-family="${f.id}">
+        <input type="checkbox" data-select="${f.id}"${selected.has(f.id) ? ' checked' : ''}>
+        <div class="fi"><b>${f.id}</b><span>${CAT_LABEL[f.category] || f.category} · ${f.textures.length} 纹理 · ${f.stateCount} 状态</span><div class="badges">${badges}</div></div>
+      </div>`;
+    }).join('');
+  }
+  function findFamily(id){ return families.find(f => f.id === id) || null; }
+  async function selectFamily(f){
+    current = f;
+    storedMode = false;
+    renderList();
+    renderDetailLoading(f);
+    try{
+      await loadFamilyTextures(f);
+      renderDetail(f);
+    }catch(err){
+      toast('纹理读取失败：' + err.message);
+      renderDetail(f);
+    }
+  }
+  async function loadFamilyTextures(f){
+    const todo = f.textures.filter(t => !t.data).slice(0, 60);
+    if(!todo.length) return;
+    const urls = await call('zip.dataURLs', { archiveId:archive.id, names:todo.map(t => t.path) });
+    for(const t of todo){
+      t.data = urls[t.path] || null;
+      if(!t.data) continue;
+      if(t.connected){
+        try{
+          const im = await imageOf(t.data);
+          if(im.naturalWidth === im.naturalHeight && [32,64,128].includes(im.naturalWidth)) t.grid = im.naturalWidth / 16;
+        }catch(_){}
+      }
+    }
+    const anims = f.textures.filter(t => t.animated && !t.mcmeta);
+    if(anims.length){
+      try{
+        const texts = await call('zip.textBatch', { archiveId:archive.id, names:anims.map(t => t.path + '.mcmeta') });
+        anims.forEach(t => { try{ t.mcmeta = JSON.parse(texts[t.path + '.mcmeta'] || 'null'); }catch(_){ t.mcmeta = null; } });
+      }catch(_){}
+    }
+  }
+  function imageOf(url){
+    return new Promise((resolve, reject) => {
+      const im = new Image(); im.onload = () => resolve(im); im.onerror = reject; im.src = url;
+    });
+  }
+
+  /* ---------------- 材质变种 / 资源包 ---------------- */
+  function hexRgb(hex){
+    const m=/^#?([0-9a-f]{6})$/i.exec(hex||''); if(!m) return {r:128,g:128,b:128};
+    const n=parseInt(m[1],16); return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+  }
+  function sampleRamp(colors, t){
+    const stops=colors.map(hexRgb);
+    if(stops.length===1) return stops[0];
+    t=Math.max(0,Math.min(1,t))*(stops.length-1);
+    const i=Math.min(stops.length-2,Math.floor(t)), f=t-i;
+    const a=stops[i], b=stops[i+1];
+    return {r:a.r+(b.r-a.r)*f,g:a.g+(b.g-a.g)*f,b:a.b+(b.b-a.b)*f};
+  }
+  function recolorCanvas(img, ramp, tileNorm, grid){
+    const w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    const g=cv.getContext('2d',{willReadFrequently:true});
+    g.imageSmoothingEnabled=false; g.drawImage(img,0,0);
+    const src=g.getImageData(0,0,w,h), d=src.data;
+    const out=g.createImageData(w,h), od=out.data;
+    const process=(x0,y0,x1,y1)=>{
+      let min=255,max=0;
+      for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){
+        const p=(y*w+x)*4;
+        if(d[p+3]<8) continue;
+        if(d[p]<20 && d[p+1]<20 && d[p+2]<20) continue;
+        const l=0.2126*d[p]+0.7152*d[p+1]+0.0722*d[p+2];
+        if(l<min) min=l; if(l>max) max=l;
+      }
+      const range=max-min;
+      for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){
+        const p=(y*w+x)*4;
+        if(d[p+3]<8){ od[p+3]=0; continue; }
+        if(d[p]<20 && d[p+1]<20 && d[p+2]<20){ od[p]=0; od[p+1]=0; od[p+2]=0; od[p+3]=d[p+3]; continue; }
+        const l=0.2126*d[p]+0.7152*d[p+1]+0.0722*d[p+2];
+        let t=range>3 ? (l-min)/range : l/255;
+        const c=sampleRamp(ramp.colors, t);
+        od[p]=c.r; od[p+1]=c.g; od[p+2]=c.b; od[p+3]=d[p+3];
+      }
+    };
+    if(tileNorm && grid && w%grid===0 && h%grid===0){
+      const cell=w/grid;
+      for(let ty=0;ty<grid;ty++) for(let tx=0;tx<grid;tx++)
+        process(tx*cell,ty*cell,(tx+1)*cell,(ty+1)*cell);
+    }else{
+      process(0,0,w,h);
+    }
+    g.putImageData(out,0,0);
+    return cv;
+  }
+  function textBase64(text){
+    const bytes=new TextEncoder().encode(text); let bin='';
+    for(let i=0;i<bytes.length;i+=0x8000) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
+    return btoa(bin);
+  }
+  function paintThumb(canvas, src){
+    const g=canvas.getContext('2d'), w=canvas.width, h=canvas.height;
+    g.clearRect(0,0,w,h);
+    for(let y=0;y<h;y+=8) for(let x=0;x<w;x+=8){
+      g.fillStyle=((x/8|0)+(y/8|0))%2?'#2d2d2d':'#232323'; g.fillRect(x,y,8,8);
+    }
+    const iw=src.naturalWidth||src.width, ih=src.naturalHeight||src.height;
+    const sc=Math.min((w-4)/iw,(h-4)/ih);
+    g.imageSmoothingEnabled=false;
+    g.drawImage(src,(w-iw*sc)/2,(h-ih*sc)/2,iw*sc,ih*sc);
+  }
+  function renderRamps(){
+    const box=$('#rampList'); if(!box) return;
+    box.innerHTML=RAMPS.map(r=>`<label class="ramp${activeRamp===r.id?' on':''}" data-ramp="${r.id}">
+      <input type="checkbox" data-ramp-on="${r.id}"${rampOn.has(r.id)?' checked':''}>
+      <span class="rsw">${r.colors.map(c=>`<i style="background:${c}"></i>`).join('')}</span>
+      <b>${r.name}</b>
+    </label>`).join('');
+    refreshVariantUI();
+  }
+  function renderRampEditor(){
+    const box=$('#rampEditor'); if(!box) return;
+    const r=RAMPS.find(x=>x.id===activeRamp); if(!r){ box.innerHTML=''; return; }
+    const labels=['暗','中暗','中亮','亮'];
+    box.innerHTML=r.colors.map((c,i)=>`<label>${labels[i]}<input type="color" data-ramp-color="${i}" value="${c}"></label>`).join('');
+  }
+  function refreshVariantUI(){
+    const btn=$('#exportVariants');
+    if(btn) btn.disabled=!selected.size || !rampOn.size;
+    const hint=$('#variantHint');
+    if(hint && !families.length) hint.textContent='先扫描资源包，再选择方块族与色阶。';
+    else if(hint) hint.textContent=`已选 ${selected.size} 个方块族 · ${rampOn.size} 个色阶；每个色阶一个资源包，ZIP 内按 packs/<色阶>/ 分目录。`;
+  }
+  async function renderFamilyVariants(f){
+    const strip=$('#familyVariants'); if(!strip) return;
+    const main=f.textures.find(t=>t.kind==='texture'&&t.data)||f.textures.find(t=>t.data);
+    if(!main){ strip.innerHTML='<h3>材质变种预览</h3><span class="hint">没有可用纹理数据。</span>'; return; }
+    const token=++variantToken;
+    strip.innerHTML='<h3>材质变种预览</h3>';
+    for(const ramp of RAMPS.filter(r=>rampOn.has(r.id)).slice(0,8)){
+      const box=document.createElement('div'); box.className='vthumb';
+      const cv=document.createElement('canvas'); cv.width=cv.height=76;
+      const label=document.createElement('span'); label.textContent=ramp.name;
+      box.appendChild(cv); box.appendChild(label); strip.appendChild(box);
+    }
+    try{
+      const im=await imageOf(main.data);
+      if(token!==variantToken) return;
+      const boxes=[...strip.querySelectorAll('.vthumb canvas')];
+      RAMPS.filter(r=>rampOn.has(r.id)).slice(0,8).forEach((ramp,i)=>{
+        if(!boxes[i]) return;
+        paintThumb(boxes[i], recolorCanvas(im,ramp,$('#tileNorm')?.checked,main.grid));
+      });
+    }catch(_){}
+  }
+  async function exportVariants(){
+    const list=families.filter(f=>selected.has(f.id));
+    const ramps=RAMPS.filter(r=>rampOn.has(r.id));
+    if(!list.length){ toast('先勾选至少一个方块族'); return; }
+    if(!ramps.length){ toast('至少勾选一个材质色阶'); return; }
+    if(list.length>60){ toast('一次最多导出 60 个方块族'); return; }
+    const btn=$('#exportVariants');
+    btn.disabled=true; btn.textContent='生成中…';
+    const hint=$('#variantHint');
+    const format=+($('#packFormat').value||15);
+    const tileNorm=!!$('#tileNorm').checked;
+    try{
+      const files=[];
+      const metaDone=new Set();
+      const seenFiles=new Set();
+      let totalFiles=0;
+      for(let fi=0;fi<list.length;fi++){
+        const f=list[fi];
+        hint.textContent=`处理 ${fi+1}/${list.length}：${f.id}`;
+        await loadFamilyTextures(f);
+        const slots=f.textures.filter(t=>t.data).slice(0,48);
+        for(const ramp of ramps){
+          if(!metaDone.has(ramp.id)){
+            metaDone.add(ramp.id);
+            const mcmeta={pack:{pack_format:format,description:'Create 材质变种 · '+ramp.name+'\nClastarStudio · Create Block Adapter'}};
+            files.push({name:`packs/${ramp.id}/pack.mcmeta`,base64:textBase64(JSON.stringify(mcmeta,null,2))});
+            files.push({name:`packs/${ramp.id}/README.txt`,base64:textBase64('ClastarStudio · Create 材质变种\n材质：'+ramp.name+'\n\n将本文件夹单独作为资源包启用；它只覆盖 assets/create/textures/block 下的纹理。\n')});
+          }
+          for(const t of slots){
+            const outPath=`packs/${ramp.id}/${t.path}`;
+            if(seenFiles.has(outPath)) continue;
+            seenFiles.add(outPath);
+            const im=await imageOf(t.data);
+            const cv=recolorCanvas(im,ramp,tileNorm,t.grid);
+            files.push({name:outPath,base64:cv.toDataURL('image/png').split(',')[1]});
+            if(t.mcmeta && typeof t.mcmeta === 'object'){
+              const metaPath=`packs/${ramp.id}/${t.path}.mcmeta`;
+              if(!seenFiles.has(metaPath)){
+                seenFiles.add(metaPath);
+                files.push({name:metaPath,base64:textBase64(JSON.stringify(t.mcmeta,null,2))});
+              }
+            }
+            totalFiles++;
+            if(files.length>7600) throw new Error('文件数量过多，请减少方块族或色阶');
+          }
+        }
+      }
+      const rootReadme='ClastarStudio · Create 材质变种包\n\n'+ramps.map(r=>'packs/'+r.id+'/  → '+r.name).join('\n')+
+        '\n\n每个 packs/<色阶>/ 都是一个独立资源包：打开对应文件夹，把里面的内容作为资源包启用。\n只覆盖 assets/create/textures/block 下的原始路径，不修改模型或代码。\n';
+      files.push({name:'README.txt',base64:textBase64(rootReadme)});
+      hint.textContent='打包中…';
+      const res=await call('zip.create',{filename:'Create材质变种-'+new Date().toISOString().slice(0,10)+'.zip',files});
+      hint.textContent='已导出 '+ramps.length+' 个资源包 · '+totalFiles+' 张纹理';
+      await call('toast',{message:'已导出 '+ramps.length+' 个 Create 材质资源包'});
+    }catch(err){
+      console.error(err);
+      toast('变种导出失败：'+err.message);
+      hint.textContent='失败：'+err.message;
+    }finally{
+      btn.textContent='导出变种资源包 ZIP';
+      btn.disabled=false;
+    }
+  }
+
+  function renderDetailEmpty(){
+    $('#detail').innerHTML = '<div class="empty"><b>没有选中的方块族</b><span>载入 Create jar 后，左侧会出现按 blockstate/model 归类的方块族。<br>选择后查看纹理槽、状态和连接纹理图集。</span></div>';
+  }
+  function renderDetailLoading(f){
+    $('#detail').innerHTML = `<div class="detail-head"><div><h2>${f.id}</h2><p>${CAT_LABEL[f.category] || f.category} · 正在读取纹理…</p></div></div><div class="progress">读取纹理数据…</div>`;
+  }
+  async function renderDetail(f){
+    const head = `<div class="detail-head"><div><h2>${f.id}</h2><p>${CAT_LABEL[f.category] || f.category} · ${f.modelCount} 个模型 · ${f.stateCount} 个状态</p></div></div>
+      <div class="detail-stats">
+        <span class="stat"><b>${f.textures.length}</b>纹理</span>
+        <span class="stat"><b>${f.stateCount}</b>blockstate</span>
+        <span class="stat"><b>${f.modelCount}</b>模型</span>
+        ${f.hasCT ? '<span class="stat" style="color:#9dc7e4"><b>CT</b>连接</span>' : ''}
+        ${f.hasAnim ? '<span class="stat" style="color:#e2b47d"><b>动画</b>帧序列</span>' : ''}
+      </div>`;
+    const states = f.stateKeys.length ? `<div class="state-list">${f.stateKeys.slice(0,80).map(s => `<span class="state">${escapeHtml(s)}</span>`).join('')}</div>` : '';
+    const tex = f.textures.map(t => {
+      const meta = [t.kind === 'ct' ? (t.grid ? 'CT ' + t.grid + '×' + t.grid : 'CT') : t.kind === 'scroll' ? '滚动' : t.kind === 'animation' ? '动画' : '纹理', t.path.split('/').pop()].join(' · ');
+      return `<div class="tex" data-tex="${t.path}"><div class="tex-thumb">${t.data ? `<img src="${t.data}" alt="">` : '<span class="hint">无图</span>'}</div>` +
+        `<div class="tex-name">${escapeHtml(t.name)}</div><div class="tex-meta">${escapeHtml(meta)}</div></div>`;
+    }).join('');
+    $('#detail').innerHTML = head + states + `<div class="tex-grid">${tex}</div><div class="variant-strip" id="familyVariants"></div>`;
+    $('#detail').querySelectorAll('[data-tex]').forEach(el => {
+      el.onclick = () => {
+        const t = f.textures.find(x => x.path === el.dataset.tex);
+        if(t) showTextureModal(f, t);
+      };
+    });
+    renderFamilyVariants(f);
+  }
+  function showTextureModal(f, t){
+    const m = $('#modal'), cv = $('#modalCv');
+    $('#modalTitle').textContent = f.id + ' / ' + t.name;
+    $('#modalSub').textContent = t.kind === 'ct' ? '连接纹理图集 · 每格 16×16' : t.kind === 'scroll' ? '滚动纹理' : t.kind === 'animation' ? '动画纹理' : '普通纹理';
+    m.classList.add('on');
+    imageOf(t.data).then(im => {
+      const scale = t.kind === 'ct' ? 512 / Math.max(im.naturalWidth, im.naturalHeight) : Math.min(512 / im.naturalWidth, 512 / im.naturalHeight, 8);
+      const s = Math.max(1, Math.floor(scale) || 1);
+      cv.width = im.naturalWidth * s; cv.height = im.naturalHeight * s;
+      const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+      g.drawImage(im, 0, 0, cv.width, cv.height);
+      if(t.kind === 'ct' && t.grid){
+        g.strokeStyle = 'rgba(255,255,255,.26)'; g.lineWidth = 1;
+        const cell = 16 * s;
+        for(let i=1;i<t.grid;i++){
+          g.beginPath(); g.moveTo(i*cell,0); g.lineTo(i*cell,cv.height); g.stroke();
+          g.beginPath(); g.moveTo(0,i*cell); g.lineTo(cv.width,i*cell); g.stroke();
+        }
+      }
+    }).catch(()=>{});
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /* ---------------- 导入 ---------------- */
+  async function importSelected(silent){
+    const list = $('#importAll').checked ? families.slice() : families.filter(f => selected.has(f.id));
+    if(!list.length){ toast('先勾选至少一个方块族'); if(silent) throw new Error('没有选中方块族'); return; }
+    if(list.length > 60){ toast('一次最多导入 60 个方块族'); if(silent) throw new Error('超过 60 个方块族'); return; }
+    const btn = $('#importBtn');
+    btn.disabled = true; btn.textContent = '导入中…';
+    $('#importHint').textContent = '准备纹理数据…';
+    try{
+      const cards = [];
+      for(let i=0;i<list.length;i++){
+        const f = list[i];
+        $('#importHint').textContent = `处理 ${i+1}/${list.length}：${f.id}`;
+        await loadFamilyTextures(f);
+        const slots = f.textures.filter(t => t.data).slice(0, 48).map(t => ({
+          id:t.slot || t.name, label:t.name, packPath:t.path, kind:t.kind,
+          data:t.data, grid:t.grid, mcmeta:t.mcmeta || null
+        }));
+        if(!slots.length) continue;
+        const main = slots.find(s => s.kind === 'texture') || slots[0];
+        cards.push({
+          name:f.id,
+          meta:`Create · ${slots.length} 纹理 · ${f.stateCount} 状态 · ${CAT_LABEL[f.category] || f.category}`,
+          badge:'Create',
+          type:'item',
+          thumb:main.data,
+          full:main.data,
+          create:{
+            pluginId:PLUGIN_ID, toolId:'create-blocks',
+            namespace:'create', blockId:f.id, family:f.id, category:f.category,
+            states:f.stateKeys.slice(0,80), models:f.modelKeys,
+            blockstates:['assets/create/blockstates/' + f.id + '.json'],
+            slots,
+            textureCount:slots.length, stateCount:f.stateCount,
+            hasCT:f.hasCT, hasAnimation:f.hasAnim, hasScroll:f.hasScroll
+          }
+        });
+      }
+      if(!cards.length) throw new Error('没有可导入的纹理');
+      $('#importHint').textContent = '写入仓库…';
+      const res = await call('library.addCards', {
+        workspaceName:$('#wsName').value.trim() || '机械动力',
+        categoryName:$('#catName').value.trim() || '方块',
+        cards
+      });
+      await call('toast', { message:'已导入 ' + res.added + ' 个 Create 方块族' });
+      $('#importHint').textContent = '已导入 ' + res.added + ' 个方块族到工作区。';
+      btn.textContent = '导入选中';
+      btn.disabled = false;
+      return res;
+    }catch(err){
+      console.error(err);
+      toast('导入失败：' + err.message);
+      $('#importHint').textContent = '导入失败：' + err.message;
+      btn.textContent = '导入选中';
+      btn.disabled = false;
+      if(silent) throw err;
+    }
+  }
+
+  /* ---------------- 从仓库卡片打开 ---------------- */
+  async function loadCard(id){
+    try{
+      const res = await call('library.getCard', { id });
+      if(!res || !res.card || !res.card.create){ toast('这张卡没有 Create 元数据'); return; }
+      const c = res.card, cr = c.create;
+      storedMode = true;
+      const slots = (cr.slots || []).map(s => Object.assign({}, s, { data:s.data || null }));
+      const f = {
+        id:cr.blockId || c.name, blockId:cr.blockId || c.name, category:cr.category || 'other',
+        stateKeys:cr.states || [], stateCount:cr.stateCount || (cr.states || []).length,
+        modelKeys:cr.models || [], modelCount:(cr.models || []).length,
+        textures:slots.map(s => ({
+          path:s.packPath, name:s.label || s.id, kind:s.kind || 'texture',
+          connected:s.kind === 'ct', scroll:s.kind === 'scroll', animated:s.kind === 'animation',
+          grid:s.grid || null, data:s.data, mcmeta:s.mcmeta || null, slot:s.id
+        })),
+        hasCT:!!cr.hasCT, hasAnim:!!cr.hasAnimation, hasScroll:!!cr.hasScroll
+      };
+      families = [f]; selected = new Set([f.id]); current = f;
+      filter = '全部'; query = '';
+      renderChips(); renderList(); refreshVariantUI(); renderDetail(f);
+      setArchiveState('仓库卡片 · ' + c.name);
+      setProgress('已从仓库载入方块族卡片');
+      $('#importBtn').disabled = true; $('#importBtn2').disabled = true;
+      $('#importHint').textContent = '当前是仓库里的方块族卡片；重新扫描 jar 可导入新的方块族。';
+    }catch(err){
+      console.error(err); toast('读取卡片失败：' + err.message);
+    }
+  }
+
+  /* ---------------- 绑定 ---------------- */
+  $('#file').onchange = e => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if(f) readFile(f);
+  };
+  $('#drop').addEventListener('dragover', e => { e.preventDefault(); $('#drop').style.borderColor = 'var(--accent)'; });
+  $('#drop').addEventListener('dragleave', () => { $('#drop').style.borderColor = ''; });
+  $('#drop').addEventListener('drop', e => {
+    e.preventDefault(); $('#drop').style.borderColor = '';
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) readFile(f);
+  });
+  $('#search').addEventListener('input', e => { query = e.target.value; renderList(); });
+  $('#chips').addEventListener('click', e => {
+    const b = e.target.closest('[data-cat]'); if(!b) return;
+    filter = b.dataset.cat; renderChips(); renderList();
+  });
+  $('#familyList').addEventListener('click', e => {
+    const cb = e.target.closest('[data-select]');
+    if(cb){ if(cb.checked) selected.add(cb.dataset.select); else selected.delete(cb.dataset.select); refreshVariantUI(); if(current) renderFamilyVariants(current); return; }
+    const row = e.target.closest('[data-family]');
+    if(row){ const f = findFamily(row.dataset.family); if(f) selectFamily(f); }
+  });
+  renderRamps();
+  renderRampEditor();
+  $('#rampList').addEventListener('change', e => {
+    const cb = e.target.closest('[data-ramp-on]');
+    if(!cb) return;
+    if(cb.checked) rampOn.add(cb.dataset.rampOn); else rampOn.delete(cb.dataset.rampOn);
+    refreshVariantUI();
+    if(current) renderFamilyVariants(current);
+  });
+  $('#rampList').addEventListener('click', e => {
+    if(e.target.closest('input')) return;
+    const row = e.target.closest('[data-ramp]');
+    if(!row) return;
+    activeRamp = row.dataset.ramp;
+    renderRamps();
+    renderRampEditor();
+  });
+  $('#rampEditor').addEventListener('input', e => {
+    const inp = e.target.closest('[data-ramp-color]');
+    if(!inp) return;
+    const r = RAMPS.find(x => x.id === activeRamp);
+    if(r){ r.colors[+inp.dataset.rampColor] = inp.value; if(current) renderFamilyVariants(current); }
+  });
+  $('#rampEditor').addEventListener('change', () => { renderRamps(); renderRampEditor(); });
+  $('#tileNorm').addEventListener('change', () => { if(current) renderFamilyVariants(current); });
+  $('#exportVariants').onclick = exportVariants;
+  $('#importBtn').onclick = importSelected;
+  $('#importBtn2').onclick = importSelected;
+  $('#clearSel').onclick = () => { selected.clear(); renderList(); refreshVariantUI(); };
+  $('#modalX').onclick = () => $('#modal').classList.remove('on');
+  $('#modal').addEventListener('click', e => { if(e.target.id === 'modal') $('#modal').classList.remove('on'); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') $('#modal').classList.remove('on'); });
+})();
+</script>
+</body>
+</html>

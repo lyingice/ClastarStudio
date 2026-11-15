@@ -1,5 +1,5 @@
 /* 像素工坊 PWA：离线缓存。发布新版本时把 CACHE 的版本号一起改掉。 */
-const CACHE = 'pixel-workshop-v0.12.0';
+const CACHE = 'pixel-workshop-v0.14.1';
 const ASSETS = [
   './index.html',
   './styles/shell.css',
@@ -7,6 +7,8 @@ const ASSETS = [
   './styles/sidebar.css',
   './styles/variants.css',
   './styles/shortcuts.css',
+  './styles/plugins.css',
+  './styles/assets.css',
   './src/embedded/anim.js',
   './src/embedded/block.js',
   './src/embedded/color.js',
@@ -20,11 +22,17 @@ const ASSETS = [
   './src/shell/exporter.js',
   './src/shell/extensions.js',
   './src/shell/shortcuts.js',
+  './src/shell/plugins.js',
+  './src/shell/assets.js',
   './src/shell/variants.js',
   './src/shell/editors.js',
   './src/shell/recolor.js',
   './src/shell/sidebar.js',
   './src/shell/init.js',
+  './plugin.json',
+  './plugins/catalog.json',
+  './plugins/create-texture/manifest.json',
+  './plugins/create-texture/plugin.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -59,7 +67,7 @@ self.addEventListener('fetch', event => {
   /* 代码 / 样式 / 页面走网络优先：开发时改脚本不会被旧缓存锁死；离线再回退 */
   let sameOrigin = false;
   try{ sameOrigin = new URL(event.request.url).origin === location.origin; }catch(e){}
-  if(sameOrigin && /\.(?:js|css|html)$/i.test(new URL(event.request.url).pathname)){
+  if(sameOrigin && /\.(?:js|css|html|json)$/i.test(new URL(event.request.url).pathname)){
     event.respondWith(
       fetch(event.request).then(resp => {
         try{ const copy = resp.clone(); caches.open(CACHE).then(c => c.put(event.request, copy)); }catch(e){}

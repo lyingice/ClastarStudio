@@ -1150,6 +1150,7 @@ function installRowHTML(){
 function openSettings(){
   $('#dlgTitle').innerHTML = iconSVG('gear', 14) + '设置';
   $('#dlgBody').innerHTML = (typeof PWShortcuts !== 'undefined' ? PWShortcuts.settingsRowHTML() : '') +
+    (typeof PWPlugins !== 'undefined' ? PWPlugins.settingsRowHTML() : '') +
     (typeof PWExtensions !== 'undefined' ? PWExtensions.settingsHTML() : '') +
     themeSectionHTML() + installRowHTML() +
     '<div class="opt" data-set="export"><div class="oi">' + iconSVG('box',16) + '</div>' +
@@ -1167,6 +1168,8 @@ function openSettings(){
   const body = $('#dlgBody');
   const scRow = body.querySelector('[data-set="shortcuts"]');
   if(scRow && typeof PWShortcuts !== 'undefined') scRow.onclick = () => { closeDialog(); PWShortcuts.openShortcutCenter(); };
+  const plRow = body.querySelector('[data-set="plugins"]');
+  if(plRow && typeof PWPlugins !== 'undefined') plRow.onclick = () => { closeDialog(); PWPlugins.openPluginCenter(); };
   $('#themeCur').onclick = () => $('#setTheme').classList.toggle('open');
   body.querySelector('[data-set="export"]').onclick = () => { closeDialog(); exportData(); };
   body.querySelector('[data-set="import"]').onclick = () => { closeDialog(); $('#dataPick').click(); };
@@ -1205,6 +1208,9 @@ function openAbout(){
     '<b>像素工坊</b> v' + APP_VERSION + '<br>' +
     '纹理 / 动画贴图的收纳与绘制。数据保存在本机浏览器（localStorage），不上传。<br><br>' +
     '常用操作：双击卡片打开编辑器 · 右键重命名 / 删除 / 一键换色 · 拖入 PNG 直接导入 · 编辑器顶栏「保存回仓库」<br><br>' +
+    '0.14.1：动画播放插帧预览（相邻帧线性混合，跟随 .mcmeta interpolate）<br>' +
+    '0.14.0：素材库（原版 / 模组纹理参考、ZIP/JAR 导入、参考图）<br>' +
+    '0.13.0：可选插件框架 · 扩展中心 · GitHub / 本地 ZIP 安装 · 机械动力方块扩展<br>' +
     '0.12.0：快捷键注册表 · 独立快捷键中心 · 速查卡 · 编辑器键位徽标实时同步<br>' +
     '0.11.0：工具模块化注册表（内置扩展可启停）· 变种工坊（明度→材质色阶、批量矩阵、ZIP）<br>' +
     '0.10.1：资源包路径清理 · 多选删除边界 · 移动端安全区修正<br>' +
@@ -1290,8 +1296,8 @@ function renderStatus(){
     $('#sbCount').innerHTML = `<b>${visibleCount()}</b> 项`;
   } else {
     $('#sbPath').innerHTML = `${ws ? esc(ws.name) + ' / ' : ''}<b>${esc(t.title)}</b>`;
-    $('#sbSel').textContent = t.kind === 'anim' ? '动画' : (t.kind === 'block' || t.kind === 'composite') ? '方块' : t.kind === 'entity' ? '实体' : t.kind === 'ctex' ? '自定义纹理' : (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts') ? '工具' : '纹理';
-    $('#sbCount').innerHTML = (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts') ? '<b>1</b> 个工具' : (t.kind === 'block' || t.kind === 'composite') ? '<b>1</b> 个方块' : t.kind === 'entity' ? '<b>1</b> 个实体' : '<b>1</b> 项';
+    $('#sbSel').textContent = t.kind === 'anim' ? '动画' : (t.kind === 'block' || t.kind === 'composite') ? '方块' : t.kind === 'entity' ? '实体' : t.kind === 'ctex' ? '自定义纹理' : (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'plugins' || t.kind === 'plugin') ? '工具' : '纹理';
+    $('#sbCount').innerHTML = (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'plugins' || t.kind === 'plugin') ? '<b>1</b> 个工具' : (t.kind === 'block' || t.kind === 'composite') ? '<b>1</b> 个方块' : t.kind === 'entity' ? '<b>1</b> 个实体' : '<b>1</b> 项';
   }
   if(typeof renderQuickRail === 'function') renderQuickRail();
 }

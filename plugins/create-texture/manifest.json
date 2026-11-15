@@ -1,0 +1,26 @@
+{
+  "id": "create-texture",
+  "name": "机械动力方块扩展",
+  "version": "0.2.0",
+  "apiVersion": 1,
+  "description": "扫描机械动力模组 jar / 资源包，按方块族整理纹理、状态和连接图集，导入 ClastarStudio 仓库。",
+  "author": "ClastarStudio",
+  "official": true,
+  "icon": "box",
+  "permissions": [
+    "library.read",
+    "library.write",
+    "zip.read",
+    "download"
+  ],
+  "tools": [
+    {
+      "id": "create-blocks",
+      "name": "机械动力",
+      "title": "机械动力方块",
+      "icon": "box",
+      "description": "扫描 Create 方块族、预览 CT 图集并导入仓库"
+    }
+  ],
+  "entry": "plugin.html"
+}

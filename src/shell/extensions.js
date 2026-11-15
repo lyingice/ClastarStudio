@@ -27,6 +27,12 @@ const PWExtensions = (() => {
       open:() => openVariantLab()
     },
     {
+      id:'asset-library', name:'素材库', kind:'tool', icon:'grid', version:'1.0.0',
+      desc:'存放原版 / 模组纹理，作为参考图或复制到工作区',
+      official:true,
+      open:() => PWAssets.open()
+    },
+    {
       id:'addon-light', name:'一键光源', kind:'editor', icon:'eye', version:'1.0.0',
       desc:'动画编辑器内的一键光源面板',
       official:true,
@@ -75,10 +81,19 @@ const PWExtensions = (() => {
     const box = document.getElementById('toolList');
     if(box){
       const list = enabledTools();
-      box.innerHTML = list.length ? list.map(d => `
+      let html = list.map(d => `
         <button class="nav sm" data-ext-tool="${esc(d.id)}" data-tip="${esc(d.desc || '')}">
           <span class="ico">${iconOf(d)}</span>${esc(d.name)}
-        </button>`).join('') : '<div class="rail-empty">工具都已关闭<br>在设置 → 工具与扩展里开启</div>';
+        </button>`).join('');
+      const pluginTools = (typeof PWPlugins !== 'undefined' && PWPlugins.tools) ? PWPlugins.tools() : [];
+      if(pluginTools.length){
+        html += pluginTools.map(t => `
+          <button class="nav sm plugin-tool-nav" data-plugin-tool="${esc(t.pluginId + '::' + t.id)}" data-tip="${esc(t.desc || '可选扩展')}">
+            <span class="ico">${iconSVG(t.icon || 'box', 15)}</span>${esc(t.name)}
+            <em class="plugin-tool-mark">扩展</em>
+          </button>`).join('');
+      }
+      box.innerHTML = html || '<div class="rail-empty">还没有启用的工具<br>在设置里开启扩展</div>';
     }
     document.querySelectorAll('[data-ext-tool]').forEach(b => {
       b.hidden = !isEnabled(b.dataset.extTool);
@@ -101,7 +116,7 @@ const PWExtensions = (() => {
   }
 
   function closeToolTab(id){
-    const map = { 'color-studio':'color', 'recolor':'recolor', 'variant-lab':'variant' };
+    const map = { 'color-studio':'color', 'recolor':'recolor', 'variant-lab':'variant', 'asset-library':'assets' };
     const kind = map[id];
     if(!kind) return;
     const t = activeTab();
@@ -164,7 +179,7 @@ const PWExtensions = (() => {
         </div>
         ${group('工具页', tools())}
         ${group('编辑器拓展', editorAddons())}
-        <div class="ext-future"><b>外部 JS 插件</b><span>导入器与权限模型将在后续版本开放；当前只加载官方内置扩展，注册接口已预留。</span></div>
+        <div class="ext-future"><b>可选插件</b><span>官方可选插件（如机械动力方块扩展）请在设置 →「扩展中心」安装；这里管理内置工具与编辑器拓展。</span></div>
         <div class="ext-note">关闭后入口会从工具栏和快捷栏隐藏；编辑器内的拓展面板也会同步隐藏。</div>
       </div>`;
   }

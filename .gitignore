@@ -15,3 +15,11 @@ Thumbs.db
 /dist/
 /release/
 *.log
+
+# 设计 / 规划文档：只保留在本地，不推送
+/docs/*TODO*.md
+/docs/*PLAN*.md
+/docs/design/
+/docs/notes/
+/plugins/README.md
+*.local.md

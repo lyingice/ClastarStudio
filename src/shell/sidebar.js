@@ -233,7 +233,7 @@ function renderQuickRail(){
     recentBox.innerHTML = rows.length ? rows.join('') : '<div class="quick-recent-empty">还没有打开过内容。</div>';
   }
   const count = document.querySelector('#wsCount');
-  if(count) count.textContent = WS.length ? String(WS.length) : '';
+  if(count) count.textContent = projectWorkspaces().length ? String(projectWorkspaces().length) : '';
   document.querySelectorAll('#wsList [data-ws]').forEach(btn => {
     const ws = WS.find(w => w.id === btn.dataset.ws);
     const node = btn.querySelector('.ws-count');
