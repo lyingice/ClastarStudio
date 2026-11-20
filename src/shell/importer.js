@@ -314,11 +314,24 @@ const PWImport = (() => {
         cat.cards.forEach(c => visit(c, null));
       });
     });
+    if(typeof PWAssets !== 'undefined' && PWAssets.localAssets){
+      PWAssets.localAssets().forEach(x => {
+        const card = x.card;
+        const url = (card.ref && card.ref.localURL) || card.full || card.thumb;
+        if(!url) return;
+        out.push({
+          url, kind:'texture', slot:null, label:'本地原版', card,
+          ws:{ name:'原版素材' }, cat:{ name:'原版' }, folder:null,
+          name:card.name
+        });
+      });
+    }
     return out;
   }
 
-  function openLibraryPicker(opts){
+  async function openLibraryPicker(opts){
     opts = opts || {};
+    if(typeof PWAssets !== 'undefined' && PWAssets.ensureLocal) await PWAssets.ensureLocal();
     const all = collectAssets();
     const old = document.getElementById('libPicker');
     if(old) old.remove();

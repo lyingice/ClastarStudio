@@ -13,7 +13,7 @@ const PWPlugins = (() => {
       id:'create-texture',
       name:'机械动力方块扩展',
       icon:'box',
-      description:'扫描 Create 模组 jar / 资源包，按方块族整理纹理、状态和连接图集，导入仓库。',
+      description:'扫描 Create 模组 jar / 资源包，按方块族组织多分支模型与纹理，支持 3D / 动态预览、OBJ / MTL 只读预览、物品模型和分支纹理拆分。',
       source:'plugin.json'
     }
   ];
@@ -409,6 +409,20 @@ const PWPlugins = (() => {
     }
     return out;
   }
+  async function netFetch(params){
+    const raw = String(params.url || '').trim();
+    if(!raw) throw new Error('缺少 URL');
+    let url;
+    try{ url = new URL(raw, location.href).href; }
+    catch(_){ throw new Error('URL 格式不正确'); }
+    if(!/^https?:/i.test(url)) throw new Error('只允许 http / https 地址');
+    const max = Math.min(128 * 1024 * 1024, Math.max(1, +params.maxBytes || 64 * 1024 * 1024));
+    const res = await fetch(url, { cache:'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const buf = await res.arrayBuffer();
+    if(buf.byteLength > max) throw new Error('文件超过大小限制');
+    return { buffer:buf, size:buf.byteLength, url };
+  }
   function storageKey(id){ return 'pixelWorkshop_plugin_' + id; }
   function storageGet(t){
     try{ return JSON.parse(localStorage.getItem(storageKey(t.payload.pluginId)) || 'null'); }
@@ -431,6 +445,7 @@ const PWPlugins = (() => {
     if(method === 'zip.read'){ need(p, 'zip.read'); return zipRead(params); }
     if(method === 'zip.textBatch'){ need(p, 'zip.read'); return zipTextBatch(params); }
     if(method === 'zip.dataURLs'){ need(p, 'zip.read'); return zipDataURLs(params); }
+    if(method === 'net.fetch'){ need(p, 'network'); return netFetch(params); }
     if(method === 'download'){
       need(p, 'download');
       const bytes = PWArchive.dataURLBytes('data:' + (params.mime || 'application/octet-stream') + ';base64,' + (params.base64 || ''));

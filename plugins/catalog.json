@@ -5,7 +5,7 @@
       "id": "create-texture",
       "name": "机械动力方块扩展",
       "icon": "box",
-      "description": "扫描 Create 模组 jar / 资源包，按方块族整理纹理、状态和连接图集，导入仓库。",
+      "description": "扫描 Create 模组 jar / 资源包，按方块族组织多分支模型与纹理，支持 3D / 动态预览、物品模型和分支纹理拆分。",
       "source": "plugin.json"
     }
   ]

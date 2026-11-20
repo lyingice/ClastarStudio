@@ -2,6 +2,38 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/)。
 
+## [0.16.0] - 2026-11-20
+
+### 本地素材内容包
+
+- 新增 `local/inbox/`：把 Create 模组 jar、原版 Minecraft 客户端 jar 或资源包 ZIP 放进去，双击 `准备本地素材.bat` 一键生成。
+- 自动生成 `local/create-pack.zip` 与 `local/vanilla/`；Create 扩展和素材库会自动读取。
+- 素材库自动加载原版 1.21.1 纹理：方块、物品、实体、界面、粒子、画、盔甲纹饰等，支持搜索、分类、参考图和复制到工作区。
+- 本地素材只引用本地文件，不写入 localStorage；`local/` 被 `.gitignore` 忽略，不上传 GitHub、Pages 或发行包。
+
+### 机械动力扩展
+
+- 本地内容包安装即用：扩展启动时自动读取 `local/create-pack.zip`，不再需要手动选择 jar。
+- 按 blockstate / multipart / item model 拆分独立分支，详情页用分支按钮切换。
+- 每个分支独立显示 3D 预览和纹理槽，支持共享纹理标记。
+- 新增 OBJ / MTL 只读几何预览：解析 OBJ、MTL、`map_Kd` 与模型 parent textures，三角形纹理映射。
+- 3D 预览支持拖动旋转、Ctrl+滚轮缩放、重置视角、放大和右下角拉伸；按投影边界自动适配，避免模型被裁切。
+- 点击方块族行即选中；新增「全选可见」「导入当前族」。
+- 纹理可在大图中替换，当前会话和后续导入使用替换后的纹理。
+- 材质变种包标记为实验性，默认关闭所有色阶，不再默认勾选。
+
+### 启动与教程
+
+- 新增 `启动像素工坊.bat`：启动本地服务并打开无边框 kiosk 窗口。
+- 新增 `准备本地素材.bat`、`tools/prepare_local_assets.py`、`tools/build_create_pack.py`、`tools/build_vanilla_pack.py`。
+- 新增 `tools/create_shortcut.ps1` 和 `clastar.ico`，可生成带图标的桌面快捷方式。
+- 素材库与模型库增加「本地素材说明 / 本地内容包说明」；Create 扩展内增加本地内容包教程。
+
+### 兼容
+
+- PWA 缓存升级到 `pixel-workshop-v0.16.0`。
+- GitHub 发行包只包含代码、插件和脚本，不包含 `local/` 下的 Create / Minecraft 资产。
+
 ## [0.15.0] - 2026-11-15
 
 ### 彩色渐变叠加

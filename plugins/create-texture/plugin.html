@@ -53,6 +53,9 @@
   .chip{height:22px;padding:0 6px;background:#373737;border:1px solid #151515;color:#bbb;font-size:9px}
   .chip.on{background:var(--accent);border-color:var(--accentd);color:#fff}
   .family-list{flex:1;min-height:80px;overflow:auto;display:flex;flex-direction:column;gap:3px}
+  .list-tools{display:flex;align-items:center;gap:5px;margin:4px 0 5px;font-size:9px;color:#8f8f8f}
+  .list-tools .chip{height:22px;padding:0 6px;font-size:9px}
+  .list-tools span{margin-left:auto;color:#aaa}
   .family{display:flex;align-items:flex-start;gap:6px;padding:5px;background:#333;border:1px solid #161616;cursor:pointer;min-width:0}
   .family:hover{background:#3c3c3c}
   .family.on{background:#3e4938;border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
@@ -65,13 +68,33 @@
   .badge.ct{border-color:#45617a;color:#9dc7e4}
   .badge.anim{border-color:#6b4c2b;color:#e2b47d}
   .badge.multi{border-color:#4b5f3c;color:#b5d49e}
+  .badge.item{border-color:#4a5f7a;color:#b6d6f0}
   .detail{flex:1;min-height:0;overflow:auto;padding:10px}
   .empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:#888;text-align:center;padding:20px}
   .empty b{color:#ccc;font-size:13px}
   .empty span{font-size:10px;line-height:1.7}
-  .detail-head{display:flex;align-items:flex-start;gap:9px;margin-bottom:9px}
+  .detail-head{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:9px}
+  .detail-head>div{min-width:0}
   .detail-head h2{margin:0;font-size:16px;letter-spacing:.3px;color:#fff}
   .detail-head p{margin:3px 0 0;font-size:10px;color:#929292}
+  .detail-head .btn{flex:0 0 auto}
+  .branch-tabs{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px}
+  .branch-tab{display:inline-flex;align-items:center;gap:4px;height:27px;padding:0 8px;background:#333;border:1px solid #161616;color:#bbb;font:9.5px inherit;cursor:pointer}
+  .branch-tab:hover{background:#3d3d3d;color:#fff}
+  .branch-tab.on{background:#3e4938;border-color:var(--accent);color:#fff;box-shadow:inset 0 -2px 0 var(--accent)}
+  .branch-tab i{font-style:normal;font-size:7.5px;color:#9dc7e4;border:1px solid #3e5368;background:#202b36;padding:0 2px}
+  .tex-section{font-size:9px;color:#8f8f8f;letter-spacing:.4px;margin:5px 0 4px}
+  .preview-wrap{height:260px;min-height:180px;max-height:65vh;resize:vertical;display:grid;place-items:center;background-color:#191919;border:1px solid #111;overflow:hidden;margin-bottom:8px;background-image:linear-gradient(45deg,#242424 25%,transparent 25%,transparent 75%,#242424 75%),linear-gradient(45deg,#242424 25%,transparent 25%,transparent 75%,#242424 75%);background-size:16px 16px;background-position:0 0,8px 8px}
+  .preview-wrap.expanded{height:62vh;max-height:72vh}
+  .preview-wrap canvas{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+  .preview-wrap canvas.dragging{cursor:grabbing}
+  .preview-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 9px;font-size:9px;color:#999}
+  .preview-row select{height:24px;max-width:240px;background:#202020;border:1px solid #111;color:#ddd;font:9px inherit;padding:0 4px;outline:none}
+  .preview-row select:focus{border-color:var(--accent)}
+  .preview-row input[type=range]{width:112px;min-width:70px}
+  .preview-row b{font-size:9px;color:#ccc;font-weight:500;width:28px;text-align:right}
+  #previewAngleBox{display:inline-flex;align-items:center;gap:4px}
+  .preview-empty{padding:18px 10px;text-align:center;color:#888;font-size:9.5px;line-height:1.7;border:1px dashed #3b3b3b;margin-bottom:9px}
   .detail-stats{display:flex;gap:5px;flex-wrap:wrap;margin:7px 0 9px}
   .stat{background:#242424;border:1px solid #111;padding:4px 7px;font-size:9.5px;color:#bbb}
   .stat b{color:#f0f0f0;font-size:11px;margin-right:3px}
@@ -81,7 +104,7 @@
   .tex{background:#232323;border:2px solid #111;padding:5px;min-width:0;cursor:pointer}
   .tex:hover{border-color:var(--accent)}
   .tex-thumb{height:86px;display:grid;place-items:center;background-color:#1b1b1b;background-image:linear-gradient(45deg,#2a2a2a 25%,transparent 25%,transparent 75%,#2a2a2a 75%),linear-gradient(45deg,#2a2a2a 25%,transparent 25%,transparent 75%,#2a2a2a 75%);background-size:12px 12px;background-position:0 0,6px 6px;overflow:hidden}
-  .tex-thumb img{max-width:100%;max-height:100%;image-rendering:pixelated;display:block}
+  .tex-thumb img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block}
   .tex-name{font-size:9px;color:#ccc;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tex-meta{font-size:8px;color:#7f7f7f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ct-preview{width:100%;display:block;image-rendering:pixelated;border:1px solid #111;background:#191919}
@@ -101,8 +124,14 @@
   .modal-box p{font-size:10px;color:#999;line-height:1.7;margin:0 0 8px}
   .modal-box canvas{width:100%;max-height:70vh;object-fit:contain;image-rendering:pixelated;background:#191919}
   .modal-box .x{float:right;background:#333;border:1px solid #111;height:24px;width:24px}
+  .modal-actions{display:flex;gap:5px;justify-content:flex-end;margin-top:8px}
   .hq{display:inline-grid;place-items:center;width:15px;height:15px;border:1px solid #666;background:#333;color:#ccc;font-size:9px;cursor:help;margin-left:3px}
 
+  .local-help{margin-top:7px;border:1px dashed #454545;background:#242424;padding:6px;font-size:9px;color:#8f8f8f;line-height:1.65}
+  .local-help summary{cursor:pointer;color:#c9d9b8}
+  .local-help div{margin-top:4px}
+  .local-help code{background:#1b1b1b;border:1px solid #111;padding:0 3px;color:#bbb}
+  .ramp-note{color:#d8a657;margin:0 0 6px}
   .ramp-list{display:grid;grid-template-columns:1fr 1fr;gap:3px;max-height:192px;overflow:auto;margin-bottom:6px}
   .ramp{display:flex;align-items:center;gap:4px;background:#333;border:1px solid #161616;padding:3px 4px;cursor:pointer;min-width:0}
   .ramp:hover{background:#3c3c3c}
@@ -133,6 +162,7 @@
     .col{overflow:visible}
     .family-list{max-height:230px}
     .detail{max-height:none;overflow:visible}
+  .preview-wrap{height:190px;min-height:150px;resize:none}
     .col.right{display:flex}
     .tb{height:auto;padding:6px 8px;flex-wrap:wrap}
     .tb .right{width:100%;justify-content:flex-start}
@@ -163,11 +193,17 @@
         </label>
         <div class="file-name" id="fileName">支持 Create 6.x 的 assets/create 资源结构</div>
         <div class="progress" id="progress"></div>
+        <details class="local-help">
+          <summary>本地内容包怎么放？</summary>
+          <div>把 Create 模组 jar 放进 <code>local/inbox/</code>，双击项目根目录的 <code>准备本地素材.bat</code>。<br>
+          扩展会自动读取生成的 <code>local/create-pack.zip</code>；GitHub 版只包含插件，不附带 Create 资产。</div>
+        </details>
       </div>
       <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
         <h2>2 · 方块族 <span id="familyCount">0</span></h2>
         <input class="search" id="search" placeholder="搜索方块 ID / 分类…" autocomplete="off">
         <div class="chips" id="chips"></div>
+        <div class="list-tools"><button class="chip" id="selectVisible">全选可见</button><span id="selCount">已选 0</span></div>
         <div class="family-list" id="familyList"><div class="hint" style="padding:10px">先载入 Create 资源包。</div></div>
       </div>
     </section>
@@ -197,6 +233,7 @@
       </div>
       <div class="card">
         <h2>4 · 材质变种包</h2>
+        <p class="hint ramp-note">实验性：默认关闭。机械动力变种暂不成熟，需要时再手动勾选色阶。</p>
         <div class="ramp-list" id="rampList"></div>
         <div class="ramp-editor" id="rampEditor"></div>
         <label class="field">目标版本<select id="packFormat">
@@ -215,7 +252,7 @@
         <p class="hint">
           支持：多纹理槽、blockstate 状态族、32/64/128 的 CT 连接图集、动画和滚动纹理标记。<br><br>
           CT 图集按 16px 小格识别；导入后保留原始 <code>packPath</code> 和方块族元数据。<br><br>
-          这不是完整 3D 机器渲染器；复杂 CTModel / OBJ / 方块实体只做图集预览。
+          支持 cuboid 3D 预览、OBJ / MTL 只读几何预览与静态 / 动态元素拆分；复杂 CTModel / 方块实体仍只做图集预览。
         </p>
       </div>
     </section>
@@ -223,8 +260,302 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="modal" id="modal"><div class="modal-box"><button class="x" id="modalX">×</button><h3 id="modalTitle">预览</h3><p id="modalSub"></p><canvas id="modalCv"></canvas></div></div>
+<div class="modal" id="modal"><div class="modal-box"><button class="x" id="modalX">×</button><h3 id="modalTitle">预览</h3><p id="modalSub"></p><canvas id="modalCv"></canvas><div class="modal-actions"><button class="btn pri" id="modalReplace">替换纹理</button></div></div></div>
+<input type="file" id="texReplaceInput" accept="image/png,image/jpeg,image/webp" hidden>
 
+<script>
+/* ============================================================
+   模型集预览
+   ------------------------------------------------------------
+   轻量 Canvas 2D 等距渲染，只读 .bbmodel 的 cuboid / group / 纹理。
+   不是完整 Blockbench：不支持 mesh、UV 旋转、动画时间轴。
+   ============================================================ */
+const PWModelView = (() => {
+  const FACE_ORDER = ['north','south','east','west','up','down'];
+  const BOX_FACES = {
+    north:[[0,1,0],[1,1,0],[1,0,0],[0,0,0]],
+    south:[[1,1,1],[0,1,1],[0,0,1],[1,0,1]],
+    west: [[0,1,1],[0,1,0],[0,0,0],[0,0,1]],
+    east: [[1,1,0],[1,1,1],[1,0,1],[1,0,0]],
+    up:   [[0,1,0],[0,1,1],[1,1,1],[1,1,0]],
+    down: [[0,0,0],[1,0,0],[1,0,1],[0,0,1]]
+  };
+  const ROLE_COLOR = { static:'#8c9b82', dynamic:'#c08352', item:'#5f8fae', overlay:'#8f6aa6' };
+  const texCache = new Map();
+
+  function safeImage(src){ return /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(String(src || '')); }
+  function euler(rot){
+    if(Array.isArray(rot)) return [+rot[0] || 0, +rot[1] || 0, +rot[2] || 0];
+    if(rot && typeof rot === 'object') return [+rot.x || 0, +rot.y || 0, +rot.z || 0];
+    return [0,0,0];
+  }
+  function rotateAxis(p, axis, deg, pivot){
+    if(!deg || axis === 'none') return p;
+    const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+    let x = p[0] - pivot[0], y = p[1] - pivot[1], z = p[2] - pivot[2];
+    if(axis === 'x'){
+      const y2 = y*c - z*s, z2 = y*s + z*c; y = y2; z = z2;
+    }else if(axis === 'z'){
+      const x2 = x*c - y*s, y2 = x*s + y*c; x = x2; y = y2;
+    }else{
+      const x2 = x*c + z*s, z2 = -x*s + z*c; x = x2; z = z2;
+    }
+    return [x + pivot[0], y + pivot[1], z + pivot[2]];
+  }
+  function rotateEuler(p, rot, origin){
+    const [rx, ry, rz] = euler(rot);
+    if(!rx && !ry && !rz) return p;
+    const o = origin || [8,8,8];
+    let x = p[0] - o[0], y = p[1] - o[1], z = p[2] - o[2];
+    if(rx){
+      const a = rx * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+      const y2 = y*c - z*s, z2 = y*s + z*c; y = y2; z = z2;
+    }
+    if(ry){
+      const a = ry * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+      const x2 = x*c + z*s, z2 = -x*s + z*c; x = x2; z = z2;
+    }
+    if(rz){
+      const a = rz * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+      const x2 = x*c - y*s, y2 = x*s + y*c; x = x2; y = y2;
+    }
+    return [x + o[0], y + o[1], z + o[2]];
+  }
+  function cross(a, b){
+    return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+  }
+  function faceBright(pts){
+    const a = [pts[1][0]-pts[0][0], pts[1][1]-pts[0][1], pts[1][2]-pts[0][2]];
+    const b = [pts[3][0]-pts[0][0], pts[3][1]-pts[0][1], pts[3][2]-pts[0][2]];
+    const n = cross(a, b);
+    const len = Math.hypot(n[0], n[1], n[2]) || 1;
+    const ny = n[1]/len, nx = n[0]/len;
+    if(Math.abs(ny) > 0.5) return ny > 0 ? 1 : 0.55;
+    if(Math.abs(nx) > 0.5) return 0.68;
+    return 0.82;
+  }
+  function loadTexture(src){
+    if(!safeImage(src)) return null;
+    let rec = texCache.get(src);
+    if(!rec){
+      rec = { img:new Image(), ready:false, failed:false, hooks:[] };
+      rec.img.onload = () => { rec.ready = true; const hs = rec.hooks; rec.hooks = []; hs.forEach(fn => { try{ fn(); }catch(_){} }); };
+      rec.img.onerror = () => { rec.failed = true; const hs = rec.hooks; rec.hooks = []; hs.forEach(fn => { try{ fn(); }catch(_){} }); };
+      rec.img.src = src;
+      texCache.set(src, rec);
+    }
+    return rec;
+  }
+
+  function collectCubes(raw){
+    const elements = Array.isArray(raw.elements) ? raw.elements : [];
+    const out = [], seen = new Set();
+    function walk(items, groups){
+      (items || []).forEach(item => {
+        if(typeof item === 'number'){
+          const el = elements[item];
+          if(el){ out.push({ el, groups }); seen.add(item); }
+        }else if(item && Array.isArray(item.children)){
+          const g = { origin:item.origin || [8,8,8], rotation:item.rotation || [0,0,0] };
+          walk(item.children, groups.concat([g]));
+        }else if(item && item.from && item.to){
+          out.push({ el:item, groups });
+        }
+      });
+    }
+    walk(raw.outliner || [], []);
+    elements.forEach((el, i) => { if(!seen.has(i) && el && el.from && el.to) out.push({ el, groups:[] }); });
+    return out;
+  }
+
+  function resolveTexture(raw, face){
+    const list = Array.isArray(raw.textures) ? raw.textures : [];
+    let tex = null;
+    if(typeof face.texture === 'number') tex = list[face.texture] || null;
+    else if(typeof face.texture === 'string'){
+      const key = face.texture.startsWith('#') ? face.texture.slice(1) : face.texture;
+      tex = list.find(t => String(t.id) === key || t.name === key || t.uuid === key) || null;
+    }
+    return tex ? loadTexture(tex.source) : null;
+  }
+
+  function render(canvas, set, opts){
+    opts = opts || {};
+    const parts = (set.parts || []).filter(p => p && p.raw);
+    const angle = +opts.angle || 0;
+    const yaw = opts.yaw == null ? -35 : opts.yaw;
+    const pitch = opts.pitch == null ? 26 : opts.pitch;
+    const zoom = opts.zoom || 1;
+    const roleThis = opts.roles === false ? false : true;
+
+    const W = Math.max(1, +opts.width || canvas.clientWidth || 320);
+    const H = Math.max(1, +opts.height || canvas.clientHeight || 220);
+    const DPR = Math.min(2, +opts.dpr || window.devicePixelRatio || 1);
+    if(canvas.width !== Math.round(W*DPR) || canvas.height !== Math.round(H*DPR)){
+      canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR);
+    }
+    const ctx = canvas.getContext('2d');
+    let dead = false;
+
+    const rawFaces = [];
+    parts.forEach(part => {
+      const raw = part.raw || {};
+      const uvW = +(raw.resolution && raw.resolution.width) || 16;
+      const uvH = +(raw.resolution && raw.resolution.height) || 16;
+      collectCubes(raw).forEach(({ el, groups }) => {
+        const from = el.from || [0,0,0], to = el.to || [16,16,16];
+        const inf = +el.inflate || 0;
+        const a = [from[0]-inf, from[1]-inf, from[2]-inf];
+        const b = [to[0]+inf, to[1]+inf, to[2]+inf];
+        FACE_ORDER.forEach(dir => {
+          const f = el.faces && el.faces[dir];
+          if(!f) return;
+          const pts = BOX_FACES[dir].map(([rx,ry,rz]) => {
+            let p = [a[0]+(b[0]-a[0])*rx, a[1]+(b[1]-a[1])*ry, a[2]+(b[2]-a[2])*rz];
+            p = rotateEuler(p, el.rotation, el.origin || [8,8,8]);
+            for(let i = groups.length-1; i >= 0; i--) p = rotateEuler(p, groups[i].rotation, groups[i].origin);
+            if(part.role === 'dynamic' && angle && (part.axis || 'y') !== 'none'){
+              p = rotateAxis(p, part.axis || 'y', angle, part.pivot || [8,8,8]);
+            }
+            return p;
+          });
+          let uv = Array.isArray(f.uv) && f.uv.length >= 4 ? f.uv : [0,0,uvW,uvH];
+          rawFaces.push({ pts, uv, uvW, uvH, tex:resolveTexture(raw, f), role:part.role || 'static' });
+        });
+      });
+    });
+    if(!rawFaces.length){
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle = '#7f8a78';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('模型没有可预览的立方体', W/2, H/2);
+      return { redraw(){}, destroy(){ dead = true; } };
+    }
+
+    const min = [Infinity,Infinity,Infinity], max = [-Infinity,-Infinity,-Infinity];
+    rawFaces.forEach(f => f.pts.forEach(p => {
+      for(let i=0;i<3;i++){ if(p[i] < min[i]) min[i] = p[i]; if(p[i] > max[i]) max[i] = p[i]; }
+    }));
+    const center = [(min[0]+max[0])/2, (min[1]+max[1])/2, (min[2]+max[2])/2];
+    const cy = Math.cos(yaw*Math.PI/180), sy = Math.sin(yaw*Math.PI/180);
+    const cp = Math.cos(pitch*Math.PI/180), sp = Math.sin(pitch*Math.PI/180);
+    function viewPoint(p){
+      const x = p[0]-center[0], y = p[1]-center[1], z = p[2]-center[2];
+      const X = x*cy + z*sy, Z = -x*sy + z*cy;
+      return [X, y*cp - Z*sp, y*sp + Z*cp];
+    }
+    let vMinX = Infinity, vMaxX = -Infinity, vMinY = Infinity, vMaxY = -Infinity;
+    rawFaces.forEach(f => f.pts.forEach(p => {
+      const v = viewPoint(p);
+      if(v[0] < vMinX) vMinX = v[0]; if(v[0] > vMaxX) vMaxX = v[0];
+      if(v[1] < vMinY) vMinY = v[1]; if(v[1] > vMaxY) vMaxY = v[1];
+    }));
+    const spanX = Math.max(0.001, vMaxX - vMinX), spanY = Math.max(0.001, vMaxY - vMinY);
+    const pad = 18;
+    const scale = Math.min((W-pad*2)/spanX, (H-pad*2)/spanY) * zoom;
+    function proj(v){ return [W/2 + v[0]*scale, H/2 - v[1]*scale, v[2]]; }
+
+    function drawQuad(poly, img, uv, uvW, uvH){
+      const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+      if(!iw || !ih) return false;
+      const u1 = Math.min(uv[0],uv[2])/uvW, u2 = Math.max(uv[0],uv[2])/uvW;
+      const v1 = Math.min(uv[1],uv[3])/uvH, v2 = Math.max(uv[1],uv[3])/uvH;
+      const sx = u1*iw, sy = v1*ih, sw = (u2-u1)*iw, sh = (v2-v1)*ih;
+      if(sw < 0.4 || sh < 0.4) return false;
+      const s0 = [sx,sy], s1 = [sx+sw,sy], s2 = [sx,sy+sh];
+      const d0 = poly[0], d1 = poly[1], d2 = poly[3];
+      const den = (s1[0]-s0[0])*(s2[1]-s0[1]) - (s2[0]-s0[0])*(s1[1]-s0[1]);
+      if(Math.abs(den) < 1e-6) return false;
+      const a = ((d1[0]-d0[0])*(s2[1]-s0[1]) - (d2[0]-d0[0])*(s1[1]-s0[1]))/den;
+      const b = ((d1[1]-d0[1])*(s2[1]-s0[1]) - (d2[1]-d0[1])*(s1[1]-s0[1]))/den;
+      const c = ((d2[0]-d0[0])*(s1[0]-s0[0]) - (d1[0]-d0[0])*(s2[0]-s0[0]))/den;
+      const d = ((d2[1]-d0[1])*(s1[0]-s0[0]) - (d1[1]-d0[1])*(s2[0]-s0[0]))/den;
+      ctx.save();
+      pathPoly(poly);
+      ctx.clip();
+      ctx.transform(a,b,c,d,d0[0]-a*s0[0]-c*s0[1], d0[1]-b*s0[0]-d*s0[1]);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img,0,0);
+      ctx.restore();
+      return true;
+    }
+    function pathPoly(poly){
+      ctx.beginPath();
+      ctx.moveTo(poly[0][0], poly[0][1]);
+      for(let i=1;i<4;i++) ctx.lineTo(poly[i][0], poly[i][1]);
+      ctx.closePath();
+    }
+    function shade(poly, bright, color){
+      if(bright < 0.999){
+        ctx.save(); pathPoly(poly); ctx.fillStyle = 'rgba(0,0,0,' + ((1-bright)*0.52).toFixed(3) + ')'; ctx.fill(); ctx.restore();
+      }
+      if(color){
+        ctx.save(); pathPoly(poly); ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+      }
+    }
+
+    function draw(){
+      if(dead) return;
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      ctx.clearRect(0,0,W,H);
+      const drawable = [];
+      rawFaces.forEach(f => {
+        const n = cross(
+          [f.pts[1][0]-f.pts[0][0], f.pts[1][1]-f.pts[0][1], f.pts[1][2]-f.pts[0][2]],
+          [f.pts[3][0]-f.pts[0][0], f.pts[3][1]-f.pts[0][1], f.pts[3][2]-f.pts[0][2]]
+        );
+        const X = n[0]*cy + n[2]*sy, Z = -n[0]*sy + n[2]*cy;
+        const Z2 = n[1]*sp + Z*cp;
+        if(Z2 > -1e-4) return;
+        const pp = f.pts.map(p => proj(viewPoint(p)));
+        const z = (pp[0][2]+pp[1][2]+pp[2][2]+pp[3][2])/4;
+        drawable.push({ poly:pp, uv:f.uv, uvW:f.uvW, uvH:f.uvH, tex:f.tex, role:f.role, bright:faceBright(f.pts), z });
+      });
+      drawable.sort((a,b) => b.z - a.z);
+      drawable.forEach(f => {
+        const img = f.tex && f.tex.ready ? f.tex.img : null;
+        let textured = false;
+        if(img) textured = drawQuad(f.poly, img, f.uv, f.uvW, f.uvH);
+        if(!textured){
+          ctx.save(); pathPoly(f.poly); ctx.fillStyle = ROLE_COLOR[f.role] || ROLE_COLOR.static; ctx.fill(); ctx.restore();
+        }
+        shade(f.poly, f.bright, !textured);
+        if(f.tex && !f.tex.ready && !f.tex.failed){
+          if(!f.tex.hooks.includes(schedule)) f.tex.hooks.push(schedule);
+        }
+      });
+    }
+    let pending = false;
+    function schedule(){
+      if(dead || pending) return;
+      pending = true;
+      requestAnimationFrame(() => { pending = false; draw(); });
+    }
+    draw();
+    return { redraw:draw, destroy(){ dead = true; } };
+  }
+
+  function thumbnail(set, size){
+    const c = document.createElement('canvas');
+    const dpr = 1;
+    return new Promise(resolve => {
+      let done = false, view = null;
+      const finish = () => {
+        if(done) return;
+        done = true;
+        try{ resolve(c.toDataURL('image/png')); }catch(_){ resolve(null); }
+        if(view) view.destroy();
+      };
+      view = render(c, set, { width:size, height:size, dpr, yaw:-35, pitch:26, angle:0 });
+      setTimeout(finish, 900);
+    });
+  }
+
+  return { render, thumbnail };
+})();
+</script>
 <script>
 (() => {
   const PLUGIN_ID = 'create-texture';
@@ -244,8 +575,8 @@
     {id:'wood', name:'木头', colors:['#24160c','#5c3a1d','#9b6736','#dfb47a']},
     {id:'obsidian', name:'黑曜石', colors:['#09080f','#211b31','#443866','#9183bb']}
   ];
-  const rampOn = new Set(['iron','copper','gold','amethyst']);
-  let activeRamp = 'iron';
+  const rampOn = new Set();
+  let activeRamp = '';
   let variantToken = 0;
   const pending = new Map();
   let seq = 0, hostReady = false, resolveReady;
@@ -258,6 +589,26 @@
   let query = '';
   let storedMode = false;
   let modelMap = new Map();
+  let previewKey = '';
+  let currentBranchId = '';
+  let previewAngle = 0;
+  let previewView3d = null;
+  let previewToken = 0;
+  let previewCam = { yaw:-35, pitch:26, zoom:1 };
+  let previewDrag = null;
+  let previewRaf = null;
+  let previewResizeObs = null;
+  let missingTexCache = null;
+  let modalTex = null;
+  let localPackTried = false;
+  const DYNAMIC_WORDS = /gear|cog|wheel|axis|shaft|rotor|fan|blade|saw|drill|piston|extension|crank|spring|clutch|roller|pulley|spinner|belt|chain|moving/i;
+  const STATIC_WORDS = /case|housing|casing|frame|base|side|top|bottom|core|inner|outer|bracket|window|wall|pole|edge|mount|plate/i;
+  function isDynamicElementName(name){
+    const v = String(name || '').toLowerCase();
+    if(!v) return false;
+    if(STATIC_WORDS.test(v)) return false;
+    return DYNAMIC_WORDS.test(v);
+  }
 
   function toast(msg){
     const t = $('#toast'); t.textContent = msg; t.classList.add('on');
@@ -282,7 +633,11 @@
       hostReady = true;
       resolveReady();
       setHostState('已连接 · ' + (d.plugin ? d.plugin.name : '宿主'));
-      if(d.payload && d.payload.cardId) setTimeout(() => loadCard(d.payload.cardId), 0);
+      if(d.payload && d.payload.cardId){
+        setTimeout(() => loadCard(d.payload.cardId), 0);
+      }else{
+        setTimeout(autoLoadLocalPack, 120);
+      }
       return;
     }
     if(d.type === 'api-result'){
@@ -305,6 +660,20 @@
     const buf = await file.arrayBuffer();
     await readBuffer(buf, file.name, file.size);
   }
+  async function autoLoadLocalPack(){
+    if(localPackTried || archive) return;
+    localPackTried = true;
+    try{
+      setProgress('检查本地机械动力内容包…');
+      const res = await call('net.fetch', { url:'local/create-pack.zip', maxBytes:80 * 1024 * 1024 });
+      if(!res || !res.buffer || !res.buffer.byteLength) return;
+      if(archive) return;
+      setProgress('发现本地内容包，正在读取…');
+      await readBuffer(res.buffer, '本地机械动力内容包', res.size);
+    }catch(_){
+      setProgress('没有本地内容包；也可以手动选择 Create jar / 资源包');
+    }
+  }
   async function readBuffer(buf, name, size){
     storedMode = false;
     setProgress('读取 ZIP…');
@@ -323,7 +692,7 @@
   }
   async function scanArchive(){
     const entries = archive.entries;
-    const jsonEntries = entries.filter(e => /^assets\/create\/(blockstates|models\/block)\/.*\.json$/i.test(e.name));
+    const jsonEntries = entries.filter(e => /^assets\/create\/(blockstates|models\/(block|item|partial))\/.*\.json$/i.test(e.name));
     if(!jsonEntries.length) throw new Error('没有找到 assets/create 的 blockstate / model');
     const names = jsonEntries.map(e => e.name);
     const texts = await call('zip.textBatch', { archiveId:archive.id, names });
@@ -332,7 +701,7 @@
     for(const [name, text] of Object.entries(texts)){
       try{
         const json = JSON.parse(text);
-        if(name.includes('/models/block/')){
+        if(name.includes('/models/')){
           const key = name.replace(/^assets\/create\/models\//, '').replace(/\.json$/i, '');
           modelMap.set(key, json);
         }else if(name.includes('/blockstates/')){
@@ -341,7 +710,7 @@
         }
       }catch(_){}
     }
-    const textureEntries = entries.filter(e => /^assets\/create\/textures\/block\/.*\.png$/i.test(e.name));
+    const textureEntries = entries.filter(e => /^assets\/create\/textures\/(block|item)\/.*\.png$/i.test(e.name));
     const textureIndex = new Map(textureEntries.map(e => [e.name, e]));
     const out = [];
     for(const [id, bs] of blockstates){
@@ -361,9 +730,13 @@
         });
         walk(bs.multipart);
       }
+      const itemKey = ['item/' + id, 'item/' + id + '_inventory'].find(k => modelMap.has(k))
+        || [...modelMap.keys()].find(k => k.startsWith('item/') && k.split('/').pop() === id)
+        || '';
       const slotNames = new Set();
       const texPaths = new Set();
       modelKeys.forEach(k => resolveModelTextures(k, slotNames, texPaths));
+      if(itemKey) resolveModelTextures(itemKey, slotNames, texPaths);
       // 模型里没有直接引用、但同族命名约定使用的 CT / 变体纹理
       const blockBase = id.toLowerCase();
       for(const e of textureEntries){
@@ -389,11 +762,13 @@
         const rank = x => x.kind === 'texture' ? 0 : x.kind === 'ct' ? 1 : x.kind === 'scroll' ? 2 : 3;
         return rank(a) - rank(b) || a.name.localeCompare(b.name);
       });
+      const branches = buildBranches(modelKeys, itemKey);
       out.push({
         id, blockId:id, category:guessCategory(id),
         stateKeys:[...new Set(stateKeys)], stateCount:stateKeys.length,
-        modelKeys:[...modelKeys], textures,
-        modelCount:modelKeys.size,
+        modelKeys:[...modelKeys], itemKey, branches, textures,
+        modelCount:modelKeys.size, branchCount:branches.length,
+        hasItem:branches.some(b => b.kind === 'item' || b.item),
         hasCT:textures.some(t => t.connected),
         hasAnim:textures.some(t => t.animated),
         hasScroll:textures.some(t => t.scroll)
@@ -453,11 +828,18 @@
       out.add(path);
     }
   }
+  function objAssetPath(v){
+    if(typeof v !== 'string' || !v) return '';
+    let p = v.replace(/^create:/, '').replace(/\\/g, '/');
+    if(p.startsWith('assets/')) return p;
+    if(p.startsWith('models/')) return 'assets/create/' + p;
+    return 'assets/create/models/' + p.replace(/^\/+/, '');
+  }
   function texturePath(v){
-    if(typeof v !== 'string') return null;
+    if(typeof v !== 'string' || v.startsWith('minecraft:')) return null;
     let p = v.replace(/^create:/, '');
-    if(p.startsWith('block/')) p = p.slice(6);
     if(p.startsWith('textures/')) p = p.replace(/^textures\//, '');
+    if(p.startsWith('block/') || p.startsWith('item/')) return 'assets/create/textures/' + p + '.png';
     if(!p) return null;
     return 'assets/create/textures/block/' + p + '.png';
   }
@@ -484,6 +866,8 @@
   }
   function renderList(){
     const list = visibleFamilies();
+    const selCount = $('#selCount');
+    if(selCount) selCount.textContent = '已选 ' + selected.size;
     $('#familyCount').textContent = families.length;
     const box = $('#familyList');
     if(!list.length){ box.innerHTML = '<div class="hint" style="padding:10px">没有匹配的方块族。</div>'; return; }
@@ -491,11 +875,13 @@
       const badges = [
         f.hasCT ? '<i class="badge ct">CT</i>' : '',
         f.hasAnim ? '<i class="badge anim">动画</i>' : '',
+        f.hasItem ? '<i class="badge item">物品</i>' : '',
         f.textures.length > 3 ? '<i class="badge multi">多槽</i>' : ''
       ].join('');
+      const branchTxt = f.branches && f.branches.length ? `${f.branches.length} 分支 · ` : '';
       return `<div class="family${current && current.id === f.id ? ' on' : ''}" data-family="${f.id}">
         <input type="checkbox" data-select="${f.id}"${selected.has(f.id) ? ' checked' : ''}>
-        <div class="fi"><b>${f.id}</b><span>${CAT_LABEL[f.category] || f.category} · ${f.textures.length} 纹理 · ${f.stateCount} 状态</span><div class="badges">${badges}</div></div>
+        <div class="fi"><b>${f.id}</b><span>${CAT_LABEL[f.category] || f.category} · ${branchTxt}${f.textures.length} 纹理 · ${f.stateCount} 状态</span><div class="badges">${badges}</div></div>
       </div>`;
     }).join('');
   }
@@ -503,6 +889,11 @@
   async function selectFamily(f){
     current = f;
     storedMode = false;
+    previewKey = '';
+    currentBranchId = '';
+    previewAngle = 0;
+    previewToken++;
+    previewCam = { yaw:-35, pitch:26, zoom:1 };
     renderList();
     renderDetailLoading(f);
     try{
@@ -627,6 +1018,7 @@
     if(btn) btn.disabled=!selected.size || !rampOn.size;
     const hint=$('#variantHint');
     if(hint && !families.length) hint.textContent='先扫描资源包，再选择方块族与色阶。';
+    else if(hint && !rampOn.size) hint.textContent='色阶默认关闭；需要导出变种时再手动勾选。';
     else if(hint) hint.textContent=`已选 ${selected.size} 个方块族 · ${rampOn.size} 个色阶；每个色阶一个资源包，ZIP 内按 packs/<色阶>/ 分目录。`;
   }
   async function renderFamilyVariants(f){
@@ -715,6 +1107,576 @@
     }
   }
 
+  function resolveTexValue(value, textures, depth){
+    depth = depth || 0;
+    if(depth > 6 || typeof value !== 'string') return null;
+    if(value.startsWith('#')) return resolveTexValue(textures[value.slice(1)], textures, depth + 1);
+    return value;
+  }
+  function resolveModelGeometry(key, seen){
+    key = normModelRef(key);
+    seen = seen || new Set();
+    const empty = { elements:[], textures:{}, textureSize:null, modelKey:key };
+    if(!key || seen.has(key)) return empty;
+    seen.add(key);
+    const m = modelMap.get(key);
+    if(!m) return empty;
+    const out = { elements:[], textures:{}, textureSize:null, modelKey:key, objPath:'', objFlipV:false };
+    if(m.parent){
+      const pk = normModelRef(m.parent);
+      if(pk && modelMap.has(pk)){
+        const p = resolveModelGeometry(pk, seen);
+        out.elements = p.elements;
+        out.textures = p.textures;
+        out.textureSize = p.textureSize;
+        out.objPath = p.objPath || '';
+        out.objFlipV = !!p.objFlipV;
+        if(p.elements.length || p.objPath) out.modelKey = p.modelKey;
+      }
+    }
+    if(m.textures && typeof m.textures === 'object') Object.assign(out.textures, m.textures);
+    if(Array.isArray(m.elements) && m.elements.length){
+      out.elements = m.elements;
+      out.modelKey = key;
+    }
+    if(Array.isArray(m.texture_size) && m.texture_size.length >= 2) out.textureSize = m.texture_size;
+    if(m.model && /\.obj$/i.test(String(m.model))){
+      out.objPath = objAssetPath(String(m.model));
+      out.objFlipV = !!m.flip_v;
+      out.modelKey = key;
+    }
+    return out;
+  }
+  function previewCandidates(f){
+    const seen = new Set(), out = [];
+    (f.modelKeys || []).forEach(key => {
+      const g = resolveModelGeometry(key);
+      const k = g.modelKey || key;
+      if(!g.elements.length || seen.has(k)) return;
+      seen.add(k);
+      out.push({ key:k, label:key, elements:g.elements, textures:g.textures, textureSize:g.textureSize });
+    });
+    return out.sort((a,b) => b.elements.length - a.elements.length);
+  }
+  function missingTexture(){
+    if(missingTexCache) return missingTexCache;
+    const c = document.createElement('canvas');
+    c.width = c.height = 16;
+    const g = c.getContext('2d');
+    g.fillStyle = '#ff00ff'; g.fillRect(0,0,16,16);
+    g.fillStyle = '#191919';
+    for(let y=0;y<16;y+=4) for(let x=(y/4)%2?0:4;x<16;x+=8) g.fillRect(x,y,4,4);
+    missingTexCache = c.toDataURL('image/png');
+    return missingTexCache;
+  }
+  function previewTexturePath(ref){
+    if(!ref || typeof ref !== 'string' || ref.startsWith('minecraft:')) return null;
+    return texturePath(ref);
+  }
+  async function ensurePreviewTextures(f, paths){
+    const missing = [...paths].filter(p => !f.textures.some(t => t.path === p && t.data));
+    if(!missing.length || storedMode || !archive) return;
+    try{
+      const urls = await call('zip.dataURLs', { archiveId:archive.id, names:missing });
+      missing.forEach(path => {
+        const data = urls[path];
+        if(!data) return;
+        let t = f.textures.find(x => x.path === path);
+        if(!t){
+          t = { path, name:path.split('/').pop().replace(/\.png$/i,''), slot:'main', kind:'texture', connected:false, scroll:false, animated:false, grid:null, data:null, mcmeta:null };
+          f.textures.push(t);
+        }
+        t.data = data;
+      });
+    }catch(_){}
+  }
+  function buildPreviewPart(f, cand, els, role){
+    const size = cand.textureSize || [16,16];
+    const pathSet = new Set();
+    els.forEach(el => Object.values(el.faces || {}).forEach(face => {
+      const ref = resolveTexValue(face.texture, cand.textures);
+      const path = previewTexturePath(ref);
+      if(path) pathSet.add(path);
+    }));
+    const pathList = [...pathSet];
+    const textures = pathList.map((path, i) => {
+      const hit = f.textures.find(t => t.path === path && t.data);
+      return { name:path.split('/').pop(), id:String(i), uuid:'preview-' + i, source:(hit && hit.data) || missingTexture() };
+    });
+    const missingIndex = textures.length;
+    textures.push({ name:'__missing.png', id:String(missingIndex), uuid:'preview-missing', source:missingTexture() });
+    const index = new Map(pathList.map((p,i) => [p,i]));
+    const elements = els.map((el, ei) => {
+      const faces = {};
+      Object.entries(el.faces || {}).forEach(([dir, face]) => {
+        const ref = resolveTexValue(face.texture, cand.textures);
+        const path = previewTexturePath(ref);
+        const idx = path ? index.get(path) : undefined;
+        const nf = {
+          uv:Array.isArray(face.uv) ? face.uv.slice() : [0,0,+size[0] || 16,+size[1] || 16],
+          texture:idx === undefined ? missingIndex : idx
+        };
+        if(face.rotation) nf.rotation = face.rotation;
+        if(face.cullface) nf.cullface = face.cullface;
+        faces[dir] = nf;
+      });
+      const out = {
+        name:el.name || ('cube_' + ei),
+        from:Array.isArray(el.from) ? el.from.slice() : [0,0,0],
+        to:Array.isArray(el.to) ? el.to.slice() : [16,16,16],
+        origin:Array.isArray(el.origin) ? el.origin.slice() : [8,8,8],
+        inflate:+el.inflate || 0,
+        faces
+      };
+      if(Array.isArray(el.rotation)){
+        out.rotation = el.rotation.slice();
+      }else if(el.rotation && typeof el.rotation === 'object'){
+        const a = +el.rotation.angle || 0;
+        const axis = String(el.rotation.axis || 'y').toLowerCase();
+        out.rotation = [axis === 'x' ? a : 0, axis === 'y' ? a : 0, axis === 'z' ? a : 0];
+        if(Array.isArray(el.rotation.origin)) out.origin = el.rotation.origin.slice();
+      }
+      return out;
+    });
+    return {
+      role,
+      raw:{
+        meta:{ format_version:'4.10', model_format:'java_block', box_uv:false },
+        name:f.id + '_' + role,
+        resolution:{ width:+size[0] || 16, height:+size[1] || 16 },
+        elements,
+        outliner:[{ name:f.id + ' · ' + role, origin:[8,8,8], children:elements.map((_,i) => i) }],
+        textures
+      }
+    };
+  }
+  function normalizeAssetPath(p){
+    const out = [];
+    String(p || '').replace(/\\/g, '/').split('/').forEach(seg => {
+      if(!seg || seg === '.') return;
+      if(seg === '..') out.pop(); else out.push(seg);
+    });
+    return out.join('/');
+  }
+  function parseObjText(text){
+    const verts = [], uvs = [], tris = [];
+    let mat = '', mtllib = '';
+    String(text || '').split(/\r?\n/).forEach(raw => {
+      const line = raw.trim();
+      if(!line || line[0] === '#') return;
+      const parts = line.split(/\s+/);
+      if(parts[0] === 'v' && parts.length >= 4){
+        verts.push([+parts[1], +parts[2], +parts[3]]);
+      }else if(parts[0] === 'vt' && parts.length >= 3){
+        uvs.push([+parts[1], +parts[2]]);
+      }else if(parts[0] === 'f' && parts.length >= 4){
+        const face = parts.slice(1).map(tok => {
+          const a = tok.split('/');
+          const vi = parseInt(a[0], 10);
+          const ti = a[1] ? parseInt(a[1], 10) : NaN;
+          return {
+            v:vi < 0 ? verts.length + vi : vi - 1,
+            t:Number.isFinite(ti) ? (ti < 0 ? uvs.length + ti : ti - 1) : null
+          };
+        });
+        for(let i=1;i<face.length-1;i++) tris.push({ a:face[0], b:face[i], c:face[i+1], mat });
+      }else if(parts[0] === 'usemtl'){
+        mat = parts.slice(1).join(' ');
+      }else if(parts[0] === 'mtllib'){
+        mtllib = parts.slice(1).join(' ');
+      }
+    });
+    return { verts, uvs, tris, mtllib };
+  }
+  function parseMtlText(text){
+    const mats = {};
+    let cur = '';
+    String(text || '').split(/\r?\n/).forEach(raw => {
+      const line = raw.trim();
+      if(!line || line[0] === '#') return;
+      const parts = line.split(/\s+/);
+      if(parts[0] === 'newmtl'){
+        cur = parts.slice(1).join(' ');
+        mats[cur] = {};
+      }else if(parts[0] === 'map_Kd' && cur){
+        mats[cur].mapKd = parts.slice(1).join(' ').replace(/^["']|["']$/g, '');
+      }else if(parts[0] === 'Kd' && cur){
+        mats[cur].kd = [+parts[1] || 0, +parts[2] || 0, +parts[3] || 0];
+      }
+    });
+    return mats;
+  }
+  async function ensureObjData(f, branch){
+    if(branch._obj) return branch._obj;
+    if(!archive) throw new Error('当前没有已加载的资源包');
+    const objPath = branch.objPath;
+    const texts = await call('zip.textBatch', { archiveId:archive.id, names:[objPath] });
+    const objText = texts[objPath];
+    if(!objText) throw new Error('OBJ 文件不存在：' + objPath);
+    const obj = parseObjText(objText);
+    let mtlPath = '', mtl = {};
+    if(obj.mtllib){
+      const dir = objPath.replace(/[^/]*$/, '');
+      let raw = obj.mtllib.replace(/\\/g, '/').trim();
+      mtlPath = normalizeAssetPath(raw.startsWith('assets/') ? raw : dir + raw);
+      const mtexts = await call('zip.textBatch', { archiveId:archive.id, names:[mtlPath] });
+      if(mtexts[mtlPath]) mtl = parseMtlText(mtexts[mtlPath]);
+    }
+    branch._obj = { obj, mtl, mtlPath };
+    return branch._obj;
+  }
+  function objMaterialInfo(f, branch, mtl, name){
+    const m = mtl[name] || {};
+    let path = null;
+    if(m.mapKd){
+      const v = String(m.mapKd).trim();
+      if(v.startsWith('#')){
+        const ref = resolveTexValue(branch.textures[v.slice(1)], branch.textures);
+        path = previewTexturePath(ref);
+      }else{
+        path = normalizeAssetPath(v.startsWith('assets/') ? v : (v.startsWith('textures/') ? 'assets/create/' + v : branch.objPath.replace(/[^/]*$/, '') + v));
+      }
+    }
+    const hit = path ? f.textures.find(t => t.path === path && t.data) : null;
+    return { path, hit, kd:m.kd || null };
+  }
+  function colorFromKd(kd){
+    if(!kd || kd.length < 3) return '#8b8b8b';
+    return 'rgb(' + kd.map(v => Math.max(0, Math.min(255, Math.round(v * 255)))).join(',') + ')';
+  }
+  function drawObjTri(ctx, poly, img, uv, flipV){
+    if(!img || !uv) return false;
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    if(!iw || !ih) return false;
+    const src = uv.map(([u,v]) => [u * iw, (flipV ? 1 - v : v) * ih]);
+    const d0 = poly[0], d1 = poly[1], d2 = poly[2];
+    const s0 = src[0], s1 = src[1], s2 = src[2];
+    const den = (s1[0]-s0[0])*(s2[1]-s0[1]) - (s2[0]-s0[0])*(s1[1]-s0[1]);
+    if(Math.abs(den) < 1e-6) return false;
+    const a = ((d1[0]-d0[0])*(s2[1]-s0[1]) - (d2[0]-d0[0])*(s1[1]-s0[1])) / den;
+    const b = ((d1[1]-d0[1])*(s2[1]-s0[1]) - (d2[1]-d0[1])*(s1[1]-s0[1])) / den;
+    const c = ((d2[0]-d0[0])*(s1[0]-s0[0]) - (d1[0]-d0[0])*(s2[0]-s0[0])) / den;
+    const d = ((d2[1]-d0[1])*(s1[0]-s0[0]) - (d1[1]-d0[1])*(s2[0]-s0[0])) / den;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(poly[0][0], poly[0][1]);
+    ctx.lineTo(poly[1][0], poly[1][1]);
+    ctx.lineTo(poly[2][0], poly[2][1]);
+    ctx.closePath();
+    ctx.clip();
+    ctx.transform(a, b, c, d, d0[0] - a*s0[0] - c*s0[1], d0[1] - b*s0[0] - d*s0[1]);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, 0, 0);
+    ctx.restore();
+    return true;
+  }
+  function objBright(A, B, C){
+    const a = [B[0]-A[0], B[1]-A[1], B[2]-A[2]];
+    const b = [C[0]-A[0], C[1]-A[1], C[2]-A[2]];
+    const n = [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+    const len = Math.hypot(n[0], n[1], n[2]) || 1;
+    const ny = n[1]/len, nx = n[0]/len;
+    if(Math.abs(ny) > 0.5) return ny > 0 ? 1 : 0.55;
+    if(Math.abs(nx) > 0.5) return 0.68;
+    return 0.82;
+  }
+  async function renderObjBranch(f, branch){
+    if(previewView3d){ try{ previewView3d.destroy(); }catch(_){} previewView3d = null; }
+    const cv = $('#preview3d');
+    if(!cv) return;
+    const token = ++previewToken;
+    try{
+      await ensurePreviewTextures(f, branchTexturePaths(branch));
+      const data = await ensureObjData(f, branch);
+      if(token !== previewToken) return;
+      const obj = data.obj;
+      if(!obj.verts.length || !obj.tris.length){
+        cv.parentElement.innerHTML = '<div class="preview-empty">OBJ 里没有可渲染的面。</div>';
+        return;
+      }
+      let min = [Infinity,Infinity,Infinity], max = [-Infinity,-Infinity,-Infinity];
+      obj.verts.forEach(v => {
+        for(let i=0;i<3;i++){ if(v[i] < min[i]) min[i] = v[i]; if(v[i] > max[i]) max[i] = v[i]; }
+      });
+      const extent = Math.max(max[0]-min[0], max[1]-min[1], max[2]-min[2], 0.0001);
+      const factor = extent <= 2 ? 16 : 1;
+      const verts = obj.verts.map(v => [v[0]*factor, v[1]*factor, v[2]*factor]);
+      const cx = (min[0]+max[0])/2*factor, cy0 = (min[1]+max[1])/2*factor, cz = (min[2]+max[2])/2*factor;
+      verts.forEach(v => { v[0]-=cx; v[1]-=cy0; v[2]-=cz; });
+      const mats = {};
+      const names = new Set(obj.tris.map(t => t.mat));
+      await Promise.all([...names].map(async name => {
+        const info = objMaterialInfo(f, branch, data.mtl, name);
+        if(info.hit) { try{ info.img = await imageOf(info.hit.data); }catch(_){} }
+        mats[name] = info;
+      }));
+      if(token !== previewToken) return;
+      const W = Math.max(1, cv.clientWidth || 320), H = Math.max(1, cv.clientHeight || 244);
+      const DPR = Math.min(2, window.devicePixelRatio || 1);
+      cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+      const ctx = cv.getContext('2d');
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      const yaw = previewCam.yaw * Math.PI/180, pitch = previewCam.pitch * Math.PI/180;
+      const cyaw = Math.cos(yaw), syaw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+      function viewPoint(p){
+        const x = p[0], y = p[1], z = p[2];
+        const X = x*cyaw + z*syaw, Z = -x*syaw + z*cyaw;
+        return [X, y*cp - Z*sp, y*sp + Z*cp];
+      }
+      const angle = branch.dynamic ? previewAngle : 0;
+      const ca = Math.cos(angle*Math.PI/180), sa = Math.sin(angle*Math.PI/180);
+      const rotate = p => angle ? [p[0]*ca + p[2]*sa, p[1], -p[0]*sa + p[2]*ca] : p;
+      let vMinX = Infinity, vMaxX = -Infinity, vMinY = Infinity, vMaxY = -Infinity;
+      verts.forEach(v => {
+        const q = viewPoint(rotate(v));
+        if(q[0] < vMinX) vMinX = q[0]; if(q[0] > vMaxX) vMaxX = q[0];
+        if(q[1] < vMinY) vMinY = q[1]; if(q[1] > vMaxY) vMaxY = q[1];
+      });
+      const spanX = Math.max(0.001, vMaxX-vMinX), spanY = Math.max(0.001, vMaxY-vMinY);
+      const pad = 18;
+      const scale = Math.min((W-pad*2)/spanX, (H-pad*2)/spanY) * previewCam.zoom;
+      function proj(p){ return [W/2 + p[0]*scale, H/2 - p[1]*scale, p[2]]; }
+      const drawable = [];
+      obj.tris.forEach(t => {
+        const A0 = verts[t.a.v], B0 = verts[t.b.v], C0 = verts[t.c.v];
+        if(!A0 || !B0 || !C0) return;
+        const A = rotate(A0), B = rotate(B0), C = rotate(C0);
+        const pp = [A,B,C].map(p => proj(viewPoint(p)));
+        const z = (pp[0][2]+pp[1][2]+pp[2][2])/3;
+        const uv = (t.a.t != null && t.b.t != null && t.c.t != null && obj.uvs[t.a.t] && obj.uvs[t.b.t] && obj.uvs[t.c.t])
+          ? [obj.uvs[t.a.t], obj.uvs[t.b.t], obj.uvs[t.c.t]] : null;
+        drawable.push({ pp, uv, z, info:mats[t.mat] || null, bright:objBright(A,B,C) });
+      });
+      drawable.sort((a,b) => b.z - a.z);
+      drawable.forEach(t => {
+        const info = t.info || {};
+        let textured = false;
+        if(info.img && t.uv) textured = drawObjTri(ctx, t.pp, info.img, t.uv, branch.objFlipV);
+        if(!textured){
+          ctx.beginPath();
+          ctx.moveTo(t.pp[0][0], t.pp[0][1]);
+          ctx.lineTo(t.pp[1][0], t.pp[1][1]);
+          ctx.lineTo(t.pp[2][0], t.pp[2][1]);
+          ctx.closePath();
+          ctx.fillStyle = colorFromKd(info.kd);
+          ctx.fill();
+        }
+        if(t.bright < 0.999){
+          ctx.beginPath();
+          ctx.moveTo(t.pp[0][0], t.pp[0][1]);
+          ctx.lineTo(t.pp[1][0], t.pp[1][1]);
+          ctx.lineTo(t.pp[2][0], t.pp[2][1]);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(0,0,0,' + ((1-t.bright)*0.45).toFixed(3) + ')';
+          ctx.fill();
+        }
+      });
+    }catch(err){
+      console.error('OBJ preview failed', err);
+      cv.parentElement.innerHTML = '<div class="preview-empty">OBJ 预览失败：' + escapeHtml(err.message || err) + '</div>';
+    }
+  }
+  async function renderFamily3D(f, branch){
+    if(previewView3d){ try{ previewView3d.destroy(); }catch(_){} previewView3d = null; }
+    const cv = $('#preview3d');
+    if(!cv) return;
+    if(!branch){
+      cv.parentElement.innerHTML = '<div class="preview-empty">没有选中的模型分支。</div>';
+      return;
+    }
+    if(branch.kind === 'obj'){
+      await renderObjBranch(f, branch);
+      return;
+    }
+    if(!branch.elements.length){
+      if(branch.kind === 'item'){
+        await renderItemPlane(f, branch);
+      }else{
+        cv.parentElement.innerHTML = '<div class="preview-empty">这个分支没有可用的 cuboid 模型数据。</div>';
+      }
+      return;
+    }
+    const token = ++previewToken;
+    const staticEls = [], dynamicEls = [];
+    branch.elements.forEach(el => { (isDynamicElementName(el.name) ? dynamicEls : staticEls).push(el); });
+    const paths = branchTexturePaths(branch);
+    await ensurePreviewTextures(f, paths);
+    if(token !== previewToken) return;
+    const parts = [];
+    if(staticEls.length) parts.push(buildPreviewPart(f, branch, staticEls, 'static'));
+    if(dynamicEls.length) parts.push(buildPreviewPart(f, branch, dynamicEls, 'dynamic'));
+    if(!parts.length) return;
+    try{
+      previewView3d = PWModelView.render(cv, { parts }, {
+        angle:previewAngle,
+        yaw:previewCam.yaw,
+        pitch:previewCam.pitch,
+        zoom:previewCam.zoom,
+        width:cv.clientWidth || 320,
+        height:cv.clientHeight || 244
+      });
+    }catch(err){ console.error('3D preview failed', err); }
+  }
+  function setPreviewAngleVisibility(cand){
+    const box = $('#previewAngleBox');
+    if(!box) return;
+    box.style.display = cand && cand.elements.some(el => isDynamicElementName(el.name)) ? 'inline-flex' : 'none';
+  }
+
+  function modelBranchTexturePaths(g){
+    const set = new Set();
+    Object.values((g && g.textures) || {}).forEach(value => {
+      const ref = resolveTexValue(value, g.textures || {});
+      const path = previewTexturePath(ref);
+      if(path) set.add(path);
+    });
+    ((g && g.elements) || []).forEach(el => Object.values(el.faces || {}).forEach(face => {
+      const ref = resolveTexValue(face.texture, (g && g.textures) || {});
+      const path = previewTexturePath(ref);
+      if(path) set.add(path);
+    }));
+    return set;
+  }
+  function buildBranches(modelKeys, itemKey){
+    const keys = [...(modelKeys || [])];
+    if(itemKey) keys.push(itemKey);
+    const seen = new Set(), out = [];
+    keys.forEach(key => {
+      const g = resolveModelGeometry(key);
+      const k = g.modelKey || normModelRef(key);
+      if(!k || seen.has(k)) return;
+      const isObj = !!g.objPath;
+      const itemFlag = key.startsWith('item/') || k.startsWith('item/');
+      const kind = isObj ? 'obj' : itemFlag ? 'item' : k.startsWith('partial/') ? 'partial' : 'block';
+      if(!g.elements.length && kind !== 'item' && kind !== 'obj') return;
+      if(!g.elements.length && kind === 'item' && !Object.keys(g.textures || {}).length) return;
+      const objName = isObj ? g.objPath.split('/').pop().replace(/\.obj$/i, '') : '';
+      const label = kind === 'obj' ? (itemFlag ? '物品模型（OBJ）' : objName) : kind === 'item' ? '物品模型' : k.split('/').pop();
+      const seenKey = k + (itemFlag ? '#item' : '');
+      if(seen.has(seenKey)) return;
+      seen.add(seenKey);
+      out.push({
+        id:seenKey, key:k, kind, label,
+        item:itemFlag,
+        dynamic:isObj ? isDynamicElementName(objName + ' ' + k.split('/').slice(-2).join(' ')) : false,
+        objPath:g.objPath, objFlipV:g.objFlipV,
+        elements:g.elements, textures:g.textures, textureSize:g.textureSize,
+        texturePaths:modelBranchTexturePaths(g)
+      });
+    });
+    return out;
+  }
+  function branchTexturePaths(branch){
+    if(!branch) return new Set();
+    if(branch.texturePaths) return branch.texturePaths;
+    const set = new Set();
+    (branch.elements || []).forEach(el => Object.values(el.faces || {}).forEach(face => {
+      const ref = resolveTexValue(face.texture, branch.textures || {});
+      const path = previewTexturePath(ref);
+      if(path) set.add(path);
+    }));
+    return set;
+  }
+  function branchSharedCount(f, path){
+    return (f.branches || []).filter(b => branchTexturePaths(b).has(path)).length;
+  }
+  async function renderItemPlane(f, branch){
+    const cv = $('#preview3d');
+    if(!cv) return;
+    const paths = [...branchTexturePaths(branch)];
+    const hit = f.textures.find(t => paths.includes(t.path) && t.data);
+    if(!hit){
+      cv.parentElement.innerHTML = '<div class="preview-empty">物品模型没有可用纹理。</div>';
+      return;
+    }
+    const img = await imageOf(hit.data);
+    const W = Math.max(1, cv.clientWidth || 300), H = Math.max(1, cv.clientHeight || 244);
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    const g = cv.getContext('2d');
+    g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    g.clearRect(0, 0, W, H);
+    for(let y=0;y<H;y+=12) for(let x=0;x<W;x+=12){
+      g.fillStyle = ((x/12|0) + (y/12|0)) % 2 ? '#242424' : '#1b1b1b';
+      g.fillRect(x, y, 12, 12);
+    }
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    const sc = Math.min((W-24)/iw, (H-24)/ih);
+    const dw = Math.max(1, Math.round(iw*sc)), dh = Math.max(1, Math.round(ih*sc));
+    g.imageSmoothingEnabled = false;
+    g.drawImage(img, (W-dw)/2, (H-dh)/2, dw, dh);
+  }
+
+  function previewBranch(){
+    if(!current) return null;
+    const branches = current.branches || [];
+    return branches.find(b => b.id === currentBranchId) || branches[0] || null;
+  }
+  function redrawPreview3D(){
+    const branch = previewBranch();
+    if(!branch) return;
+    if(previewRaf) cancelAnimationFrame(previewRaf);
+    previewRaf = requestAnimationFrame(() => {
+      previewRaf = null;
+      if(current) renderFamily3D(current, branch);
+    });
+  }
+  function resetPreviewView(){
+    previewCam = { yaw:-35, pitch:26, zoom:1 };
+    redrawPreview3D();
+  }
+  function togglePreviewExpand(){
+    const wrap = $('#previewWrap');
+    if(!wrap) return;
+    wrap.classList.toggle('expanded');
+    const btn = $('[data-preview-expand]');
+    if(btn) btn.textContent = wrap.classList.contains('expanded') ? '还原' : '放大';
+    setTimeout(redrawPreview3D, 80);
+  }
+  function observePreview(){
+    if(previewResizeObs){ try{ previewResizeObs.disconnect(); }catch(_){} previewResizeObs = null; }
+    const wrap = $('#previewWrap');
+    if(wrap && typeof ResizeObserver !== 'undefined'){
+      previewResizeObs = new ResizeObserver(() => redrawPreview3D());
+      previewResizeObs.observe(wrap);
+    }
+  }
+  function bindPreviewPointer(){
+    const detail = $('#detail');
+    if(!detail) return;
+    detail.addEventListener('pointerdown', e => {
+      const cv = e.target.closest('#preview3d');
+      if(!cv || e.button !== 0) return;
+      previewDrag = { id:e.pointerId, x:e.clientX, y:e.clientY, yaw:previewCam.yaw, pitch:previewCam.pitch };
+      try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+      cv.classList.add('dragging');
+      e.preventDefault();
+    });
+    detail.addEventListener('pointermove', e => {
+      if(!previewDrag || e.pointerId !== previewDrag.id) return;
+      previewCam.yaw = previewDrag.yaw - (e.clientX - previewDrag.x) * 0.65;
+      previewCam.pitch = Math.max(-85, Math.min(85, previewDrag.pitch + (e.clientY - previewDrag.y) * 0.55));
+      redrawPreview3D();
+    });
+    const endDrag = e => {
+      if(!previewDrag || (e.pointerId != null && e.pointerId !== previewDrag.id)) return;
+      const cv = e.target.closest && e.target.closest('#preview3d');
+      if(cv) cv.classList.remove('dragging');
+      previewDrag = null;
+    };
+    detail.addEventListener('pointerup', endDrag);
+    detail.addEventListener('pointercancel', endDrag);
+    detail.addEventListener('wheel', e => {
+      const cv = e.target.closest('#preview3d');
+      if(!cv || !(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      const next = previewCam.zoom * (e.deltaY > 0 ? 0.9 : 1.1);
+      previewCam.zoom = Math.max(0.35, Math.min(4, next));
+      redrawPreview3D();
+    }, { passive:false });
+  }
+
   function renderDetailEmpty(){
     $('#detail').innerHTML = '<div class="empty"><b>没有选中的方块族</b><span>载入 Create jar 后，左侧会出现按 blockstate/model 归类的方块族。<br>选择后查看纹理槽、状态和连接纹理图集。</span></div>';
   }
@@ -722,30 +1684,102 @@
     $('#detail').innerHTML = `<div class="detail-head"><div><h2>${f.id}</h2><p>${CAT_LABEL[f.category] || f.category} · 正在读取纹理…</p></div></div><div class="progress">读取纹理数据…</div>`;
   }
   async function renderDetail(f){
-    const head = `<div class="detail-head"><div><h2>${f.id}</h2><p>${CAT_LABEL[f.category] || f.category} · ${f.modelCount} 个模型 · ${f.stateCount} 个状态</p></div></div>
+    const branches = f.branches || [];
+    const branch = branches.find(b => b.id === currentBranchId) || branches[0] || null;
+    currentBranchId = branch ? branch.id : '';
+    const hasDynamic = !!(branch && (branch.dynamic || branch.elements.some(el => isDynamicElementName(el.name))));
+    const head = `<div class="detail-head"><div><h2>${f.id}</h2><p>${CAT_LABEL[f.category] || f.category} · ${branches.length || 0} 个分支 · ${f.modelCount} 个模型 · ${f.stateCount} 个状态</p></div>${storedMode ? '' : '<button class="btn pri sm" data-import-current title="跳过勾选，直接导入当前方块族">导入当前族</button>'}</div>
       <div class="detail-stats">
+        <span class="stat"><b>${branches.length || 0}</b>分支</span>
         <span class="stat"><b>${f.textures.length}</b>纹理</span>
         <span class="stat"><b>${f.stateCount}</b>blockstate</span>
         <span class="stat"><b>${f.modelCount}</b>模型</span>
         ${f.hasCT ? '<span class="stat" style="color:#9dc7e4"><b>CT</b>连接</span>' : ''}
         ${f.hasAnim ? '<span class="stat" style="color:#e2b47d"><b>动画</b>帧序列</span>' : ''}
       </div>`;
-    const states = f.stateKeys.length ? `<div class="state-list">${f.stateKeys.slice(0,80).map(s => `<span class="state">${escapeHtml(s)}</span>`).join('')}</div>` : '';
-    const tex = f.textures.map(t => {
-      const meta = [t.kind === 'ct' ? (t.grid ? 'CT ' + t.grid + '×' + t.grid : 'CT') : t.kind === 'scroll' ? '滚动' : t.kind === 'animation' ? '动画' : '纹理', t.path.split('/').pop()].join(' · ');
-      return `<div class="tex" data-tex="${t.path}"><div class="tex-thumb">${t.data ? `<img src="${t.data}" alt="">` : '<span class="hint">无图</span>'}</div>` +
+    const branchTabs = branches.length ? `<div class="branch-tabs">${branches.map(b => `<button class="branch-tab${b.id === currentBranchId ? ' on' : ''}" data-branch="${escapeHtml(b.id)}">${escapeHtml(b.label)}${b.kind === 'obj' ? '<i>OBJ</i>' : b.kind === 'partial' ? '<i>partial</i>' : ''}</button>`).join('')}</div>` : '';
+    let preview;
+    if(branch && branch.kind === 'obj'){
+      preview = `<div class="preview-wrap" id="previewWrap"><canvas id="preview3d"></canvas></div>
+        <div class="preview-row">
+          ${hasDynamic ? `<span id="previewAngleBox"><span>动态角度</span><input id="previewAngle" type="range" min="0" max="360" value="${previewAngle}"><b id="previewAngleV">${previewAngle}°</b></span>` : '<span class="hint">OBJ / MTL · 只读几何预览</span>'}
+          <span class="hint">拖动旋转 · Ctrl+滚轮缩放 · 右下角可拉伸</span>
+          <span style="margin-left:auto"></span>
+          <button class="btn sm" data-preview-reset>重置视角</button>
+          <button class="btn sm" data-preview-expand>放大</button>
+        </div>`;
+    }else if(branch && branch.elements.length){
+      preview = `<div class="preview-wrap" id="previewWrap"><canvas id="preview3d"></canvas></div>
+        <div class="preview-row">
+          ${hasDynamic ? `<span id="previewAngleBox"><span>动态角度</span><input id="previewAngle" type="range" min="0" max="360" value="${previewAngle}"><b id="previewAngleV">${previewAngle}°</b></span>` : '<span class="hint">当前分支按静态模型显示</span>'}
+          <span class="hint">拖动旋转 · Ctrl+滚轮缩放 · 右下角可拉伸</span>
+          <span style="margin-left:auto"></span>
+          <button class="btn sm" data-preview-reset>重置视角</button>
+          <button class="btn sm" data-preview-expand>放大</button>
+        </div>`;
+    }else if(branch && branch.kind === 'item'){
+      preview = `<div class="preview-wrap"><canvas id="preview3d"></canvas></div><div class="preview-row"><span class="hint">物品模型（2D 生成模型，仅纹理预览）</span></div>`;
+    }else if(branch){
+      preview = `<div class="preview-empty">这个分支没有可用的 cuboid 模型数据，只显示纹理。</div>`;
+    }else{
+      preview = `<div class="preview-empty">这个卡片没有模型分支，只显示纹理。</div>`;
+    }
+    const paths = branch ? branchTexturePaths(branch) : new Set(f.textures.map(t => t.path));
+    const primary = f.textures.filter(t => paths.has(t.path));
+    const others = branch ? f.textures.filter(t => !paths.has(t.path)) : [];
+    const texCard = t => {
+      const shared = branchSharedCount(f, t.path);
+      const meta = [t.kind === 'ct' ? (t.grid ? 'CT ' + t.grid + '×' + t.grid : 'CT') : t.kind === 'scroll' ? '滚动' : t.kind === 'animation' ? '动画' : '纹理', t.path.split('/').pop(), shared > 1 ? '共享×' + shared : ''].filter(Boolean).join(' · ');
+      return `<div class="tex" data-tex="${escapeHtml(t.path)}"><div class="tex-thumb">${t.data ? `<img src="${t.data}" alt="">` : '<span class="hint">无图</span>'}</div>` +
         `<div class="tex-name">${escapeHtml(t.name)}</div><div class="tex-meta">${escapeHtml(meta)}</div></div>`;
-    }).join('');
-    $('#detail').innerHTML = head + states + `<div class="tex-grid">${tex}</div><div class="variant-strip" id="familyVariants"></div>`;
+    };
+    const primaryHtml = primary.length
+      ? `<div class="tex-section">分支纹理</div><div class="tex-grid">${primary.map(texCard).join('')}</div>`
+      : `<div class="preview-empty">这个分支没有直接纹理；可以看下方其他纹理 / CT。</div>`;
+    const otherHtml = others.length
+      ? `<div class="tex-section">其他纹理 / CT</div><div class="tex-grid">${others.map(texCard).join('')}</div>`
+      : '';
+    const states = f.stateKeys.length ? `<div class="state-list">${f.stateKeys.slice(0,80).map(s => `<span class="state">${escapeHtml(s)}</span>`).join('')}</div>` : '';
+    $('#detail').innerHTML = head + branchTabs + preview + states + primaryHtml + otherHtml + `<div class="variant-strip" id="familyVariants"></div>`;
+    const resetBtn = $('#detail').querySelector('[data-preview-reset]');
+    if(resetBtn) resetBtn.onclick = resetPreviewView;
+    const expandBtn = $('#detail').querySelector('[data-preview-expand]');
+    if(expandBtn) expandBtn.onclick = togglePreviewExpand;
+    observePreview();
+    $('#detail').querySelectorAll('[data-branch]').forEach(el => {
+      el.onclick = () => {
+        currentBranchId = el.dataset.branch;
+        previewAngle = 0;
+        renderDetail(f);
+      };
+    });
     $('#detail').querySelectorAll('[data-tex]').forEach(el => {
       el.onclick = () => {
         const t = f.textures.find(x => x.path === el.dataset.tex);
         if(t) showTextureModal(f, t);
       };
     });
+    const pa = $('#previewAngle');
+    if(pa) pa.oninput = () => {
+      previewAngle = +pa.value || 0;
+      const v = $('#previewAngleV'); if(v) v.textContent = previewAngle + '°';
+      renderFamily3D(f, branch);
+    };
+    const ic = $('#detail').querySelector('[data-import-current]');
+    if(ic) ic.onclick = () => importSelected(false, [f.id]);
+    renderFamily3D(f, branch);
     renderFamilyVariants(f);
   }
+  function readDataURL(file){
+    return new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result || ''));
+      fr.onerror = () => reject(fr.error || new Error('读取纹理失败'));
+      fr.readAsDataURL(file);
+    });
+  }
   function showTextureModal(f, t){
+    modalTex = { f, t };
     const m = $('#modal'), cv = $('#modalCv');
     $('#modalTitle').textContent = f.id + ' / ' + t.name;
     $('#modalSub').textContent = t.kind === 'ct' ? '连接纹理图集 · 每格 16×16' : t.kind === 'scroll' ? '滚动纹理' : t.kind === 'animation' ? '动画纹理' : '普通纹理';
@@ -771,8 +1805,10 @@
   }
 
   /* ---------------- 导入 ---------------- */
-  async function importSelected(silent){
-    const list = $('#importAll').checked ? families.slice() : families.filter(f => selected.has(f.id));
+  async function importSelected(silent, onlyIds){
+    const list = Array.isArray(onlyIds)
+      ? families.filter(f => onlyIds.includes(f.id))
+      : ($('#importAll').checked ? families.slice() : families.filter(f => selected.has(f.id)));
     if(!list.length){ toast('先勾选至少一个方块族'); if(silent) throw new Error('没有选中方块族'); return; }
     if(list.length > 60){ toast('一次最多导入 60 个方块族'); if(silent) throw new Error('超过 60 个方块族'); return; }
     const btn = $('#importBtn');
@@ -837,6 +1873,11 @@
       if(!res || !res.card || !res.card.create){ toast('这张卡没有 Create 元数据'); return; }
       const c = res.card, cr = c.create;
       storedMode = true;
+      previewKey = '';
+      currentBranchId = '';
+      previewAngle = 0;
+      previewToken++;
+      previewCam = { yaw:-35, pitch:26, zoom:1 };
       const slots = (cr.slots || []).map(s => Object.assign({}, s, { data:s.data || null }));
       const f = {
         id:cr.blockId || c.name, blockId:cr.blockId || c.name, category:cr.category || 'other',
@@ -875,6 +1916,10 @@
     if(f) readFile(f);
   });
   $('#search').addEventListener('input', e => { query = e.target.value; renderList(); });
+  $('#selectVisible').onclick = () => {
+    visibleFamilies().forEach(f => selected.add(f.id));
+    renderList(); refreshVariantUI();
+  };
   $('#chips').addEventListener('click', e => {
     const b = e.target.closest('[data-cat]'); if(!b) return;
     filter = b.dataset.cat; renderChips(); renderList();
@@ -883,7 +1928,10 @@
     const cb = e.target.closest('[data-select]');
     if(cb){ if(cb.checked) selected.add(cb.dataset.select); else selected.delete(cb.dataset.select); refreshVariantUI(); if(current) renderFamilyVariants(current); return; }
     const row = e.target.closest('[data-family]');
-    if(row){ const f = findFamily(row.dataset.family); if(f) selectFamily(f); }
+    if(row){
+      const f = findFamily(row.dataset.family);
+      if(f){ selected.add(f.id); selectFamily(f); refreshVariantUI(); }
+    }
   });
   renderRamps();
   renderRampEditor();
@@ -911,12 +1959,36 @@
   $('#rampEditor').addEventListener('change', () => { renderRamps(); renderRampEditor(); });
   $('#tileNorm').addEventListener('change', () => { if(current) renderFamilyVariants(current); });
   $('#exportVariants').onclick = exportVariants;
-  $('#importBtn').onclick = importSelected;
-  $('#importBtn2').onclick = importSelected;
+  bindPreviewPointer();
+  $('#importBtn').onclick = () => importSelected();
+  $('#importBtn2').onclick = () => importSelected();
   $('#clearSel').onclick = () => { selected.clear(); renderList(); refreshVariantUI(); };
-  $('#modalX').onclick = () => $('#modal').classList.remove('on');
-  $('#modal').addEventListener('click', e => { if(e.target.id === 'modal') $('#modal').classList.remove('on'); });
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') $('#modal').classList.remove('on'); });
+  function closeTextureModal(){
+    $('#modal').classList.remove('on');
+    modalTex = null;
+  }
+  $('#modalX').onclick = closeTextureModal;
+  $('#modal').addEventListener('click', e => { if(e.target.id === 'modal') closeTextureModal(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeTextureModal(); });
+  $('#modalReplace').onclick = () => $('#texReplaceInput').click();
+  $('#texReplaceInput').onchange = async e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if(!file || !modalTex) return;
+    const { f, t } = modalTex;
+    try{
+      const data = await readDataURL(file);
+      t.data = data;
+      t.name = file.name.replace(/\.[^.]+$/, '') || t.name;
+      try{
+        const im = await imageOf(data);
+        if(t.connected && im.naturalWidth === im.naturalHeight && [32,64,128].includes(im.naturalWidth)) t.grid = im.naturalWidth / 16;
+      }catch(_){}
+      closeTextureModal();
+      renderDetail(f);
+      toast('已替换纹理：' + t.name + '（当前会话）');
+    }catch(err){ toast('替换失败：' + err.message); }
+  };
 })();
 </script>
 </body>

@@ -961,6 +961,32 @@ function askName(title, value, onOk){
   };
 }
 
+function showLocalPackHelp(kind){
+  const create = kind === 'create';
+  $('#dlgTitle').innerHTML = iconSVG('box', 14) + (create ? ' 本地 Create 内容包' : ' 本地原版素材');
+  $('#dlgBody').innerHTML =
+    '<div class="hintline" style="font-size:11.5px;line-height:1.9;text-align:left;margin:0">' +
+    (create
+      ? '<b>推荐方式：安装即用</b><br>' +
+        '把 Create 模组 jar 或资源包 ZIP 放进 <code>local/inbox/</code>，双击项目根目录的 <code>准备本地素材.bat</code>。<br>' +
+        '脚本会生成 <code>local/create-pack.zip</code>，机械动力扩展下次打开时自动读取，不需要再手动选 jar。<br><br>' +
+        '<b>手动方式</b><br>' +
+        '仍然可以在扩展里选择 Create jar / ZIP。GitHub 版只包含插件代码，不附带 Create 资产。<br><br>' +
+        '<b>注意</b><br>' +
+        'local 文件夹只在本机使用，不会上传到 GitHub、Pages 或发行包。'
+      : '<b>推荐方式：安装即用</b><br>' +
+        '把原版 Minecraft 客户端 jar 或资源包 ZIP 放进 <code>local/inbox/</code>，双击项目根目录的 <code>准备本地素材.bat</code>。<br>' +
+        '脚本会生成 <code>local/vanilla/catalog.json</code> 和纹理目录，素材库打开时自动显示原版方块 / 物品 / 实体 / 界面等纹理。<br><br>' +
+        '<b>手动方式</b><br>' +
+        '也可以继续用「导入 PNG / 导入 ZIP / JAR」把需要的纹理单独导入素材库。<br><br>' +
+        '<b>注意</b><br>' +
+        'local 文件夹只在本机使用，不会上传到 GitHub、Pages 或发行包。') +
+    '</div>';
+  dlgOkFn = () => closeDialog();
+  $('#dlgOk').textContent = '知道了';
+  $('#dlgCancel').style.display = 'none';
+  $('#modal').classList.add('on');
+}
 function confirmDialog(title, text, okText, onOk){
   $('#dlgTitle').innerHTML = iconSVG('trash', 14) + esc(title);
   $('#dlgBody').innerHTML = '<div class="hintline" style="font-size:12.5px;line-height:1.8;margin:0">' + esc(text) + '</div>';
@@ -1211,6 +1237,7 @@ function openAbout(){
     '<b>像素工坊</b> v' + APP_VERSION + '<br>' +
     '纹理 / 动画贴图的收纳与绘制。数据保存在本机浏览器（localStorage），不上传。<br><br>' +
     '常用操作：双击卡片打开编辑器 · 右键重命名 / 删除 / 一键换色 · 拖入 PNG 直接导入 · 编辑器顶栏「保存回仓库」<br><br>' +
+    '0.16.0：本地素材内容包（Create / 原版）· Create 多分支与 OBJ/MTL 3D 预览 · 旋转缩放与可拉伸预览 · 一键启动脚本<br>' +
     '0.15.0：彩色渐变叠加支持 2–8 个自定义色标并自动保存 · 设置新增 GitHub 检查更新<br>' +
     '0.14.1：动画播放插帧预览（相邻帧线性混合，跟随 .mcmeta interpolate）<br>' +
     '0.14.0：素材库（原版 / 模组纹理参考、ZIP/JAR 导入、参考图）<br>' +
@@ -1300,8 +1327,8 @@ function renderStatus(){
     $('#sbCount').innerHTML = `<b>${visibleCount()}</b> 项`;
   } else {
     $('#sbPath').innerHTML = `${ws ? esc(ws.name) + ' / ' : ''}<b>${esc(t.title)}</b>`;
-    $('#sbSel').textContent = t.kind === 'anim' ? '动画' : (t.kind === 'block' || t.kind === 'composite') ? '方块' : t.kind === 'entity' ? '实体' : t.kind === 'ctex' ? '自定义纹理' : (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'plugins' || t.kind === 'plugin') ? '工具' : '纹理';
-    $('#sbCount').innerHTML = (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'plugins' || t.kind === 'plugin') ? '<b>1</b> 个工具' : (t.kind === 'block' || t.kind === 'composite') ? '<b>1</b> 个方块' : t.kind === 'entity' ? '<b>1</b> 个实体' : '<b>1</b> 项';
+    $('#sbSel').textContent = t.kind === 'anim' ? '动画' : (t.kind === 'block' || t.kind === 'composite') ? '方块' : t.kind === 'entity' ? '实体' : t.kind === 'ctex' ? '自定义纹理' : (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin') ? '工具' : '纹理';
+    $('#sbCount').innerHTML = (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin') ? '<b>1</b> 个工具' : (t.kind === 'block' || t.kind === 'composite') ? '<b>1</b> 个方块' : t.kind === 'entity' ? '<b>1</b> 个实体' : '<b>1</b> 项';
   }
   if(typeof renderQuickRail === 'function') renderQuickRail();
 }

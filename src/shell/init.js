@@ -93,6 +93,8 @@ function init(){
   if(typeof PWExtensions !== 'undefined') PWExtensions.init();
   if(typeof PWShortcuts !== 'undefined') PWShortcuts.init();
   if(typeof PWPlugins !== 'undefined') PWPlugins.init();
+  if(typeof PWAssets !== 'undefined') PWAssets.init();
+  if(typeof PWModels !== 'undefined') PWModels.init();
   if(typeof PWUpdates !== 'undefined') PWUpdates.init();
   if(typeof setupSidebar === 'function') setupSidebar();
   renderWorkspaces();

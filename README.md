@@ -18,7 +18,7 @@
 - 工作区与作品保存在浏览器 `localStorage`，可随时导出资源包备份。
 - 所有文件都在本地运行，适合个人创作与局域网调试。
 
-当前版本：**v0.15.0**<br>
+当前版本：**v0.16.0**<br>
 运行方式：`python serve.py`，打开 `http://127.0.0.1:8766/`。
 
 ## 功能亮点
@@ -53,7 +53,10 @@
 - **扩展注册表**：工具与编辑器扩展统一定义、启停与持久化。
 - **可选插件 / 扩展中心**：官方可选扩展按需安装，支持 GitHub raw / release ZIP / 本地 ZIP；插件在 sandbox iframe 中运行，经宿主 API 访问仓库。
 - **素材库**：独立存放原版 / 模组纹理，支持 PNG、文件夹、jar/ZIP 导入；按 namespace / 分类浏览，可设为编辑器参考图或复制到工作区。
-- **机械动力方块扩展**：读取 Create jar / 资源包，解析 blockstate / model，按方块族整理多纹理槽、状态、CT 连接图集、动画与滚动纹理，并导入仓库。
+- **本地原版纹理**：从本机原版客户端 jar 生成 `local/vanilla`，自动加载 3000+ 张原版方块 / 物品 / 实体 / 界面纹理，不写入 GitHub。
+- **机械动力方块扩展**：本地内容包自动加载；解析 blockstate / multipart / item 模型，按独立分支切换 3D 预览与分支纹理；支持 OBJ / MTL 只读几何预览；可导入仓库或导出变种包。
+- **本地内容包**：把 Create jar / 原版客户端 jar 放进 `local/inbox/`，用 `准备本地素材.bat` 一键生成，素材与插件均不上传资产。
+- **一键启动**：`启动像素工坊.bat` 自动启动本地服务并打开无边框 kiosk 窗口；`tools/create_shortcut.ps1` 可生成桌面快捷方式。
 - **检查更新**：设置中读取 GitHub 最新 Release，有新版本时可直接打开下载页。
 - **PWA / 移动端**：可安装到桌面/主屏幕，触屏布局与安全区适配。
 
@@ -77,13 +80,39 @@ HOST=0.0.0.0 PORT=8766 python serve.py
 
 > 只建议在可信局域网使用 `HOST=0.0.0.0`。应用没有登录与权限系统，不要直接暴露到公网。
 
+## 本地素材内容包（可选，不上传）
+
+把 Create 模组 jar、原版 Minecraft 客户端 jar 或对应资源包 ZIP 放进：
+
+```text
+local/inbox/
+```
+
+然后双击项目根目录的 `准备本地素材.bat`。脚本会生成：
+
+```text
+local/create-pack.zip        Create 扩展自动读取
+local/vanilla/               素材库原版纹理目录
+```
+
+`local/` 被 `.gitignore` 忽略，不会进入 GitHub、Pages 或发行包。没有本地包时仍可手动导入 jar/ZIP 或单张 PNG。
+
+启动方式：
+
+```text
+双击 启动像素工坊.bat
+```
+
+它会自动启动 `serve.py` 并打开无边框 kiosk 窗口；按 `Alt+F4` 退出。也可以继续使用 `python serve.py`。
+
 ## 发行包
 
-从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.15.0 发行包。发行包是可直接运行的静态源码包：
+
+从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.16.0 发行包。发行包是可直接运行的静态源码包：
 
 ```bash
-unzip ClastarStudio-v0.15.0.zip
-cd ClastarStudio-v0.15.0
+unzip ClastarStudio-v0.16.0.zip
+cd ClastarStudio-v0.16.0
 python serve.py
 ```
 
@@ -96,6 +125,11 @@ manifest.json           PWA manifest
 sw.js                   PWA 离线缓存
 serve.py                本地静态服务器
 plugins/                官方可选插件包（机械动力方块扩展）
+integrations/           Blockbench 桥接插件
+local/                  本地素材内容包（gitignore，不上传）
+tools/                  构建、启动、素材准备与仓库检查脚本
+准备本地素材.bat
+启动像素工坊.bat
 icon-192.png
 icon-512.png
 src/
@@ -103,7 +137,6 @@ src/
   embedded/             六类编辑器的内嵌 base64 文档
 styles/                 应用与工具样式
 docs/                   架构与开发文档
-tools/                  仓库自检脚本
 .github/                CI 与 issue/PR 模板
 ```
 

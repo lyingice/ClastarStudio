@@ -23,3 +23,6 @@ Thumbs.db
 /docs/notes/
 /plugins/README.md
 *.local.md
+
+# 本地 Create 资产包（不上传 GitHub）
+/local/

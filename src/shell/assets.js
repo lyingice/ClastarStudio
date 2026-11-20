@@ -9,9 +9,14 @@ const PWAssets = (() => {
   const CAT_LABEL = {
     block:'方块', item:'物品', entity:'实体', equipment:'实体装备', gui:'界面',
     particle:'粒子', painting:'画', environment:'环境', font:'字体', effect:'效果',
-    misc:'杂项', models:'模型', textures:'纹理', other:'其他'
+    misc:'杂项', models:'模型', textures:'纹理', other:'其他',
+    trims:'盔甲纹饰', mob_effect:'状态效果', map:'地图', colormap:'着色地图'
   };
   let page = null;
+  let localCatalog = null;
+  let localCache = null;
+  let localPromise = null;
+  const CAT_RANK = { block:0, item:1, entity:2, particle:3, trims:4, painting:5, environment:6, effect:7, mob_effect:8, gui:9, map:10, colormap:11, models:12, misc:13, font:14, other:15 };
   let state = { query:'', group:'全部', ns:'全部', cat:'全部', fav:false, sort:'name', selected:null };
 
   function ensureWorkspace(){
@@ -26,13 +31,54 @@ const PWAssets = (() => {
     return w;
   }
   function workspace(){ return ensureWorkspace(); }
-  function allCards(){
-    const w = WS.find(x => x.assetLibrary);
-    if(!w) return [];
-    const out = [];
-    w.cats.forEach(cat => cat.cards.forEach(c => { if(c && c.ref && c.type !== 'folder') out.push({ card:c, cat }); }));
-    return out;
+  function localCards(){
+    if(localCache) return localCache;
+    const items = localCatalog && Array.isArray(localCatalog.items) ? localCatalog.items : [];
+    localCache = items.map(item => ({
+      card:{
+        id:'vanilla:' + item.path,
+        name:item.name,
+        meta:'原版 · ' + item.width + '×' + item.height + ' · ' + (CAT_LABEL[item.category] || item.category),
+        badge:'原版', type:'item', local:true,
+        thumb:item.url, full:item.url,
+        ref:{
+          namespace:'minecraft', path:item.path, category:item.category, group:'原版',
+          source:item.source || ('Minecraft ' + (localCatalog.version || '') + ' · 本地内容包'),
+          width:item.width, height:item.height, addedAt:0, favorite:false,
+          mcmeta:item.mcmeta || null, localURL:item.url
+        }
+      },
+      cat:{ name:'原版' }
+    }));
+    return localCache;
   }
+  function allCards(){
+    const out = [];
+    const w = WS.find(x => x.assetLibrary);
+    if(w) w.cats.forEach(cat => cat.cards.forEach(c => { if(c && c.ref && c.type !== 'folder') out.push({ card:c, cat }); }));
+    return out.concat(localCards());
+  }
+  async function ensureLocal(){
+    if(localPromise) return localPromise;
+    localPromise = fetch('local/vanilla/catalog.json', { cache:'no-store' })
+      .then(res => {
+        if(!res.ok) return null;
+        return res.json();
+      })
+      .then(d => {
+        if(d && Array.isArray(d.items)){
+          localCatalog = d;
+          localCache = null;
+        }
+        return localCatalog;
+      })
+      .catch(() => null)
+      .finally(() => {
+        if(page) render(page);
+      });
+    return localPromise;
+  }
+  function init(){ ensureLocal(); }
   function cardById(id){ return allCards().find(x => x.card.id === id) || null; }
   function groupOf(ref){ return ref.group || (ref.namespace === 'minecraft' ? '原版' : ref.namespace === 'local' ? '本地' : '模组'); }
 
@@ -55,6 +101,7 @@ const PWAssets = (() => {
           <button class="btn sm" id="asPng">导入 PNG</button>
           <button class="btn sm" id="asZip">导入 ZIP / JAR</button>
           <button class="btn sm" id="asDir">导入文件夹</button>
+          <button class="btn sm" id="asLocalHelp" title="本地原版内容包说明">本地素材说明</button>
         </div>
       </div>
       <div class="scroll as-scroll">
@@ -107,11 +154,13 @@ const PWAssets = (() => {
     page = pane;
     bind(pane);
     render(pane);
+    ensureLocal().then(() => render(pane));
   }
 
   function bind(pane){
     const q = s => pane.querySelector(s);
     q('#asPng').onclick = () => q('#asFilePng').click();
+    q('#asLocalHelp').onclick = () => showLocalPackHelp('vanilla');
     q('#asZip').onclick = () => q('#asFileZip').click();
     q('#asDir').onclick = () => q('#asFileDir').click();
     q('#asFilePng').onchange = async e => {
@@ -177,8 +226,12 @@ const PWAssets = (() => {
     const cards = allCards();
     const q = pane.querySelector('#asSummary');
     const total = cards.length;
-    const bytes = cards.reduce((n,x) => n + (x.card.full ? x.card.full.length : 0), 0);
-    if(q) q.innerHTML = `<b>${total}</b> 张素材<span>${(bytes/1024/1024).toFixed(1)} MB 本地数据</span>`;
+    const localCount = cards.filter(x => x.card.local).length;
+    const bytes = cards.reduce((n,x) => n + (x.card.local ? 0 : (x.card.full ? x.card.full.length : 0)), 0);
+    const summaryBits = [];
+    if(localCount) summaryBits.push(localCount + ' 原版引用（本地）');
+    if(bytes) summaryBits.push((bytes/1024/1024).toFixed(1) + ' MB 本地数据');
+    if(q) q.innerHTML = `<b>${total}</b> 张素材<span>${summaryBits.join(' · ') || '本地素材库'}</span>`;
     const counts = {全部:total, 原版:0, 模组:0, 本地:0, 收藏:0};
     cards.forEach(x => {
       const g=groupOf(x.card.ref); counts[g]=(counts[g]||0)+1;
@@ -213,7 +266,7 @@ const PWAssets = (() => {
           const anim=r.mcmeta?'<i class="as-badge anim">动画</i>':'';
           const fav=r.favorite?'<i class="as-badge fav">★</i>':'';
           return `<button class="as-card${state.selected===c.id?' on':''}" data-asset="${c.id}" title="${esc(c.name+' · '+(r.namespace||'local')+'/'+(r.path||''))}">
-            <span class="as-thumb"><img src="${c.thumb || c.full}" alt="" loading="lazy"></span>
+            <span class="as-thumb"><img src="${c.full || c.thumb}" alt="" loading="lazy"></span>
             <span class="as-name">${esc(c.name)}</span>
             <span class="as-meta">${esc(r.namespace||'local')} · ${esc(CAT_LABEL[r.category]||r.category||'其他')}</span>
             ${anim}${fav}
@@ -238,6 +291,10 @@ const PWAssets = (() => {
     }).sort((a,b)=>{
       if(state.sort==='recent') return (b.card.ref.addedAt||0)-(a.card.ref.addedAt||0);
       if(state.sort==='size') return (b.card.ref.width||0)*(b.card.ref.height||0)-(a.card.ref.width||0)*(a.card.ref.height||0);
+      if(a.card.local || b.card.local){
+        const ca=CAT_RANK[a.card.ref.category] ?? 99, cb=CAT_RANK[b.card.ref.category] ?? 99;
+        if(ca !== cb) return ca-cb;
+      }
       return String(a.card.name).localeCompare(String(b.card.name),'zh');
     });
   }
@@ -263,8 +320,7 @@ const PWAssets = (() => {
         <button class="btn pri" data-as-act="ref">设为参考图</button>
         <button class="btn" data-as-act="copy">复制到工作区</button>
         <button class="btn sm" data-as-act="path">复制路径</button>
-        <button class="btn sm" data-as-act="fav">${r.favorite?'取消收藏':'收藏'}</button>
-        <button class="btn sm danger" data-as-act="del">删除</button>
+        ${c.local ? '<span class="as-local-note">本地原版资产 · 不随 GitHub 上传</span>' : `<button class="btn sm" data-as-act="fav">${r.favorite?'取消收藏':'收藏'}</button><button class="btn sm danger" data-as-act="del">删除</button>`}
       </div>
       <p class="as-detail-tip">双击素材可直接设为参考图。参考图会进入当前/最近一次动画编辑器的「参考图」面板。</p>`;
   }
@@ -375,8 +431,11 @@ const PWAssets = (() => {
   }
   function encodeImage(im,cap){
     const w=im.naturalWidth||im.width, h=im.naturalHeight||im.height;
-    const tc=document.createElement('canvas'); tc.width=tc.height=16;
-    const tg=tc.getContext('2d'); tg.imageSmoothingEnabled=false; tg.drawImage(im,0,0,16,16);
+    const tcap=96;
+    const ts=Math.min(1, tcap/Math.max(w,h));
+    const tw=Math.max(1,Math.round(w*ts)), th=Math.max(1,Math.round(h*ts));
+    const tc=document.createElement('canvas'); tc.width=tw; tc.height=th;
+    const tg=tc.getContext('2d'); tg.imageSmoothingEnabled=false; tg.drawImage(im,0,0,tw,th);
     const thumb=tc.toDataURL('image/png');
     const sc=Math.min(1, cap/Math.max(w,h));
     const fc=document.createElement('canvas');
@@ -436,16 +495,29 @@ const PWAssets = (() => {
   }
   function toggleFavorite(id,pane){
     const c=assetById(id); if(!c) return;
+    if(c.local){ toast('原版资产不支持收藏'); return; }
     c.ref.favorite=!c.ref.favorite;
     saveData(); render(pane||page);
     toast(c.ref.favorite?'已收藏':'已取消收藏');
   }
-  function copyToProject(id){
+  async function copyToProject(id){
     const c=assetById(id); if(!c) return;
     const ws=currentWS();
     if(!ws){ toast('先新建一个项目工作区'); return; }
     if(!ws.cats.length) ws.cats.push({id:uidWs(),name:'默认',open:true,cards:[]});
     const copy=JSON.parse(JSON.stringify(c));
+    if(c.local && c.ref && c.ref.localURL){
+      try{
+        const res=await fetch(c.ref.localURL);
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const im=await imageOfBlob(await res.blob());
+        const rec=encodeImage(im,256);
+        copy.thumb=rec.thumb; copy.full=rec.full;
+        copy.ref.width=rec.w; copy.ref.height=rec.h;
+        copy.ref.localURL=null;
+      }catch(err){ toast('读取原版纹理失败：'+err.message); return; }
+    }
+    copy.local=false;
     copy.id='a'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
     copy.badge='素材'; copy.meta=(copy.meta||'')+' · 来自素材库';
     ws.cats[0].cards.unshift(copy);
@@ -454,6 +526,7 @@ const PWAssets = (() => {
   }
   function deleteAsset(id,pane){
     const c=assetById(id); if(!c) return;
+    if(c.local){ toast('原版资产来自本地内容包，不能删除'); return; }
     confirmDialog('删除素材','确定从素材库删除「'+c.name+'」？','删除',()=>{
       for(const w of WS){
         if(!w.assetLibrary) continue;
@@ -464,5 +537,5 @@ const PWAssets = (() => {
     });
   }
 
-  return {open, mount, ensureWorkspace, allCards, useAsReference, importLoose, importArchive};
+  return {open, mount, init, ensureLocal, localAssets: localCards, ensureWorkspace, allCards, useAsReference, importLoose, importArchive};
 })();

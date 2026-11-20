@@ -33,6 +33,12 @@ const PWExtensions = (() => {
       open:() => PWAssets.open()
     },
     {
+      id:'model-library', name:'模型库', kind:'tool', icon:'box', version:'0.1.0',
+      desc:'Blockbench .bbmodel / Create 动静部件 / 纹理分离',
+      official:true,
+      open:() => PWModels.open()
+    },
+    {
       id:'addon-light', name:'一键光源', kind:'editor', icon:'eye', version:'1.0.0',
       desc:'动画编辑器内的一键光源面板',
       official:true,
@@ -116,7 +122,7 @@ const PWExtensions = (() => {
   }
 
   function closeToolTab(id){
-    const map = { 'color-studio':'color', 'recolor':'recolor', 'variant-lab':'variant', 'asset-library':'assets' };
+    const map = { 'color-studio':'color', 'recolor':'recolor', 'variant-lab':'variant', 'asset-library':'assets', 'model-library':'models' };
     const kind = map[id];
     if(!kind) return;
     const t = activeTab();

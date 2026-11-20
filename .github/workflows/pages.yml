@@ -10,6 +10,7 @@ on:
       - 'icon-*.png'
       - 'plugin.json'
       - 'plugins/**'
+      - 'integrations/**'
       - 'src/**'
       - 'styles/**'
       - '.github/workflows/pages.yml'
@@ -38,7 +39,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html manifest.json sw.js plugin.json icon-192.png icon-512.png _site/
-          cp -r plugins src styles _site/
+          cp -r plugins src styles integrations _site/
           find _site -name '*.map' -delete
           du -sh _site
 
