@@ -18,7 +18,7 @@
 - 工作区与作品保存在浏览器 `localStorage`，可随时导出资源包备份。
 - 所有文件都在本地运行，适合个人创作与局域网调试。
 
-当前版本：**v0.16.0**<br>
+当前版本：**v0.16.1**<br>
 运行方式：`python serve.py`，打开 `http://127.0.0.1:8766/`。
 
 ## 功能亮点
@@ -42,8 +42,8 @@
 
 ### 换色与批量变种
 
-- **一键换色**：读取纹理颜色，使用预设或调色板替换；原图/结果并排预览，可逐色微调、保存写回或导出 PNG。
-- **变种工坊**：14 套内置材质色阶 + 自定义色阶，矩阵预览、批量生成、PNG ZIP 或写回仓库。
+- **一键换色**：读取纹理颜色，使用 Blockbench 默认 40 / Endesga 64 / 材质色阶等色板替换；原图/结果并排预览，可逐色取色微调、保存写回或导出 PNG。
+- **变种工坊**：20 套内置材质六色阶 + 2–8 色标自定义色阶，矩阵预览、批量生成、PNG ZIP 或写回仓库。
 
 ### 导入、打包与工作流
 
@@ -108,11 +108,11 @@ local/vanilla/               素材库原版纹理目录
 ## 发行包
 
 
-从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.16.0 发行包。发行包是可直接运行的静态源码包：
+从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.16.1 发行包。发行包是可直接运行的静态源码包：
 
 ```bash
-unzip ClastarStudio-v0.16.0.zip
-cd ClastarStudio-v0.16.0
+unzip ClastarStudio-v0.16.1.zip
+cd ClastarStudio-v0.16.1
 python serve.py
 ```
 

@@ -121,12 +121,32 @@
 }
 .var-ramp-name-row input:focus{border-color:var(--accent)}
 .var-ramp-name-row .var-mini{margin-left:0}
-.var-stops{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.var-stop{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8.5px;color:#999;position:relative}
-.var-stop input[type=color]{width:100%;height:26px;padding:0;border:1px solid #111;background:#222;cursor:pointer}
-.var-stop input[type=color]::-webkit-color-swatch-wrapper{padding:1px}
-.var-stop input[type=color]::-webkit-color-swatch{border:none}
-.var-stop i{display:none}
+.var-stops{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:5px}
+.var-stop{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:8.5px;color:#999;position:relative}
+.var-stop-swatch{
+  width:100%;height:30px;padding:0;border:1px solid #111;background:#222;cursor:pointer;
+  box-shadow:inset 0 0 0 1px #ffffff18;position:relative;
+}
+.var-stop-swatch:hover{outline:2px solid var(--accent2);outline-offset:1px}
+.var-stop-label{font-size:8.5px;line-height:1.1;color:#9c9c9c;white-space:nowrap}
+.var-stop-hex{
+  width:100%;min-width:0;height:19px;padding:0 1px;background:#202020;border:1px solid #111;
+  color:#bdbdbd;font:8.5px/1 ui-monospace,Consolas,monospace;text-align:center;outline:none;
+}
+.var-stop-hex:focus{border-color:var(--accent);color:#fff}
+.var-stop-del{
+  position:absolute;top:-5px;right:-5px;width:16px;height:16px;padding:0;display:grid;place-items:center;
+  background:#3a2424;border:1px solid #111;color:#d99;font:11px/1 inherit;cursor:pointer;
+}
+.var-stop-del:hover{background:#a33;color:#fff}
+.var-stop-add{
+  width:100%;height:25px;background:#252525;border:1px dashed #4d4d4d;color:#aaa;
+  font:10px/1 inherit;cursor:pointer;
+}
+.var-stop-add:hover{border-color:var(--accent);color:#e8e8e8}
+.var-stop-add:disabled{opacity:.4;cursor:not-allowed}
+.var-stop-hint{font-size:9px;color:#777;line-height:1.4;margin:-1px 0 1px}
+.var-ramp-name-row input[readonly]{color:#9a9a9a;border-color:#181818;cursor:default}
 .var-ramp-preview{height:18px;border:1px solid #111;box-shadow:inset 0 0 0 1px #ffffff12}
 .var-ramp-actions{display:flex;align-items:center;gap:5px}
 .var-ramp-actions span{margin-left:auto;font-size:9px;color:#777}

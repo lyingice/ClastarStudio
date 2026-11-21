@@ -137,6 +137,288 @@ function rethemeFrames(){
   S.tabs.forEach(t => { if(t._frame) rethemeFrame(t._frame); });
 }
 
+/* 内嵌编辑器里的原生 <input type="color"> 在部分桌面 / PWA 环境会弹出
+   到窗口外。注入一个同源小取色器，所有内嵌工具共用。 */
+function embeddedColorPickerBootstrap(){
+  if(window.__pwEmbeddedColorPicker) return;
+  window.__pwEmbeddedColorPicker = true;
+  const RECENT_KEY = 'pixelWorkshop_recentColors_v1';
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+  const hex2rgb = h => {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(h || '').trim());
+    if(!m) return null;
+    const n = parseInt(m[1], 16);
+    return [(n>>16)&255, (n>>8)&255, n&255];
+  };
+  const rgb2hex = c => '#' + c.map(v => clamp(Math.round(v),0,255).toString(16).padStart(2,'0')).join('');
+  const rgb2hsv = (r,g,b) => {
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+    let h=0;
+    if(d){
+      if(max===r) h=((g-b)/d)%6;
+      else if(max===g) h=(b-r)/d+2;
+      else h=(r-g)/d+4;
+      h*=60; if(h<0) h+=360;
+    }
+    return {h, s:max?d/max:0, v:max};
+  };
+  const hsv2rgb = (h,s,v) => {
+    h=((h%360)+360)%360; s=clamp(s,0,1); v=clamp(v,0,1);
+    const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c;
+    let r=0,g=0,b=0;
+    if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;}
+    else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;}
+    return [(r+m)*255,(g+m)*255,(b+m)*255];
+  };
+  const style = document.createElement('style');
+  style.textContent = `
+  .epc-pop{position:fixed;z-index:99999;width:232px;padding:8px;background:linear-gradient(180deg,#242424,#191919);
+    border:2px solid #0a0a0a;color:#e8e8e8;box-shadow:0 16px 44px #000c,inset 0 1px 0 #ffffff14;
+    font:12px/1.2 "Microsoft YaHei",system-ui,sans-serif;user-select:none}
+  .epc-head{display:flex;align-items:center;gap:6px;min-height:18px}
+  .epc-prev{width:17px;height:17px;border:2px solid #0a0a0a;outline:1px solid #666;box-sizing:border-box}
+  .epc-title{flex:1;font-size:11px;font-weight:700;color:#eee}
+  .epc-x{width:22px;height:22px;padding:0;display:grid;place-items:center;background:#333;border:2px solid #101010;
+    color:#bbb;font:14px/1 inherit;cursor:pointer}
+  .epc-x:hover{background:#494949;color:#fff}
+  .epc-picker{display:flex;gap:5px;height:122px;margin-top:7px}
+  .epc-sv{position:relative;flex:1;min-width:0;border:2px solid #0a0a0a;cursor:crosshair;touch-action:none;background:#f00}
+  .epc-sv i{position:absolute;width:11px;height:11px;border:2px solid #fff;outline:1px solid #000;border-radius:50%;
+    transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 4px #000a}
+  .epc-hue{position:relative;width:17px;flex:0 0 auto;border:2px solid #0a0a0a;cursor:ns-resize;touch-action:none;
+    background:linear-gradient(to bottom,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+  .epc-hue i{position:absolute;left:50%;width:13px;height:4px;background:#fff;border:1px solid #000;
+    transform:translate(-50%,-50%);pointer-events:none}
+  .epc-hex{display:grid;grid-template-columns:32px minmax(0,1fr);gap:5px;align-items:center;margin-top:6px}
+  .epc-hex span{font-size:9.5px;color:#8c8c8c;letter-spacing:.5px}
+  .epc-hex input,.epc-rgb input{width:100%;min-width:0;height:24px;padding:1px 4px;background:#2b2b2b;
+    border:2px solid #101010;color:#f0f0f0;font:600 10.5px/1 ui-monospace,Consolas,monospace;outline:none;box-sizing:border-box}
+  .epc-hex input:focus,.epc-rgb input:focus{border-color:#4c9a2a}
+  .epc-rgb{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px}
+  .epc-rgb label{display:flex;align-items:center;gap:2px;background:#262626;border:2px solid #101010;
+    padding:1px 2px;font-size:9px;color:#929292;box-sizing:border-box}
+  .epc-rgb input{height:20px;padding:0 1px;border:0;background:transparent;text-align:right}
+  .epc-recent{display:flex;align-items:flex-start;gap:5px;margin-top:6px;min-height:17px}
+  .epc-recent>span{font-size:9px;color:#858585;padding-top:3px}
+  .epc-chips{flex:1;display:flex;flex-wrap:wrap;gap:3px;min-width:0}
+  .epc-chip{width:16px;height:16px;padding:0;border:1px solid #0b0b0b;box-shadow:inset 0 0 0 1px #ffffff20;cursor:pointer}
+  .epc-chip:hover{outline:1px solid #fff;outline-offset:1px}`;
+  document.head.appendChild(style);
+
+  function readRecent(){
+    try{
+      const arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+      return Array.isArray(arr) ? arr.filter(h => hex2rgb(h)).slice(0,12) : [];
+    }catch(_){ return []; }
+  }
+  function remember(hex){
+    if(!hex2rgb(hex)) return;
+    const key = hex.toLowerCase();
+    const list = [key, ...readRecent().filter(h => h.toLowerCase() !== key)].slice(0,12);
+    try{ localStorage.setItem(RECENT_KEY, JSON.stringify(list)); }catch(_){}
+  }
+  let live = null;
+  function close(){
+    if(!live) return;
+    const old = live; live = null;
+    document.removeEventListener('pointerdown', old.onDown, true);
+    document.removeEventListener('keydown', old.onKey, true);
+    window.removeEventListener('scroll', old.place, true);
+    window.removeEventListener('resize', old.place);
+    try{ old.pop.remove(); }catch(_){}
+  }
+  function inputSelector(inp){
+    if(inp.id) return 'input[type="color"]#' + (window.CSS && CSS.escape ? CSS.escape(inp.id) : inp.id);
+    if(inp.dataset.gcolor !== undefined) return 'input[type="color"][data-gcolor="' + inp.dataset.gcolor + '"]';
+    if(inp.dataset.set) return 'input[type="color"][data-set="' + inp.dataset.set + '"]';
+    return null;
+  }
+  function open(anchor){
+    if(!anchor || !anchor.isConnected) return;
+    close();
+    const sel = inputSelector(anchor);
+    let inp = anchor;
+    const rgb0 = hex2rgb(inp.value) || [255,255,255];
+    let rgb = rgb0.slice();
+    let hsv = rgb2hsv(rgb[0], rgb[1], rgb[2]);
+    const pop = document.createElement('div');
+    pop.className = 'epc-pop';
+    pop.setAttribute('role', 'dialog');
+    pop.setAttribute('aria-label', '选择颜色');
+    pop.innerHTML = `
+      <div class="epc-head"><span class="epc-prev"></span><b class="epc-title">选择颜色</b><button type="button" class="epc-x" aria-label="关闭">×</button></div>
+      <div class="epc-picker"><div class="epc-sv"><i></i></div><div class="epc-hue"><i></i></div></div>
+      <div class="epc-hex"><span>HEX</span><input type="text" maxlength="7" spellcheck="false"></div>
+      <div class="epc-rgb">
+        <label>R<input type="number" min="0" max="255"></label>
+        <label>G<input type="number" min="0" max="255"></label>
+        <label>B<input type="number" min="0" max="255"></label>
+      </div>
+      <div class="epc-recent"><span>最近</span><div class="epc-chips"></div></div>`;
+    document.body.appendChild(pop);
+    const q = s => pop.querySelector(s);
+    const sv = q('.epc-sv'), svDot = sv.querySelector('i');
+    const hue = q('.epc-hue'), hueDot = hue.querySelector('i');
+    const hexIn = q('.epc-hex input');
+    const rgs = pop.querySelectorAll('.epc-rgb input');
+    const rr = rgs[0], gg = rgs[1], bb = rgs[2];
+    const prev = q('.epc-prev');
+    const chips = q('.epc-chips');
+    if(!rr || !gg || !bb) return;
+    function currentInput(){
+      if(sel){
+        const n = document.querySelector(sel);
+        if(n && n.type === 'color'){ inp = n; return n; }
+      }
+      return inp;
+    }
+    function apply(hex, rememberNow){
+      if(!hex2rgb(hex)) return;
+      let target = currentInput();
+      try{ target.value = hex; }catch(_){}
+      target.dispatchEvent(new Event('input', {bubbles:true}));
+      const after = currentInput();
+      if(after !== target && after.isConnected){
+        try{ after.value = hex; }catch(_){}
+        target = after;
+      }
+      target.dispatchEvent(new Event('change', {bubbles:true}));
+      if(rememberNow) remember(hex);
+      renderChips();
+    }
+    function currentHex(){ return rgb2hex(rgb); }
+    function render(){
+      const hex = currentHex();
+      prev.style.background = hex;
+      if(document.activeElement !== hexIn) hexIn.value = hex;
+      if(document.activeElement !== rr) rr.value = rgb[0];
+      if(document.activeElement !== gg) gg.value = rgb[1];
+      if(document.activeElement !== bb) bb.value = rgb[2];
+      sv.style.background = 'linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(' + hsv.h + ',100%,50%))';
+      svDot.style.left = (hsv.s*100) + '%';
+      svDot.style.top = ((1-hsv.v)*100) + '%';
+      hueDot.style.top = (hsv.h/360*100) + '%';
+    }
+    function renderChips(){
+      const list = readRecent();
+      chips.innerHTML = list.length ? list.map(h => '<button type="button" class="epc-chip" style="background:' + h + '" title="' + h.toUpperCase() + '" data-h="' + h + '"></button>').join('') : '';
+    }
+    function setRgb(next, rememberNow){
+      rgb = next.map(v => clamp(Math.round(v),0,255));
+      const nh = rgb2hsv(rgb[0],rgb[1],rgb[2]);
+      if(nh.s > .001 && nh.v > .001) hsv.h = nh.h;
+      hsv.s = nh.s; hsv.v = nh.v;
+      render(); apply(currentHex(), rememberNow);
+    }
+    function setHsv(h,s,v,rememberNow){
+      hsv.h=((h%360)+360)%360; hsv.s=clamp(s,0,1); hsv.v=clamp(v,0,1);
+      rgb = hsv2rgb(hsv.h,hsv.s,hsv.v).map(v => clamp(Math.round(v),0,255));
+      render(); apply(currentHex(), rememberNow);
+    }
+    function bindDrag(el, fn){
+      let id = null;
+      el.addEventListener('pointerdown', e => {
+        e.preventDefault(); id = e.pointerId;
+        try{ el.setPointerCapture(id); }catch(_){}
+        fn(e);
+      });
+      el.addEventListener('pointermove', e => { if(e.pointerId === id) fn(e); });
+      const end = e => {
+        if(e.pointerId !== id) return;
+        id = null;
+        remember(currentHex());
+        renderChips();
+        try{ el.releasePointerCapture(e.pointerId); }catch(_){}
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+    }
+    bindDrag(sv, e => {
+      const r = sv.getBoundingClientRect();
+      setHsv(hsv.h, (e.clientX-r.left)/r.width, 1-(e.clientY-r.top)/r.height);
+    });
+    bindDrag(hue, e => {
+      const r = hue.getBoundingClientRect();
+      setHsv((e.clientY-r.top)/r.height*360, hsv.s, hsv.v);
+    });
+    hexIn.addEventListener('input', () => {
+      let h = hexIn.value.trim().replace(/^#/,'');
+      if(/^[0-9a-f]{3}$/i.test(h)) h = h.replace(/./g,'$&$&');
+      const c = hex2rgb(h);
+      if(c) setRgb(c);
+    });
+    hexIn.addEventListener('change', () => {
+      let h = hexIn.value.trim().replace(/^#/,'');
+      if(/^[0-9a-f]{3}$/i.test(h)) h = h.replace(/./g,'$&$&');
+      const c = hex2rgb(h);
+      if(c) setRgb(c, true); else render();
+    });
+    hexIn.addEventListener('blur', () => { hexIn.value = currentHex(); });
+    [[rr,0],[gg,1],[bb,2]].forEach(([el,i]) => {
+      el.addEventListener('input', () => setRgb([+rr.value||0,+gg.value||0,+bb.value||0]));
+      el.addEventListener('change', () => setRgb([+rr.value||0,+gg.value||0,+bb.value||0], true));
+    });
+    chips.addEventListener('click', e => {
+      const b = e.target.closest('[data-h]');
+      if(b){
+        const c = hex2rgb(b.dataset.h);
+        if(c) setRgb(c, true);
+      }
+    });
+    q('.epc-x').onclick = close;
+    function place(){
+      if(!live) return;
+      let target = currentInput();
+      let r;
+      try{ r = target.getBoundingClientRect(); }catch(_){ return; }
+      if(!target.isConnected && (!r.width || !r.height)) return;
+      const pr = pop.getBoundingClientRect();
+      const gap=7, pad=8;
+      let left=r.left, top=r.bottom+gap;
+      if(left+pr.width>innerWidth-pad) left=innerWidth-pr.width-pad;
+      if(left<pad) left=pad;
+      if(top+pr.height>innerHeight-pad) top=r.top-pr.height-gap;
+      if(top<pad) top=Math.max(pad, innerHeight-pr.height-pad);
+      pop.style.left=Math.round(left)+'px'; pop.style.top=Math.round(top)+'px';
+    }
+    const onDown = e => {
+      if(pop.contains(e.target)) return;
+      if(e.target === inp || (sel && e.target.closest && e.target.closest(sel))) return;
+      close();
+    };
+    const onKey = e => { if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); close(); } };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey, true);
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    live = { pop, onDown, onKey, place };
+    renderChips(); render();
+    pop.style.visibility='hidden';
+    place();
+    pop.style.visibility='';
+  }
+  document.addEventListener('pointerdown', e => {
+    const inp = e.target && e.target.closest && e.target.closest('input[type="color"]');
+    if(!inp) return;
+    e.preventDefault(); e.stopPropagation();
+    open(inp);
+  }, true);
+  document.addEventListener('click', e => {
+    const inp = e.target && e.target.closest && e.target.closest('input[type="color"]');
+    if(inp){ e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  document.addEventListener('keydown', e => {
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const inp = e.target && e.target.closest && e.target.closest('input[type="color"]');
+    if(!inp) return;
+    e.preventDefault(); open(inp);
+  }, true);
+}
+function embeddedColorPickerScript(){
+  return '<script>(' + embeddedColorPickerBootstrap.toString() + ')();<\/script>';
+}
+
 function mountEditor(t, host){
   /* 纹理 / 动画都用动画工作室（纹理 = 单帧） */
   const kind = t.kind === 'color' ? 'color' : t.kind === 'block' ? 'block'
@@ -151,7 +433,10 @@ function mountEditor(t, host){
     host.appendChild(pane);
     return;
   }
-  const html = src.replace(/<\/head>/i, '<style id="shell-skin">' + skinCSS() + '</style></head>');
+  let html = src.replace(/<\/head>/i, '<style id="shell-skin">' + skinCSS() + '</style></head>');
+  html = /<\/body>/i.test(html)
+    ? html.replace(/<\/body>/i, embeddedColorPickerScript() + '</body>')
+    : html + embeddedColorPickerScript();
   const fr = document.createElement('iframe');
   fr.className = 'ed-frame';
   fr.setAttribute('title', t.title);
@@ -1237,6 +1522,7 @@ function openAbout(){
     '<b>像素工坊</b> v' + APP_VERSION + '<br>' +
     '纹理 / 动画贴图的收纳与绘制。数据保存在本机浏览器（localStorage），不上传。<br><br>' +
     '常用操作：双击卡片打开编辑器 · 右键重命名 / 删除 / 一键换色 · 拖入 PNG 直接导入 · 编辑器顶栏「保存回仓库」<br><br>' +
+    '0.16.1：修复原生取色器弹窗 · Blockbench / Endesga 默认色板 · 变种工坊 6 色阶与自定义增删 · 一键换色材质色卡<br>' +
     '0.16.0：本地素材内容包（Create / 原版）· Create 多分支与 OBJ/MTL 3D 预览 · 旋转缩放与可拉伸预览 · 一键启动脚本<br>' +
     '0.15.0：彩色渐变叠加支持 2–8 个自定义色标并自动保存 · 设置新增 GitHub 检查更新<br>' +
     '0.14.1：动画播放插帧预览（相邻帧线性混合，跟随 .mcmeta interpolate）<br>' +

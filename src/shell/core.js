@@ -41,7 +41,7 @@ function paintIcons(root){
 /* ============================================================
    数据
    ============================================================ */
-const APP_VERSION = '0.16.0';
+const APP_VERSION = '0.16.1';
 const THEMES = [
   {id:'grass',    name:'草原绿',  c:['#4c9a2a','#6fc244','#2f6b1a']},
   {id:'diamond',  name:'钻石蓝',  c:['#2fa8c9','#5fd2ee','#186f88']},
@@ -129,6 +129,7 @@ function activateTab(id){
   if(t.kind === 'tex' || t.kind === 'anim') S.lastEditor = id;
   syncNav();
   renderTabs(); renderContent(); renderStatus();
+  if(t.kind === 'recolor' && typeof recolorRefreshPalettes === 'function') recolorRefreshPalettes(t);
 }
 function syncNav(){
   $$('#wsList .nav').forEach(x => x.classList.toggle('on', x.dataset.ws === S.wsId));

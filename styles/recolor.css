@@ -107,13 +107,12 @@
 .rec-target{
   position:relative;display:flex;align-items:center;justify-content:center;height:28px;min-width:0;
   border:2px dashed #656565;background:#282828;color:#999;font:9.5px/1 ui-monospace,Consolas,monospace;
-  cursor:pointer;overflow:hidden;
+  cursor:pointer;overflow:hidden;padding:0 2px;
+  font-family:ui-monospace,Consolas,monospace;
 }
+.rec-target:hover{border-color:#a8a8a8;color:#ddd}
 .rec-target.has{border-style:solid;border-color:#101010;font-weight:700;letter-spacing:.2px}
-.rec-target input{
-  position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;
-}
-.rec-target span{pointer-events:none;text-shadow:0 1px 1px #00000055}
+.rec-target.has:hover{outline:2px solid var(--accent2);outline-offset:-2px}
 .rec-reset{
   width:23px;height:23px;display:grid;place-items:center;background:#303030;border:2px solid #121212;
   color:#aaa;font:12px/1 inherit;cursor:pointer;padding:0;
@@ -128,6 +127,8 @@
 }
 .rec-swatch:hover{outline:2px solid var(--accent2);outline-offset:1px}
 .rec-swatch.small{width:20px;height:20px}
+.rec-swatches.dense .rec-swatch{width:18px;height:18px}
+.rec-swatches.dense .rec-swatch.small{width:16px;height:16px}
 .rec-swatch-actions{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
 .rec-recent-wrap{display:flex;align-items:flex-start;gap:7px;margin-top:7px;padding-top:7px;border-top:1px solid #1a1a1a}
 .rec-recent-label{font-size:9.5px;color:#777;white-space:nowrap;padding-top:4px}

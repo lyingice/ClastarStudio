@@ -2,20 +2,26 @@
    变种工坊：母版明度 → 材质色阶 → 批量变种
    ============================================================ */
 const VARIANT_PRESETS = [
-  {id:'iron',     name:'铁',     colors:['#2b3037','#6a727d','#b6bec8','#f2f6fb']},
-  {id:'steel',    name:'钢',     colors:['#252d39','#566679','#9bacc1','#e7f0fb']},
-  {id:'copper',   name:'铜',     colors:['#3a1710','#8f3f25','#d17143','#ffc79e']},
-  {id:'bronze',   name:'青铜',   colors:['#33240f','#76511e','#b88635','#ead39a']},
-  {id:'gold',     name:'金',     colors:['#3e2a05','#a2720c','#dfb338','#fff0a6']},
-  {id:'silver',   name:'银',     colors:['#303841','#7d8b99','#c6d1dc','#ffffff']},
-  {id:'amethyst', name:'紫水晶', colors:['#211333','#5b2d8e','#9b6bd1','#eadcff']},
-  {id:'emerald',  name:'绿宝石', colors:['#04251a','#0a6240','#23a268','#b9ffd8']},
-  {id:'ruby',     name:'红宝石', colors:['#31070d','#811426','#cc3045','#ffbcc4']},
-  {id:'lapis',    name:'青金石', colors:['#0b1738','#163b82','#2d68c4','#a9c9ff']},
-  {id:'wood',     name:'木头',   colors:['#24160c','#5c3a1d','#9b6736','#dfb47a']},
-  {id:'obsidian', name:'黑曜石', colors:['#09080f','#211b31','#443866','#9183bb']},
-  {id:'ice',      name:'冰',     colors:['#17303f','#39708c','#83bad0','#e7fbff']},
-  {id:'toxic',    name:'剧毒',   colors:['#122607','#2f6610','#6bb52a','#d9ff8f']}
+  {id:'iron',     name:'铁',       colors:['#353535','#5a5a5a','#6e6e6e','#8a8a8a','#c5c5c5','#ffffff']},
+  {id:'steel',    name:'钢',       colors:['#2b2b2e','#424243','#585858','#726e6e','#919090','#ffffff']},
+  {id:'copper',   name:'铜',       colors:['#25120b','#7e3c26','#9c472b','#ba5835','#ef8868','#fbc3b6']},
+  {id:'bronze',   name:'青铜',     colors:['#702f15','#a45720','#b87025','#dc9043','#f8b687','#fddad2']},
+  {id:'brass',    name:'黄铜',     colors:['#602f24','#8b5237','#bb804b','#f3c364','#fff1a8','#fffef5']},
+  {id:'gold',     name:'金',       colors:['#752802','#c37812','#e6ac15','#fbdc4e','#fefaac','#ffffff']},
+  {id:'silver',   name:'银',       colors:['#303841','#56616f','#7d8b99','#a1adb9','#c6d1dc','#ffffff']},
+  {id:'zinc',     name:'锌',       colors:['#213b3f','#44635b','#7d8777','#a1b99b','#c5f2cc','#ffffff']},
+  {id:'amethyst', name:'紫水晶',   colors:['#1d132f','#5f4297','#8765c5','#b992f3','#ebbaeb','#fffdd5']},
+  {id:'emerald',  name:'绿宝石',   colors:['#002d00','#007313','#00a22b','#28e670','#8bf7b3','#dbffeb']},
+  {id:'diamond',  name:'钻石',     colors:['#07201c','#11727a','#1aaaa7','#2ce0d8','#a1fbe8','#ffffff']},
+  {id:'ruby',     name:'红宝石',   colors:['#2d0000','#470300','#720500','#a50c00','#d91a10','#ff5a5a']},
+  {id:'lapis',    name:'青金石',   colors:['#052463','#173e8d','#1a4fa2','#3c65c9','#6a8fe7','#aec3f3']},
+  {id:'wood',     name:'木头',     colors:['#231b0f','#755b33','#987743','#ac8d53','#bc9860','#dcc6a4']},
+  {id:'obsidian', name:'黑曜石',   colors:['#000001','#06030b','#100c1c','#271e3d','#3b2754','#8d829c']},
+  {id:'ice',      name:'冰',       colors:['#243555','#6b9dfb','#6ca3fd','#74abfe','#8eb8fe','#a9c8ff']},
+  {id:'toxic',    name:'剧毒',     colors:['#1e3508','#3f6f0e','#5fa818','#7cc92f','#a6e35c','#ddff9e']},
+  {id:'netherite',name:'下界合金', colors:['#111111','#31292a','#3b393b','#484548','#5a575a','#aeadae']},
+  {id:'quartz',   name:'石英',     colors:['#26201f','#84756e','#b5a28f','#d8cebf','#e6e0d8','#f7f5f2']},
+  {id:'sculk',    name:'幽匿',     colors:['#0d1217','#07272f','#10444b','#1d5e63','#08a1a6','#83ecf3']}
 ];
 const VARIANT_LS_OPTIONS = 'pixelWorkshop_variantOptions_v1';
 const VARIANT_LS_CUSTOMS = 'pixelWorkshop_variantCustoms_v1';
@@ -25,6 +31,35 @@ const VARIANT_DEFAULT_OPTIONS = {
   contrast:1, gamma:1, pattern:'{name}_{ramp}', output:'flat'
 };
 const VARIANT_MAX_SOURCES = 24;
+const VARIANT_MIN_STOPS = 2;
+const VARIANT_MAX_STOPS = 8;
+
+function variantValidHex(hex){ return /^#[0-9a-f]{6}$/i.test(String(hex || '')); }
+function variantCleanColors(list, fallback){
+  const out = [];
+  (Array.isArray(list) ? list : []).forEach(h => {
+    const v = String(h || '').toLowerCase();
+    if(variantValidHex(v)) out.push(v);
+  });
+  if(out.length < VARIANT_MIN_STOPS){
+    const base = (Array.isArray(fallback) ? fallback : []).map(h => String(h).toLowerCase()).filter(variantValidHex);
+    return (base.length >= VARIANT_MIN_STOPS ? base : ['#222222','#eeeeee']).slice(0, VARIANT_MIN_STOPS);
+  }
+  if(out.length > VARIANT_MAX_STOPS) out.length = VARIANT_MAX_STOPS;
+  return out;
+}
+function variantStopLabels(n){
+  const table = {
+    2:['暗部','高光'],
+    3:['暗部','中间','高光'],
+    4:['暗部','中暗','中亮','高光'],
+    5:['暗部','深色','中间','浅色','高光'],
+    6:['暗部','深色','中暗','中亮','浅色','高光'],
+    7:['暗部','深色','暗中间','中间','亮中间','浅色','高光'],
+    8:['暗部','深色','暗中间','中暗','中亮','亮中间','浅色','高光']
+  };
+  return table[n] || Array.from({length:n}, (_,i) => i === 0 ? '暗部' : i === n-1 ? '高光' : ('色 ' + (i + 1)));
+}
 
 function variantOptions(){
   const o = Object.assign({}, VARIANT_DEFAULT_OPTIONS);
@@ -41,7 +76,8 @@ function variantLoadCustoms(){
   try{
     const a = JSON.parse(localStorage.getItem(VARIANT_LS_CUSTOMS) || '[]');
     return Array.isArray(a) ? a.filter(x => x && x.id && Array.isArray(x.colors)).map(x => ({
-      id:String(x.id), name:String(x.name || '自定义色阶'), colors:x.colors.slice(0,4), custom:true
+      id:String(x.id), name:String(x.name || '自定义色阶'),
+      colors:variantCleanColors(x.colors, [x.colors[0], x.colors[0]]), custom:true
     })) : [];
   }catch(_){ return []; }
 }
@@ -64,10 +100,12 @@ let VARIANT_OVERRIDES = variantLoadOverrides();
 
 function variantRamps(){
   const builtins = VARIANT_PRESETS.map(p => Object.assign({}, p, {
-    colors:(VARIANT_OVERRIDES[p.id] || p.colors).slice(0,4),
+    colors:variantCleanColors(VARIANT_OVERRIDES[p.id] || p.colors, p.colors),
     builtin:true
   }));
-  return builtins.concat(VARIANT_CUSTOMS.map(x => Object.assign({}, x, {builtin:false})));
+  return builtins.concat(VARIANT_CUSTOMS.map(x => Object.assign({}, x, {
+    colors:variantCleanColors(x.colors, [x.colors[0], x.colors[0]]), builtin:false
+  })));
 }
 function variantRamp(id){
   return variantRamps().find(r => r.id === id) || variantRamps()[0];
@@ -424,42 +462,70 @@ function variantRenderEditor(t, pane){
   const st = variantState(t);
   const box = pane.querySelector('#varRampEditor');
   if(!box) return;
+  if(window.PWColorPicker) PWColorPicker.close();
   const ramp = variantRamp(st.activeRamp);
   if(!ramp){ box.innerHTML = ''; return; }
   const nameEl = pane.querySelector('#varActiveRampName');
   if(nameEl) nameEl.textContent = ramp.name;
-  const labels = ['暗部','中暗','中亮','高光'];
+  const labels = variantStopLabels(ramp.colors.length);
   box.innerHTML = `
     <div class="var-ramp-name-row">
-      <input id="varRampName" value="${esc(ramp.name)}" maxlength="18" spellcheck="false">
+      <input id="varRampName" value="${esc(ramp.name)}" maxlength="18" spellcheck="false"${ramp.builtin ? ' title="内置色阶不能直接改名；输入新名字后点「存为新色阶」"' : ''}>
       <button class="var-mini" id="varRampSave">存为新色阶</button>
     </div>
+    <div class="var-stop-hint">从暗到亮 ${ramp.colors.length} 个色标 · 点击色块调整</div>
     <div class="var-stops">
-      ${ramp.colors.map((c,i) => `<label class="var-stop"><input type="color" data-var-color="${i}" value="${esc(c)}"><span>${labels[i] || ('色 '+(i+1))}</span><i style="background:${esc(c)}"></i></label>`).join('')}
+      ${ramp.colors.map((c,i) => `<div class="var-stop">
+        <button type="button" class="var-stop-swatch" data-var-stop-pick="${i}" style="background:${esc(c)}" title="${esc(c.toUpperCase())} · ${esc(labels[i])}"></button>
+        <span class="var-stop-label">${esc(labels[i])}</span>
+        <input class="var-stop-hex" data-var-stop-hex="${i}" value="${esc(c.toUpperCase())}" maxlength="7" spellcheck="false" aria-label="${esc(labels[i])}色值">
+        ${ramp.colors.length > VARIANT_MIN_STOPS ? `<button type="button" class="var-stop-del" data-var-stop-del="${i}" title="删除这个色标">×</button>` : ''}
+      </div>`).join('')}
     </div>
+    <button type="button" class="var-stop-add" id="varStopAdd"${ramp.colors.length >= VARIANT_MAX_STOPS ? ' disabled' : ''}>＋ 添加色标</button>
     <div class="var-ramp-preview" id="varRampPreview" style="background:linear-gradient(90deg,${ramp.colors.map(esc).join(',')})"></div>
     <div class="var-ramp-actions">
       ${ramp.builtin ? '<button class="var-mini" id="varRampReset">恢复预设</button>' : '<button class="var-mini" id="varRampDelete">删除此色阶</button>'}
-      <span>${ramp.builtin ? '内置色阶' : '自定义色阶'}</span>
+      <span>${ramp.builtin ? '内置色阶 · 可改色 / 加色标 / 存为新色阶' : '自定义色阶 · 可增删色标'}</span>
     </div>`;
-  box.querySelectorAll('[data-var-color]').forEach(inp => {
-    inp.addEventListener('input', () => {
+
+  box.querySelectorAll('[data-var-stop-pick]').forEach(btn => {
+    btn.addEventListener('click', () => {
       const r = variantRamp(st.activeRamp);
       if(!r) return;
-      r.colors[+inp.dataset.varColor] = inp.value;
-      variantPersistRamp(r);
-      const prev = box.querySelector('#varRampPreview');
-      if(prev) prev.style.background = 'linear-gradient(90deg,' + r.colors.join(',') + ')';
-      const sw = box.querySelectorAll('.var-stop i');
-      if(sw[+inp.dataset.varColor]) sw[+inp.dataset.varColor].style.background = inp.value;
-      variantUpdateCompare(t, pane);
-      variantScheduleMatrix(t, pane);
-    });
-    inp.addEventListener('change', () => {
-      variantRenderRamps(t, pane);
-      variantRenderEditor(t, pane);
+      const idx = +btn.dataset.varStopPick;
+      if(!r.colors[idx]) return;
+      if(!window.PWColorPicker) return;
+      PWColorPicker.open(btn, {
+        title: `${r.name} · ${variantStopLabels(r.colors.length)[idx] || ('色 ' + (idx + 1))}`,
+        color: r.colors[idx],
+        swatches: r.colors,
+        onInput(hex){ variantSetStopColor(t, pane, idx, hex); },
+        onClose(){
+          const now = variantRamp(st.activeRamp);
+          if(now) variantPersistRamp(now);
+        }
+      });
     });
   });
+  box.querySelectorAll('[data-var-stop-hex]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const idx = +inp.dataset.varStopHex;
+      const hex = variantNormalizeHex(inp.value);
+      const r = variantRamp(st.activeRamp);
+      if(!hex){
+        if(r && r.colors[idx]) inp.value = r.colors[idx].toUpperCase();
+        return;
+      }
+      variantSetStopColor(t, pane, idx, hex, true);
+      if(r) variantPersistRamp(variantRamp(st.activeRamp));
+    });
+  });
+  box.querySelectorAll('[data-var-stop-del]').forEach(btn => {
+    btn.addEventListener('click', () => variantRemoveStop(t, pane, +btn.dataset.varStopDel));
+  });
+  const add = box.querySelector('#varStopAdd');
+  if(add) add.onclick = () => variantAddStop(t, pane);
   const nameInp = box.querySelector('#varRampName');
   if(nameInp) nameInp.addEventListener('input', () => {
     const r = variantRamp(st.activeRamp);
@@ -467,10 +533,10 @@ function variantRenderEditor(t, pane){
     r.name = nameInp.value.trim() || '自定义色阶';
     const saved = VARIANT_CUSTOMS.find(x => x.id === r.id);
     if(saved) saved.name = r.name;
-    variantSaveCustoms(VARIANT_CUSTOMS);
+    try{ localStorage.setItem(VARIANT_LS_CUSTOMS, JSON.stringify(VARIANT_CUSTOMS)); }catch(_){}
     variantRenderRamps(t, pane);
-    const nameEl = pane.querySelector('#varActiveRampName');
-    if(nameEl) nameEl.textContent = r.name;
+    const activeName = pane.querySelector('#varActiveRampName');
+    if(activeName) activeName.textContent = r.name;
   });
   const save = box.querySelector('#varRampSave');
   if(save) save.onclick = () => variantSaveCustomRamp(t, pane);
@@ -502,14 +568,109 @@ function variantRenderEditor(t, pane){
     toast('已删除自定义色阶');
   };
 }
+
+function variantNormalizeHex(v){
+  let h = String(v || '').trim().replace(/^#/, '');
+  if(/^[0-9a-f]{3}$/i.test(h)) h = h.replace(/./g, '$&$&');
+  return /^[0-9a-f]{6}$/i.test(h) ? ('#' + h.toLowerCase()) : null;
+}
+function variantApplyRampColors(ramp){
+  if(!ramp) return;
+  const colors = ramp.colors.slice();
+  if(ramp.builtin) VARIANT_OVERRIDES[ramp.id] = colors;
+  else {
+    const saved = VARIANT_CUSTOMS.find(x => x.id === ramp.id);
+    if(saved) saved.colors = colors;
+  }
+}
+let variantPersistTimer = null;
+function variantPersistSoon(ramp){
+  clearTimeout(variantPersistTimer);
+  variantPersistTimer = setTimeout(() => {
+    variantPersistTimer = null;
+    variantPersistRamp(ramp);
+  }, 260);
+}
+function variantPaintRampRow(pane, ramp){
+  if(!pane || !ramp) return;
+  const btn = pane.querySelector(`[data-var-ramp-edit="${cssEscape(ramp.id)}"]`);
+  if(!btn) return;
+  const cells = btn.querySelectorAll('.var-ramp-swatches i');
+  cells.forEach((el, i) => { if(ramp.colors[i]) el.style.background = ramp.colors[i]; });
+}
+function variantSetStopColor(t, pane, idx, hex, immediate){
+  const st = variantState(t);
+  const ramp = variantRamp(st.activeRamp);
+  if(!ramp || !variantValidHex(hex) || !ramp.colors[idx]) return;
+  hex = hex.toLowerCase();
+  ramp.colors[idx] = hex;
+  variantApplyRampColors(ramp);
+  const box = pane.querySelector('#varRampEditor');
+  if(box){
+    const sw = box.querySelector(`[data-var-stop-pick="${idx}"]`);
+    if(sw){ sw.style.background = hex; sw.title = hex.toUpperCase(); }
+    const hi = box.querySelector(`[data-var-stop-hex="${idx}"]`);
+    if(hi && document.activeElement !== hi) hi.value = hex.toUpperCase();
+    const prev = box.querySelector('#varRampPreview');
+    if(prev) prev.style.background = 'linear-gradient(90deg,' + ramp.colors.join(',') + ')';
+  }
+  variantPaintRampRow(pane, ramp);
+  if(immediate) variantPersistRamp(ramp);
+  else variantPersistSoon(ramp);
+  variantUpdateCompare(t, pane);
+  variantScheduleMatrix(t, pane);
+}
+function variantAddStop(t, pane){
+  const st = variantState(t);
+  const ramp = variantRamp(st.activeRamp);
+  if(!ramp || ramp.colors.length >= VARIANT_MAX_STOPS) return;
+  let best = 0, bestD = -1;
+  for(let i=0;i<ramp.colors.length-1;i++){
+    const a = variantHexRgb(ramp.colors[i]), b = variantHexRgb(ramp.colors[i+1]);
+    const d = Math.abs(variantLum(a.r,a.g,a.b) - variantLum(b.r,b.g,b.b));
+    if(d > bestD){ bestD = d; best = i; }
+  }
+  const a = variantHexRgb(ramp.colors[best]), b = variantHexRgb(ramp.colors[best+1]);
+  const mid = variantRgbHex((a.r+b.r)/2, (a.g+b.g)/2, (a.b+b.b)/2);
+  ramp.colors.splice(best + 1, 0, mid);
+  variantApplyRampColors(ramp);
+  variantPersistRamp(ramp);
+  variantRenderRamps(t, pane);
+  variantRenderEditor(t, pane);
+  variantUpdateCompare(t, pane);
+  variantScheduleMatrix(t, pane);
+  toast('已添加色标，可继续调色');
+}
+function variantRemoveStop(t, pane, idx){
+  const st = variantState(t);
+  const ramp = variantRamp(st.activeRamp);
+  if(!ramp || ramp.colors.length <= VARIANT_MIN_STOPS) return;
+  if(idx < 0 || idx >= ramp.colors.length) return;
+  if(window.PWColorPicker) PWColorPicker.close();
+  ramp.colors.splice(idx, 1);
+  variantApplyRampColors(ramp);
+  variantPersistRamp(ramp);
+  variantRenderRamps(t, pane);
+  variantRenderEditor(t, pane);
+  variantUpdateCompare(t, pane);
+  variantScheduleMatrix(t, pane);
+  toast('已删除色标');
+}
 function variantPersistRamp(ramp){
   if(!ramp) return;
+  clearTimeout(variantPersistTimer);
+  variantPersistTimer = null;
+  variantApplyRampColors(ramp);
   if(ramp.builtin){
-    VARIANT_OVERRIDES[ramp.id] = ramp.colors.slice(0,4);
+    VARIANT_OVERRIDES[ramp.id] = ramp.colors.slice();
     variantSaveOverrides(VARIANT_OVERRIDES);
   }else{
     const saved = VARIANT_CUSTOMS.find(x => x.id === ramp.id);
-    if(saved){ saved.colors = ramp.colors.slice(0,4); saved.name = ramp.name; variantSaveCustoms(VARIANT_CUSTOMS); }
+    if(saved){
+      saved.colors = ramp.colors.slice();
+      saved.name = ramp.name;
+      variantSaveCustoms(VARIANT_CUSTOMS);
+    }
   }
 }
 function variantSaveCustomRamp(t, pane){
@@ -517,9 +678,10 @@ function variantSaveCustomRamp(t, pane){
   const r = variantRamp(st.activeRamp);
   if(!r) return;
   const nameEl = pane.querySelector('#varRampName');
-  const name = (nameEl && nameEl.value.trim()) || (r.name + ' 副本');
-  const id = 'custom_' + Date.now().toString(36);
-  VARIANT_CUSTOMS.push({ id, name, colors:r.colors.slice(0,4), custom:true });
+  let name = (nameEl && nameEl.value.trim()) || (r.name + ' 副本');
+  if(r.builtin && name === r.name) name = r.name + ' 副本';
+  const id = 'custom_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+  VARIANT_CUSTOMS.push({ id, name, colors:r.colors.slice(), custom:true });
   variantSaveCustoms(VARIANT_CUSTOMS);
   st.activeRamp = id;
   st.rampOn.add(id);
@@ -527,7 +689,7 @@ function variantSaveCustomRamp(t, pane){
   variantRenderEditor(t, pane);
   variantUpdateCompare(t, pane);
   variantScheduleMatrix(t, pane);
-  toast('已新增色阶「' + name + '」');
+  toast('已新增色阶「' + name + '」，可继续增删色标');
 }
 
 function variantUpdateCompare(t, pane){
@@ -538,11 +700,16 @@ function variantUpdateCompare(t, pane){
   const after = pane.querySelector('#varCmpAfter');
   const label = pane.querySelector('#varCmpLabel');
   if(!asset || !ramp || !before || !after) return;
+  const token = (st.cmpToken = (st.cmpToken || 0) + 1);
   if(label) label.textContent = asset.cardName + ' · ' + ramp.name;
-  variantLoadImage(st, asset).then(im => variantDrawPreview(before, im))
-    .catch(() => {});
-  variantRender(asset, ramp, st.opts, st).then(cv => variantDrawPreview(after, cv))
-    .catch(() => {});
+  variantLoadImage(st, asset).then(im => {
+    if(token !== st.cmpToken) return;
+    variantDrawPreview(before, im);
+  }).catch(() => {});
+  variantRender(asset, ramp, st.opts, st).then(cv => {
+    if(token !== st.cmpToken) return;
+    variantDrawPreview(after, cv);
+  }).catch(() => {});
 }
 
 function variantScheduleMatrix(t, pane){

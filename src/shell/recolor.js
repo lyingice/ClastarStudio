@@ -12,6 +12,27 @@ const RECOLOR_BASE_PALETTE = [
   '#ffcd75','#ef7d57','#b13e53','#5d275d','#38b764','#257179','#41a6f6','#73eff7',
   '#a7f070','#3b5dc9','#ffd479','#e8a33d','#b86f2d','#8b4a2b','#94b0c2','#566c86'
 ];
+/* Blockbench 内置默认色板（40 色）与 Endesga 64，适合像素纹理创作 */
+const RECOLOR_BB_DEFAULT = [
+  '#1a1a1b','#353637','#464849','#5d5f60','#757677','#868788','#979b9d','#b8bdbe','#dadedf','#ffffff',
+  '#9a080f','#b40a1a','#d21129','#ef2142','#ff5774',
+  '#bb7907','#cc9104','#edb508','#fcd720','#fef364',
+  '#0d7e36','#12933d','#11aa38','#1cc93d','#29e64d',
+  '#044b8f','#0955a8','#126bc3','#1782db','#339afc',
+  '#cd3e00','#e65b00','#f37800','#f89520','#fdaf40',
+  '#02a8c1','#0cc3ca','#17d1c7','#38debd','#5be9b7'
+];
+const RECOLOR_BB_ENDESGA = [
+  '#ff0040','#131313','#1b1b1b','#272727','#3d3d3d','#5d5d5d','#858585','#b4b4b4','#ffffff',
+  '#c7cfdd','#92a1b9','#657392','#424c6e','#2a2f4e','#1a1932','#0e071b',
+  '#1c121c','#391f21','#5d2c28','#8a4836','#bf6f4a','#e69c69','#f6ca9f','#f9e6cf',
+  '#edab50','#e07438','#c64524','#8e251d','#ff5000','#ed7614','#ffa214','#ffc825','#ffeb57',
+  '#d3fc7e','#99e65f','#5ac54f','#33984b','#1e6f50','#134c4c','#0c2e44',
+  '#00396d','#0069aa','#0098dc','#00cdf9','#0cf1ff','#94fdff',
+  '#fdd2ed','#f389f5','#db3ffd','#7a09fa','#3003d9','#0c0293',
+  '#03193f','#3b1443','#622461','#93388f','#ca52c9','#c85086',
+  '#f68187','#f5555d','#ea323c','#c42430','#891e2b','#571c27'
+];
 const RECOLOR_PRESETS = [
   { id:'theme',   name:'主题单色', hint:'用当前主题色统一整张纹理，保留原来的明暗。' },
   { id:'lighten', name:'提亮',     hint:'整体变亮，适合做高光或浅色版本。' },
@@ -124,30 +145,78 @@ function recolorBuiltinPalettes(){
   for(let i=0;i<12;i++){
     rainbow.push(recolorHslToHex(i * 30, .78, .62));
   }
-  return [
-    { id:'__base__', group:'内置', name:'基础 24', colors:RECOLOR_BASE_PALETTE.slice() },
-    { id:'__gray__', group:'内置', name:'灰阶 8', colors:['#ffffff','#c0cbdc','#8b9bb4','#5a6988','#3a4466','#262b44','#1a1c2c','#000000'] },
-    { id:'__rainbow__', group:'内置', name:'彩虹 12', colors:rainbow },
-    { id:'__metal__', group:'内置', name:'金属 6', colors:['#fbe6a2','#e8c46a','#c9a24a','#a07d33','#75591f','#4a3812'] }
+  const list = [
+    { id:'__bb_default__', group:'Blockbench', name:'默认 40', colors:RECOLOR_BB_DEFAULT.slice() },
+    { id:'__bb_endesga__', group:'Blockbench', name:'Endesga 64', colors:RECOLOR_BB_ENDESGA.slice() },
+    { id:'__bb_gray__', group:'Blockbench', name:'灰阶 10', colors:RECOLOR_BB_DEFAULT.slice(0,10) },
+    { id:'__classic__', group:'经典', name:'基础 24', colors:RECOLOR_BASE_PALETTE.slice() },
+    { id:'__classic_gray__', group:'经典', name:'灰阶 8', colors:['#ffffff','#c0cbdc','#8b9bb4','#5a6988','#3a4466','#262b44','#1a1c2c','#000000'] },
+    { id:'__rainbow__', group:'经典', name:'彩虹 12', colors:rainbow },
+    { id:'__metal__', group:'经典', name:'金属 6', colors:['#fbe6a2','#e8c46a','#c9a24a','#a07d33','#75591f','#4a3812'] }
   ];
+  /* 变种工坊的材质色阶直接作为一键换色的色卡 */
+  if(typeof variantRamps === 'function'){
+    try{
+      variantRamps().forEach(r => list.push({
+        id:'__ramp_' + r.id, group:'材质色阶', name:r.name,
+        colors:(r.colors || []).slice()
+      }));
+    }catch(_){}
+  }
+  return list.filter(p => p.colors.length);
+}
+function recolorLegacyDefaultColors(name){
+  const sets = {
+    '基础 24': RECOLOR_BASE_PALETTE,
+    '灰阶 8': ['#ffffff','#c0cbdc','#8b9bb4','#5a6988','#3a4466','#262b44','#1a1c2c','#000000'],
+    '彩虹 12': Array.from({length:12}, (_,i) => recolorHslToHex(i * 30, .78, .62)),
+    '金属 6': ['#fbe6a2','#e8c46a','#c9a24a','#a07d33','#75591f','#4a3812']
+  };
+  return sets[name] || null;
+}
+function recolorIsLegacyDefaultPalette(p){
+  if(!p || p.group !== '原版') return false;
+  const sig = recolorLegacyDefaultColors(p.name);
+  if(!sig) return false;
+  const a = (p.colors || []).map(x => String(x).toLowerCase());
+  const b = sig.map(x => String(x).toLowerCase());
+  return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 function recolorPaletteState(){
+  const builtins = recolorBuiltinPalettes();
+  const list = builtins.slice();
+  const seen = new Set(list.map(p => p.group + '/' + p.name));
+  let active = '__bb_default__';
   try{
     const saved = JSON.parse(localStorage.getItem('animStudioPalettes_v1') || 'null');
     if(saved && Array.isArray(saved.list) && saved.list.length){
-      const list = saved.list.map(p => ({
+      const legacy = saved.v !== 2;
+      saved.list.map(p => ({
         id:p.id || ('pal' + Math.random().toString(36).slice(2,8)),
         group:p.group || '未分类',
         name:p.name || '色卡',
         colors:(Array.isArray(p.colors) ? p.colors : []).filter(h => recolorHexToRgb(h)).slice()
-      })).filter(p => p.colors.length);
-      if(list.length){
-        return { list, active: list.some(p => p.id === saved.active) ? saved.active : list[0].id };
+      })).filter(p => p.colors.length).forEach(p => {
+        /* 旧版「原版」默认色卡由新内置色板替代；玩家改过色的仍保留 */
+        if(legacy && recolorIsLegacyDefaultPalette(p)) return;
+        const key = p.group + '/' + p.name;
+        if(seen.has(key)) return;
+        seen.add(key);
+        list.push(p);
+      });
+      const activeObj = saved.active && list.find(p => p.id === saved.active);
+      if(activeObj && (!legacy || !['原版','经典','Blockbench'].includes(activeObj.group))){
+        active = activeObj.id;
+      }else if(saved.active){
+        const savedPal = saved.list.find(p => p && p.id === saved.active);
+        if(savedPal){
+          const same = list.find(p => p.group === (savedPal.group || '未分类') && p.name === (savedPal.name || '色卡'));
+          if(same && (!legacy || !['原版','经典','Blockbench'].includes(same.group))) active = same.id;
+        }
       }
     }
   }catch(e){}
-  const list = recolorBuiltinPalettes();
-  return { list, active:list[0].id };
+  return { list, active:list.some(p => p.id === active) ? active : (list[0] && list[0].id) };
 }
 function recolorRecentColors(){
   try{
@@ -459,7 +528,7 @@ function recolorPageHTML(){
             <div class="rec-block">
               <div class="rec-block-head">
                 <h3>颜色对应 <span id="recColorCount" class="rec-count"></span></h3>
-                <span>点目标色可单独改 · 只换几个先清空</span>
+                <span>点目标色打开取色器 · 可吸管 / 微调 · 只换几个先清空</span>
               </div>
               <div class="rec-rows" id="recRows"></div>
             </div>
@@ -616,6 +685,13 @@ function recolorBind(t, pane){
   });
 
   on(q('#recRows'), 'click', e => {
+    const pick = e.target.closest('[data-rec-pick]');
+    if(pick){
+      e.preventDefault();
+      e.stopPropagation();
+      recolorOpenRowPicker(t, +pick.dataset.recPick, pick);
+      return;
+    }
     const reset = e.target.closest('[data-rec-reset]');
     if(reset){
       e.stopPropagation();
@@ -637,21 +713,6 @@ function recolorBind(t, pane){
     const st = recolorState(t);
     st.selected = +row.dataset.recRow;
     recolorRenderRows(t);
-  });
-  on(q('#recRows'), 'input', e => {
-    if(!e.target.matches('[data-rec-color]')) return;
-    const i = +e.target.dataset.recColor;
-    const st = recolorState(t);
-    if(!st.mapping[i]) return;
-    st.mapping[i].target = e.target.value;
-    st.mapping[i].paletteIndex = null;
-    st.selected = i;
-    recolorMarkDirty(t);
-    recolorPaintRow(t, i);
-    recolorRenderPreview(t);
-  });
-  on(q('#recRows'), 'change', e => {
-    if(e.target.matches('[data-rec-color]')) recolorRenderPreview(t);
   });
 
   on(q('#recPalette'), 'change', e => {
@@ -856,6 +917,7 @@ function recolorRenderRows(t){
   const st = recolorState(t);
   const pane = t._pane;
   if(!pane) return;
+  if(window.PWColorPicker) PWColorPicker.close();
   const box = pane.querySelector('#recRows');
   if(!st.mapping.length){
     box.innerHTML = '<div class="rec-rows-empty">这张纹理没有可处理的颜色。</div>';
@@ -872,13 +934,42 @@ function recolorRenderRows(t){
       <span class="rec-source-hex">${m.source.toUpperCase()}</span>
       <span class="rec-share">${share}%</span>
       <span class="rec-arrow">→</span>
-      <label class="rec-target${target ? ' has' : ''}" style="${style}" title="点击选择新颜色">
-        <input type="color" data-rec-color="${i}" value="${target || m.source}" aria-label="第 ${i+1} 个颜色的新颜色">
-        <span>${text}</span>
-      </label>
+      <button type="button" class="rec-target${target ? ' has' : ''}" data-rec-pick="${i}" style="${style}" title="点击选择新颜色">${text}</button>
       <button type="button" class="rec-reset" data-rec-reset="${i}" title="恢复为本来的颜色">↺</button>
     </div>`;
   }).join('');
+}
+
+function recolorOpenRowPicker(t, i, anchor){
+  const st = recolorState(t);
+  const m = st.mapping[i];
+  if(!m || !window.PWColorPicker) return;
+  const current = st.palettes.find(p => p.id === st.paletteId) || st.palettes[0];
+  const swatches = (current ? current.colors : []).concat(recolorRecentColors());
+  st.selected = i;
+  const pane = t._pane;
+  if(pane) pane.querySelectorAll('.rec-row').forEach(r => r.classList.toggle('sel', +r.dataset.recRow === i));
+  let previewRaf = 0;
+  PWColorPicker.open(anchor, {
+    title: `第 ${i + 1} 色 · 原色 ${m.source.toUpperCase()}`,
+    color: m.target || m.source,
+    swatches,
+    onInput(hex){
+      const mm = st.mapping[i];
+      if(!mm) return;
+      mm.target = hex;
+      mm.paletteIndex = null;
+      recolorMarkDirty(t);
+      recolorPaintRow(t, i);
+      if(!previewRaf) previewRaf = requestAnimationFrame(() => {
+        previewRaf = 0;
+        recolorRenderPreview(t);
+      });
+    },
+    onClose(){
+      if(t._pane) recolorRenderPreview(t);
+    }
+  });
 }
 
 function recolorPaintRow(t, i){
@@ -894,16 +985,24 @@ function recolorPaintRow(t, i){
     target.classList.add('has');
     target.style.background = m.target;
     target.style.color = recolorTextColor(m.target);
-    target.querySelector('span').textContent = m.target.toUpperCase();
+    target.textContent = m.target.toUpperCase();
   }else{
     target.classList.remove('has');
     target.style.background = '';
     target.style.color = '';
-    target.querySelector('span').textContent = '选色';
+    target.textContent = '选色';
   }
   pane.querySelectorAll('.rec-row').forEach(r => r.classList.toggle('sel', +r.dataset.recRow === st.selected));
 }
 
+function recolorRefreshPalettes(t){
+  if(!t || t.kind !== 'recolor' || !t._pane) return;
+  const st = recolorState(t);
+  const pal = recolorPaletteState();
+  st.palettes = pal.list;
+  if(!st.palettes.some(p => p.id === st.paletteId)) st.paletteId = pal.active;
+  recolorRenderPalette(t);
+}
 function recolorRenderPalette(t){
   const st = recolorState(t);
   const pane = t._pane;
@@ -919,6 +1018,7 @@ function recolorRenderPalette(t){
   const current = st.palettes.find(p => p.id === st.paletteId) || st.palettes[0];
   const box = pane.querySelector('#recPaletteSwatches');
   if(box){
+    box.classList.toggle('dense', !!(current && current.colors.length > 24));
     box.innerHTML = current ? current.colors.map(hex =>
       `<button type="button" class="rec-swatch" data-rec-hex="${hex}" style="background:${hex}" title="${hex.toUpperCase()}"></button>`
     ).join('') : '<span class="rec-muted">没有色卡颜色</span>';
