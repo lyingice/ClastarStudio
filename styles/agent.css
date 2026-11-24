@@ -1,0 +1,343 @@
+/* ============================================================
+   AI 助手：聊天面板 / 配置 / 同意卡片 / 工具日志
+   Ore UI 深色风格：直角、2px 硬边、主题色来自 shell 变量
+   ============================================================ */
+.agent-pane{display:none;flex-direction:column;min-height:0;overflow:hidden;background:#1a1a1a}
+.agent-pane.on{display:flex}
+.agent-page{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:#1a1a1a}
+
+/* ---------------- 顶栏 ---------------- */
+.ag-head{
+  flex:0 0 46px;display:flex;align-items:center;gap:10px;padding:0 12px;
+  background:#242424;border-bottom:2px solid #101010;box-shadow:inset 0 1px 0 #ffffff0d;
+}
+.ag-head-main{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.ag-logo{
+  width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;
+  background:#2d2d2d;border:2px solid #111;color:var(--accent2);
+  box-shadow:inset 0 -2px 0 #00000038;
+}
+.ag-head b{font-size:12.5px;letter-spacing:.8px;color:#f0f0f0;white-space:nowrap}
+.ag-badge{
+  height:20px;display:inline-flex;align-items:center;padding:0 7px;
+  background:#2d2d2d;border:1px solid #111;color:#aaa;
+  font-size:9.5px;letter-spacing:.4px;white-space:nowrap;
+  box-shadow:inset 0 -2px 0 #00000030;
+}
+.ag-badge.proxy{background:#2e3a2a;border-color:#1a2317;color:var(--accent2);box-shadow:inset 0 -2px 0 #1c2618}
+.ag-badge.direct{background:#28343a;border-color:#151e22;color:#8fc7dc;box-shadow:inset 0 -2px 0 #172126}
+.ag-badge.off,.ag-badge.warn{background:#3a3324;border-color:#221e13;color:#d8b46a;box-shadow:inset 0 -2px 0 #211c12}
+.ag-status{
+  margin-left:auto;font-size:10px;color:#8b8b8b;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:190px;
+}
+.ag-head-actions{display:flex;gap:6px;flex:0 0 auto}
+.ag-head-actions .btn{height:26px;font-size:11px}
+
+/* ---------------- 消息流 ---------------- */
+.ag-messages{
+  flex:1;min-height:0;overflow:auto;padding:14px 16px 10px;
+  display:flex;flex-direction:column;gap:10px;
+  background:linear-gradient(180deg,#191919,#1b1b1b);
+}
+.ag-messages::-webkit-scrollbar{width:11px;height:11px}
+.ag-messages::-webkit-scrollbar-track{background:#141414}
+.ag-messages::-webkit-scrollbar-thumb{background:#4a4a4a;border:2px solid #141414}
+.ag-msg{display:flex;flex-direction:column;gap:4px;max-width:min(780px,92%);min-width:0}
+.ag-msg.user{align-self:flex-end;align-items:flex-end}
+.ag-msg.assistant{align-self:flex-start;align-items:flex-start}
+.ag-role{font-size:9.5px;color:#7f7f7f;letter-spacing:.8px;padding:0 2px}
+.ag-msg.user .ag-role{color:#9fb08e}
+.ag-msg.assistant .ag-role{color:var(--accent2);opacity:.9}
+.ag-bubble{
+  position:relative;padding:9px 11px;background:#2a2a2a;border:2px solid #111;
+  color:#e4e4e4;font-size:12.5px;line-height:1.7;white-space:pre-wrap;
+  overflow-wrap:anywhere;box-shadow:inset 0 1px 0 #ffffff0c;
+}
+.ag-msg.user .ag-bubble{background:#34402c;border-color:#1b2317;color:#eef2e9}
+.ag-toolchips{display:flex;flex-wrap:wrap;gap:4px;max-width:100%}
+.ag-toolchip{
+  display:inline-flex;align-items:center;gap:5px;max-width:100%;
+  padding:2px 6px;background:#222;border:1px solid #111;
+  box-shadow:inset 2px 0 0 var(--accent);font-size:9.5px;color:#c8c8c8;
+}
+.ag-toolchip em{
+  font-style:normal;color:#7f7f7f;max-width:300px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;font-family:ui-monospace,Consolas,monospace;font-size:9px;
+}
+
+/* ---------------- 工具结果 ---------------- */
+.ag-toolresult{
+  align-self:stretch;max-width:100%;padding:7px 8px 8px;
+  background:#232323;border:2px solid #111;box-shadow:inset 0 1px 0 #ffffff0a;
+}
+.ag-toolresult.err{border-color:#4d2626;background:#2a2222}
+.ag-toolresult-head{display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:5px}
+.ag-toolresult-head .ag-toolchip{flex:0 0 auto}
+.ag-toolresult-head b{font-size:10.5px;color:#dedede;font-weight:600;white-space:nowrap}
+.ag-toolresult-head .ag-log-state{margin-left:auto}
+.ag-toolresult:not(.err) .ag-toolresult-head .ag-log-state{color:var(--accent2)}
+.ag-toolresult.err .ag-toolresult-head .ag-log-state{color:#e08a8a}
+.ag-toolresult.err .ag-toolchip{box-shadow:inset 2px 0 0 #a35a5a}
+.ag-toolargs{
+  margin:0 0 6px;font:9.5px/1.5 ui-monospace,Consolas,monospace;color:#7f7f7f;
+  white-space:pre-wrap;overflow-wrap:anywhere;max-height:46px;overflow:hidden;
+}
+.ag-toolresult-body{display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-width:0}
+.ag-img{
+  display:block;max-width:100%;max-height:280px;object-fit:contain;
+  border:2px solid #101010;image-rendering:pixelated;
+  background-color:#232323;
+  background-image:
+    linear-gradient(45deg,#2d2d2d 25%,transparent 25%,transparent 75%,#2d2d2d 75%),
+    linear-gradient(45deg,#2d2d2d 25%,transparent 25%,transparent 75%,#2d2d2d 75%);
+  background-size:16px 16px;background-position:0 0,8px 8px;
+}
+.ag-variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;width:100%}
+.ag-variants figure{margin:0;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ag-variants img{
+  width:100%;aspect-ratio:1;object-fit:contain;display:block;
+  border:2px solid #101010;image-rendering:pixelated;
+  background-color:#232323;
+  background-image:
+    linear-gradient(45deg,#2d2d2d 25%,transparent 25%,transparent 75%,#2d2d2d 75%),
+    linear-gradient(45deg,#2d2d2d 25%,transparent 25%,transparent 75%,#2d2d2d 75%);
+  background-size:16px 16px;background-position:0 0,8px 8px;
+}
+.ag-variants figcaption{
+  font-size:9px;color:#999;text-align:center;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.ag-colors{display:flex;flex-wrap:wrap;gap:5px}
+.ag-color{width:44px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.ag-color i{
+  width:100%;height:32px;display:block;border:2px solid #0d0d0d;
+  box-shadow:inset 0 0 0 1px #ffffff1a;
+}
+.ag-color em{
+  font-style:normal;font:8px/1 ui-monospace,Consolas,monospace;color:#8f8f8f;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;
+}
+.ag-toolnote{font-size:10px;line-height:1.5;color:#8f8f8f}
+.ag-error-line{color:#e79a9a;font-size:11px;line-height:1.6;overflow-wrap:anywhere}
+
+/* ---------------- 错误 / 同意卡片 ---------------- */
+.ag-error{
+  align-self:stretch;display:flex;gap:7px;align-items:flex-start;
+  padding:8px 10px;background:#392222;border:2px solid #5c2b2b;
+  color:#f0a7a7;font-size:11.5px;line-height:1.6;overflow-wrap:anywhere;
+}
+.ag-error .ico{flex:0 0 auto;margin-top:1px}
+.ag-consent{
+  align-self:stretch;padding:9px 10px;background:#36301f;
+  border:2px solid #6b5424;box-shadow:inset 3px 0 0 #d8b46a;
+}
+.ag-consent-head{display:flex;align-items:center;gap:6px;font-size:11px;color:#f0dfb2}
+.ag-consent-head b{font-weight:600}
+.ag-consent-head span{
+  margin-left:auto;font-size:9.5px;color:#bda86f;
+  border:1px solid #5d4a20;padding:1px 5px;background:#2c2719;
+}
+.ag-consent p{margin:6px 0;font-size:10.5px;color:#c9bd9d;line-height:1.5}
+.ag-consent pre{
+  margin:0 0 7px;max-height:120px;overflow:auto;padding:6px 7px;
+  background:#201d14;border:1px solid #16140e;color:#bfb69e;
+  font:9.5px/1.55 ui-monospace,Consolas,monospace;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.ag-consent-actions{display:flex;justify-content:flex-end;gap:6px}
+.ag-consent-actions .btn{height:26px;font-size:11px}
+.ag-consent .ag-toolnote{margin-top:6px;color:#c7a86a}
+
+/* ---------------- 工具日志 ---------------- */
+.ag-log{flex:0 0 auto;border-top:2px solid #101010;background:#202020}
+.ag-log-head{
+  width:100%;height:30px;display:flex;align-items:center;gap:7px;padding:0 12px;
+  background:#242424;border:0;color:#bdbdbd;font:10.5px/1 inherit;cursor:pointer;text-align:left;
+}
+.ag-log-head:hover{background:#2c2c2c;color:#fff}
+.ag-log-head span{letter-spacing:.5px}
+.ag-log-head em{
+  font-style:normal;font-size:9px;color:#888;background:#1a1a1a;
+  border:1px solid #111;padding:1px 5px;
+}
+.ag-log-head i{margin-left:auto;font-style:normal;color:#888;transition:transform .15s}
+.ag-log.on .ag-log-head i{transform:rotate(180deg)}
+.ag-log-body{max-height:180px;overflow:auto;border-top:1px solid #171717}
+.ag-log-body[hidden]{display:none!important}
+.ag-log-row{
+  display:grid;grid-template-columns:60px minmax(110px,180px) 56px minmax(0,1fr);
+  gap:7px;padding:5px 12px;border-bottom:1px solid #1a1a1a;
+  font-size:10px;color:#aaa;align-items:center;
+}
+.ag-log-row:last-child{border-bottom:0}
+.ag-log-time{font:9px/1 ui-monospace,Consolas,monospace;color:#777}
+.ag-log-name{font-size:10px;color:#d0d0d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-log-state{font-size:9px;color:#aaa;white-space:nowrap}
+.ag-log-row.ok .ag-log-state{color:var(--accent2)}
+.ag-log-row.err .ag-log-state{color:#e08a8a}
+.ag-log-row.pending .ag-log-state{color:#d8b46a}
+.ag-log-sum{
+  min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:#8f8f8f;font-size:9.5px;
+}
+
+/* ---------------- 输入区 ---------------- */
+.ag-input{
+  flex:0 0 auto;display:flex;align-items:flex-end;gap:8px;
+  padding:9px 12px calc(9px + env(safe-area-inset-bottom,0px));
+  background:#242424;border-top:2px solid #101010;
+}
+.ag-input textarea{
+  flex:1;min-width:0;min-height:40px;max-height:140px;resize:none;
+  padding:9px 10px;background:#2b2b2b;border:2px solid #101010;
+  color:#f0f0f0;font:12px/1.5 inherit;outline:none;
+  box-shadow:inset 0 2px 0 #00000055;
+}
+.ag-input textarea:focus{border-color:var(--accent)}
+.ag-input textarea::placeholder{color:#777}
+.ag-send{height:40px;min-width:74px;flex:0 0 auto}
+.ag-send.stop{background:#7a3434;color:#fff;box-shadow:inset 0 -3px 0 #4d1d1d}
+.ag-send.stop:hover{background:#994242}
+
+/* ---------------- 配置面板 ---------------- */
+.ag-config{
+  position:absolute;inset:0;z-index:20;display:none;flex-direction:column;
+  background:#1b1b1b;
+}
+.ag-config.on{display:flex}
+.ag-config-head{
+  flex:0 0 46px;display:flex;align-items:center;gap:9px;padding:0 12px;
+  background:#242424;border-bottom:2px solid #101010;
+}
+.ag-config-title{display:flex;align-items:center;gap:7px;color:#eee;font-size:12px}
+.ag-config-title b{letter-spacing:.6px}
+.ag-config-head .btn{margin-left:auto}
+.ag-config-body{
+  flex:1;min-height:0;overflow:auto;padding:14px 16px 24px;
+  display:flex;flex-direction:column;gap:12px;
+  max-width:780px;width:100%;margin:0 auto;
+}
+.ag-config-section{
+  background:#242424;border:2px solid #111;padding:12px;
+  box-shadow:inset 0 1px 0 #ffffff0a;
+}
+.ag-config-section h3{
+  margin:0 0 9px;font-size:11px;letter-spacing:1px;color:#dedede;
+  display:flex;align-items:center;gap:7px;
+}
+.ag-config-section h3::before{content:'';width:4px;height:12px;background:var(--accent);flex:0 0 auto}
+.ag-field{display:flex;flex-direction:column;gap:4px;font-size:10.5px;color:#aaa;margin-bottom:8px}
+.ag-field:last-child{margin-bottom:0}
+.ag-field input,.ag-field select,.ag-field textarea{
+  width:100%;min-width:0;padding:0 8px;background:#202020;border:2px solid #101010;
+  color:#eee;font:11.5px/1.4 inherit;outline:none;box-shadow:inset 0 2px 0 #00000055;
+}
+.ag-field input,.ag-field select{height:30px}
+.ag-field textarea{padding:7px 8px;resize:vertical;min-height:92px}
+.ag-field input:focus,.ag-field select:focus,.ag-field textarea:focus{border-color:var(--accent)}
+.ag-field input::placeholder{color:#666}
+.ag-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ag-field-hint{font-size:9.5px;color:#7f7f7f;line-height:1.4}
+.ag-conn-line{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-size:10.5px;color:#999;
+}
+.ag-conn-line b{color:var(--accent2);font-weight:600}
+.ag-note{font-size:9.5px;line-height:1.65;color:#8d8d8d;margin:6px 0 0}
+.ag-sec-note{
+  font-size:9.5px;line-height:1.65;color:#d0b477;background:#2c281c;
+  border:1px solid #453b22;padding:6px 8px;margin:8px 0 0;
+}
+.ag-check{
+  display:flex;align-items:center;gap:7px;font-size:11px;color:#c8c8c8;
+  margin:8px 0;cursor:pointer;
+}
+.ag-check input{width:14px;height:14px;accent-color:var(--accent);margin:0}
+.ag-passfield.off{opacity:.45}
+.ag-key-state{
+  font-size:10.5px;color:#bdbdbd;background:#1e1e1e;border:1px solid #111;
+  padding:6px 8px;margin-bottom:8px;
+}
+.ag-key-state b{color:var(--accent2);font-weight:600}
+.ag-key-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.ag-danger{
+  background:#5a2d2d;color:#f0c0c0;border-color:#1a0e0e;
+  box-shadow:inset 0 -3px 0 #351717;
+}
+.ag-danger:hover{background:#7a3a3a;color:#fff}
+.ag-config-body code{
+  background:#1d1d1d;border:1px solid #111;padding:0 3px;color:#ccc;
+  font-size:9px;
+}
+
+/* ---------------- 引导 / 空状态 ---------------- */
+.ag-guide-slot:empty{display:none}
+.ag-guide{
+  align-self:stretch;max-width:470px;margin:10px auto 4px;padding:16px 16px 14px;
+  background:#242424;border:2px solid #111;text-align:center;
+  box-shadow:inset 0 1px 0 #ffffff0a;
+}
+.ag-guide-ico{color:var(--accent2);margin-bottom:6px;display:flex;justify-content:center}
+.ag-guide b{display:block;font-size:13px;color:#eee;margin-bottom:4px}
+.ag-guide p{margin:0 0 10px;font-size:10.5px;line-height:1.7;color:#929292}
+.ag-guide .ag-note{text-align:left}
+.ag-guide-row{display:flex;gap:6px;margin-top:8px;align-items:stretch;justify-content:center}
+.ag-guide-row input{
+  flex:1;min-width:0;max-width:280px;height:30px;padding:0 8px;
+  background:#202020;border:2px solid #101010;color:#eee;
+  font:11.5px inherit;outline:none;
+}
+.ag-guide-row input:focus{border-color:var(--accent)}
+.ag-guide-row .btn{height:30px}
+.ag-empty{
+  margin:auto;padding:18px;text-align:center;color:#777;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-size:10.5px;line-height:1.6;
+}
+.ag-empty .ico{color:#666}
+.ag-empty b{color:#cfcfcf;font-size:12px}
+.ag-empty span{max-width:380px}
+.ag-empty[hidden]{display:none!important}
+
+/* ---------------- 移动端 ---------------- */
+@media (max-width:900px){
+  .ag-head{flex:0 0 auto;flex-wrap:wrap;height:auto;min-height:46px;padding:6px 9px;row-gap:5px}
+  .ag-head-main{width:100%}
+  .ag-status{margin-left:0}
+  .ag-head-actions{width:100%}
+  .ag-head-actions .btn{flex:1}
+  .ag-messages{padding:10px 8px}
+  .ag-msg{max-width:96%}
+  .ag-input{padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px))}
+  .ag-send{min-width:62px}
+  .ag-log-row{grid-template-columns:54px minmax(90px,1fr) 48px;padding:5px 8px}
+  .ag-log-sum{grid-column:1/-1;padding-left:0}
+  .ag-config-body{padding:10px 8px 18px}
+  .ag-grid2{grid-template-columns:1fr}
+  .ag-variants{grid-template-columns:repeat(auto-fill,minmax(82px,1fr))}
+  /* 安卓触控：加大命中区与输入字号（≥16px 防聚焦缩放） */
+  .ag-head-actions .btn{height:34px;font-size:12px}
+  .ag-config-head .btn{height:34px}
+  .ag-log-head{height:36px}
+  .ag-send{height:44px;min-width:70px;font-size:13px}
+  .ag-input textarea{font-size:16px}
+  .ag-bubble{font-size:13px}
+  .ag-consent-actions{gap:8px}
+  .ag-consent-actions .btn{flex:1;height:38px;font-size:12.5px}
+  .ag-field input,.ag-field select{height:38px;font-size:16px}
+  .ag-field textarea{font-size:16px}
+  .ag-check input{width:18px;height:18px}
+  .ag-key-actions .btn{height:36px}
+  .ag-guide-row input{height:38px;font-size:16px}
+  .ag-guide-row .btn{height:36px}
+}
+@media (max-width:560px){
+  .ag-head b{font-size:12px}
+  .ag-head-actions .btn{font-size:10.5px}
+  .ag-img{max-height:220px}
+  .ag-guide-row{flex-wrap:wrap}
+  .ag-guide-row input{max-width:none;flex-basis:100%}
+  .ag-guide-row .btn{flex:1}
+  .ag-color{width:38px}
+}

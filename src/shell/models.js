@@ -879,6 +879,7 @@ const PWModels = (() => {
       data: JSON.stringify({
         format:'clastar-model-set@1',
         name:set.name,
+        namespace:set.namespace || null,
         exportedAt:new Date().toISOString(),
         parts:(set.parts || []).map(p => ({
           name:p.name, role:p.role, axis:p.axis || 'y',
@@ -887,6 +888,71 @@ const PWModels = (() => {
       }, null, 2)
     });
     PWArchive.download(PWArchive.create(files), safeName(set.name, 'model_set') + '.zip');
+  }
+
+  /* ---------------- 全库导出 / 导入（Phase 0） ---------------- */
+  async function exportLibrary(){
+    await ensureLoaded();
+    if(!sets.length) throw new Error('模型库是空的，没有可导出的模型');
+    const files = [];
+    for(const set of sets){
+      const folder = PWArchive.slug(set.name, 'set') + '_' + String(set.id).slice(-6);
+      const used = new Set();
+      (set.parts || []).forEach((p, i) => {
+        let base = PWArchive.safeName(p.name || ('part_' + (i + 1)), 'part');
+        let fname = base + '.bbmodel', n = 2;
+        while(used.has(fname.toLowerCase())){ fname = base + '_' + n + '.bbmodel'; n++; }
+        used.add(fname.toLowerCase());
+        p._exportFile = fname;
+        files.push({ name:folder + '/' + fname, data:JSON.stringify(p.raw, null, 2) });
+      });
+      files.push({ name:folder + '/model-set.json', data:JSON.stringify({
+        format:'clastar-model-set@1',
+        name:set.name,
+        namespace:set.namespace || null,
+        exportedAt:new Date().toISOString(),
+        parts:(set.parts || []).map(p => ({ name:p.name, role:p.role, axis:p.axis || 'y', file:p._exportFile }))
+      }, null, 2) });
+      (set.parts || []).forEach(p => { delete p._exportFile; });
+    }
+    const filename = '模型库备份-' + new Date().toISOString().slice(0, 10) + '.zip';
+    PWArchive.download(PWArchive.create(files), filename);
+    return { filename, setCount:sets.length };
+  }
+  async function importLibrary(file){
+    const entries = await PWArchive.read(file);
+    const flat = entries.filter(e => !e.dir);
+    const byName = new Map(flat.map(e => [e.name, e]));
+    const manifests = flat.filter(e => /model-set\.json$/i.test(e.name));
+    if(!manifests.length) throw new Error('压缩包里没有找到 model-set.json，不是模型库备份');
+    let ok = 0, fail = 0;
+    for(const m of manifests){
+      try{
+        const folder = m.name.replace(/model-set\.json$/i, '');
+        const manifest = JSON.parse(new TextDecoder().decode(await m.data()));
+        const parts = [];
+        for(const pm of (manifest.parts || [])){
+          const entry = byName.get(folder + pm.file);
+          if(!entry) continue;
+          const text = new TextDecoder().decode(await entry.data());
+          const parsed = parseModel(text, pm.file);
+          parts.push({
+            id:uid('p'), name:pm.name || parsed.name, role:pm.role || 'static', axis:pm.axis || 'y',
+            raw:parsed.raw, meta:parsed.meta, createdAt:Date.now(), updatedAt:Date.now(), source:pm.file
+          });
+        }
+        if(!parts.length){ fail++; continue; }
+        const set = {
+          id:uid('s'), name:manifest.name || '导入模型集', namespace:manifest.namespace || null,
+          createdAt:Date.now(), updatedAt:Date.now(), thumb:firstTextureOfSet({ parts }),
+          source:'library-import', parts
+        };
+        await saveSet(set);
+        ok++;
+      }catch(err){ fail++; console.warn('模型集导入失败', err); }
+    }
+    if(page) render(page);
+    return { ok, fail };
   }
 
   /* ---------------- Blockbench 桥接 ---------------- */
@@ -1054,7 +1120,8 @@ const PWModels = (() => {
         if(target){
           bridge.nonce = makeNonce();
           bridge.origin = BRIDGE_ORIGIN;
-          const targetOrigin = opener ? BRIDGE_ORIGIN : location.origin;
+          /* 反向握手用 '*'：插件侧会校验 nonce + allowedOrigin，桌面版 BB 的 origin 不固定 */
+          const targetOrigin = opener ? '*' : location.origin;
           const hello = () => {
             if(bridge.ready) return;
             try{
@@ -1100,5 +1167,12 @@ const PWModels = (() => {
     if(text) busyText(text);
   }
 
-  return { open, mount, init, importFiles, exportSet, openInBlockbench, connect, _state: state, _bridge: bridge, _applySave: applyBridgeSave, _getSets: () => sets };
+  return {
+    open, mount, init, importFiles, exportSet, openInBlockbench, connect,
+    /* 供 AI agent / 外部调用的模型库 CRUD 与工具 */
+    ensureLoaded, getSet:setById, findPart, saveSet, removeSet,
+    parseModel, modelMeta, exportPart, exportLibrary, importLibrary,
+    uid, safeImage, firstTexture, firstTextureOfSet,
+    _state: state, _bridge: bridge, _applySave: applyBridgeSave, _getSets: () => sets
+  };
 })();

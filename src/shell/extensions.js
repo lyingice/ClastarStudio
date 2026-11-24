@@ -122,7 +122,7 @@ const PWExtensions = (() => {
   }
 
   function closeToolTab(id){
-    const map = { 'color-studio':'color', 'recolor':'recolor', 'variant-lab':'variant', 'asset-library':'assets', 'model-library':'models' };
+    const map = { 'color-studio':'color', 'recolor':'recolor', 'variant-lab':'variant', 'asset-library':'assets', 'model-library':'models', 'ai-assistant':'agent' };
     const kind = map[id];
     if(!kind) return;
     const t = activeTab();

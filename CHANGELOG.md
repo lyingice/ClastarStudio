@@ -2,6 +2,35 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/)。
 
+## [0.17.0] - 2026-11-22
+
+### AI 助手（接入你的大模型 API key）
+
+- 新增「AI 助手」工具页：聊天式交互，用户自带大模型 API key，agent 通过工具调用真正操作平台，而非仅聊天。
+- 支持 OpenAI 兼容（OpenAI / DeepSeek / Moonshot / 智谱 / 硅基流动 / 通义 / Ollama / LM Studio 等）、Anthropic、Gemini 三类接口；模型 / 温度 / 最大 token / 系统提示可配置。
+- 密钥只存本机浏览器：默认仅内存，可选口令加密（WebCrypto AES-GCM + PBKDF2）记住；不写入配置持久化对象、不上传、不记录日志。
+- 工具化纹理创作：列出工作区 / 卡片 / 纹理、读取纹理颜色、查素材库、一键换色、套材质色阶、批量变种、像素绘制（填充 / 矩形 / 直线 / 噪点 / 渐变）、写回纹理、新建纹理卡片、导出资源包 ZIP。
+- 破坏性操作（写回 / 建卡 / 导出）需在聊天里逐项批准；工具调用日志透明可查；预览图实时展示，base64 不回灌模型上下文（用 previewId 句柄传递预览）。
+
+### AI 模型生成与模型库管理
+
+- 无头 `.bbmodel` 构建器：AI 按立方体规格（from/to/枢轴/膨胀/六面 UV）直接生成合法 Blockbench 工程，支持 java_block / free / bedrock 等格式、分组与多纹理，并实时渲染等距预览。
+- 模型纹理可来自素材库 `assetId`、AI 画的纹理预览 `previewId` 或纯色占位，打通「画纹理 → 建模型」闭环。
+- 模型库 CRUD 工具：列出 / 查看模型集、保存模型（新建模型集或加部件，含静态/动态类型与旋转轴）、删除模型集 / 部件、导出 `.bbmodel` / 模型集 ZIP / 全库备份。
+- 模型库增强：模型集支持 `namespace`；新增全库导出 / 导入（消费 `model-set.json`，保留部件类型 / 旋转轴 / 命名空间）；修复 Blockbench 反向握手 origin 硬编码。
+- Blockbench 联动：AI 生成的模型可一键发送到官方 web Blockbench 弹窗编辑（Clastar Bridge 伴生插件，不修改 BB 本体），改完同步回模型库。
+
+### 本地 LLM 代理
+
+- `serve.py` 新增可选同源代理 `POST /api/llm`，解决浏览器直连大模型的 CORS 问题；`GET /api/llm/health` 供客户端探测代理可用性。
+- 目标 host 白名单防 SSRF（可用 `CLASTAR_LLM_ALLOW_HOSTS` 扩展）；Origin 校验防 CSRF；非回环绑定默认禁用代理（`CLASTAR_LLM_PROXY_ALLOW_LAN=1` 开启）；每 IP 限流；流式回传；绝不记录密钥或请求体。
+- GitHub Pages 纯静态模式自动降级为浏览器直连（仅 CORS 友好的服务商可用）。
+
+### 兼容
+
+- PWA 缓存升级到 `pixel-workshop-v0.17.0`。
+- AI 纹理工具复用现有换色 / 变种 / 素材库 / 资源包算法，不重写；本地素材仍只从 `local/` 读取，不上传 GitHub、Pages 或发行包。
+
 ## [0.16.1] - 2026-11-21
 
 ### 取色器修复

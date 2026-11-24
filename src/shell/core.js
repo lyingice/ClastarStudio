@@ -21,7 +21,8 @@ const ICONS = {
   select: ["##....##","#......#","........","........","........","........","#......#","##....##"],
   shape:  ["..####..",".#....#.","#......#","#......#","#......#","#......#",".#....#.","..####.."],
   eye:    ["..####..",".#....#.","#..##..#","#..##..#","#......#",".#....#.","..####..","........"],
-  keyboard:["........","########","#.#.#..#","########","#.#.#..#","########","........","........"]
+  keyboard:["........","########","#.#.#..#","########","#.#.#..#","########","........","........"],
+  ai:["...##...","...##...","..####..","########","########","..####..","...##...","...##..."]
 };
 function iconSVG(name, size){
   const art = ICONS[name] || ICONS.box;
@@ -41,7 +42,7 @@ function paintIcons(root){
 /* ============================================================
    数据
    ============================================================ */
-const APP_VERSION = '0.16.1';
+const APP_VERSION = '0.17.0';
 const THEMES = [
   {id:'grass',    name:'草原绿',  c:['#4c9a2a','#6fc244','#2f6b1a']},
   {id:'diamond',  name:'钻石蓝',  c:['#2fa8c9','#5fd2ee','#186f88']},
@@ -114,7 +115,7 @@ function applyTheme(id){
 /* ============================================================
    标签页
    ============================================================ */
-const TAB_ICON = { home:'home', tex:'tex', anim:'anim', ctex:'tex', block:'box', composite:'box', entity:'entity', color:'palette', recolor:'brush', variant:'shape', shortcuts:'keyboard', assets:'grid', models:'box', plugin:'box', plugins:'grid', recent:'grid', trash:'trash' };
+const TAB_ICON = { home:'home', tex:'tex', anim:'anim', ctex:'tex', block:'box', composite:'box', entity:'entity', color:'palette', recolor:'brush', variant:'shape', shortcuts:'keyboard', assets:'grid', models:'box', plugin:'box', plugins:'grid', recent:'grid', trash:'trash', agent:'ai' };
 function newTab(kind, title, payload){
   const id = ++S.seq;
   const t = { id, kind, title: title || (kind === 'home' ? '首页' : '未命名'), payload: payload || null };
@@ -266,7 +267,7 @@ function renderContent(){
     return;
   }
 
-  if(t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin'){
+  if(t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin' || t.kind === 'agent'){
     document.querySelector('.workspace').classList.add('editing');
     document.body.classList.add('editing');
     repo.classList.remove('on');
@@ -280,6 +281,7 @@ function renderContent(){
       else if(t.kind === 'assets') PWAssets.mount(t, eds);
       else if(t.kind === 'models') PWModels.mount(t, eds);
       else if(t.kind === 'plugins') PWPlugins.mountCenter(t, eds);
+      else if(t.kind === 'agent') PWAgent.mount(t, eds);
       else PWPlugins.mount(t, eds);
     }
     return;

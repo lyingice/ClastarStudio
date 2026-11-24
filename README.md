@@ -18,7 +18,7 @@
 - 工作区与作品保存在浏览器 `localStorage`，可随时导出资源包备份。
 - 所有文件都在本地运行，适合个人创作与局域网调试。
 
-当前版本：**v0.16.1**<br>
+当前版本：**v0.17.0**<br>
 运行方式：`python serve.py`，打开 `http://127.0.0.1:8766/`。
 
 ## 功能亮点
@@ -44,6 +44,13 @@
 
 - **一键换色**：读取纹理颜色，使用 Blockbench 默认 40 / Endesga 64 / 材质色阶等色板替换；原图/结果并排预览，可逐色取色微调、保存写回或导出 PNG。
 - **变种工坊**：20 套内置材质六色阶 + 2–8 色标自定义色阶，矩阵预览、批量生成、PNG ZIP 或写回仓库。
+
+### AI 助手（可选，接入你的大模型）
+
+- **自带 API key**：在「工具 → AI 助手」或设置里配置模型服务商与密钥，支持 OpenAI 兼容（OpenAI / DeepSeek / Moonshot / 智谱 / 硅基流动 / 通义 / Ollama / LM Studio 等）、Anthropic、Gemini；密钥只存本机浏览器，默认仅内存、可选口令加密记住，不上传、不记录日志。
+- **工具化创作**：AI 通过工具调用真正操作平台——查工作区 / 纹理、读取颜色、查素材库、一键换色、套材质色阶、批量变种、像素绘制（填充 / 矩形 / 直线 / 噪点 / 渐变）、写回纹理、新建纹理卡片、导出资源包 ZIP；破坏性操作逐项征求同意，调用日志透明，预览图实时展示。
+- **AI 生成模型**：按立方体规格直接生成合法 Blockbench `.bbmodel`（多格式 / 分组 / 多纹理，实时等距预览），纹理可用素材库或 AI 画的预览；模型库 CRUD、`namespace`、全库导出导入；一键送官方 web Blockbench 编辑再同步回库（Clastar Bridge 插件，不修改 BB 本体）。
+- **本地 LLM 代理**：`python serve.py` 提供可选同源 `/api/llm` 代理解决浏览器直连大模型的 CORS（host 白名单防 SSRF + Origin 校验 + 限流 + 流式回传，不记录密钥）；GitHub Pages 纯静态模式自动降级为直连（仅 CORS 友好的服务商可用）。
 
 ### 导入、打包与工作流
 
@@ -108,11 +115,11 @@ local/vanilla/               素材库原版纹理目录
 ## 发行包
 
 
-从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.16.1 发行包。发行包是可直接运行的静态源码包：
+从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.17.0 发行包。发行包是可直接运行的静态源码包：
 
 ```bash
-unzip ClastarStudio-v0.16.1.zip
-cd ClastarStudio-v0.16.1
+unzip ClastarStudio-v0.17.0.zip
+cd ClastarStudio-v0.17.0
 python serve.py
 ```
 

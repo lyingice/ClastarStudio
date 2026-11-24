@@ -96,6 +96,7 @@ function init(){
   if(typeof PWAssets !== 'undefined') PWAssets.init();
   if(typeof PWModels !== 'undefined') PWModels.init();
   if(typeof PWUpdates !== 'undefined') PWUpdates.init();
+  if(typeof PWAgent !== 'undefined') PWAgent.init();
   if(typeof setupSidebar === 'function') setupSidebar();
   renderWorkspaces();
   newTab('home', '首页');   // 默认首页标签

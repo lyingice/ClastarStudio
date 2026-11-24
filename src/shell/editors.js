@@ -1463,6 +1463,7 @@ function openSettings(){
   $('#dlgBody').innerHTML = (typeof PWShortcuts !== 'undefined' ? PWShortcuts.settingsRowHTML() : '') +
     (typeof PWPlugins !== 'undefined' ? PWPlugins.settingsRowHTML() : '') +
     (typeof PWUpdates !== 'undefined' ? PWUpdates.rowHTML() : '') +
+    (typeof PWAgent !== 'undefined' ? PWAgent.settingsRowHTML() : '') +
     (typeof PWExtensions !== 'undefined' ? PWExtensions.settingsHTML() : '') +
     themeSectionHTML() + installRowHTML() +
     '<div class="opt" data-set="export"><div class="oi">' + iconSVG('box',16) + '</div>' +
@@ -1484,6 +1485,8 @@ function openSettings(){
   if(plRow && typeof PWPlugins !== 'undefined') plRow.onclick = () => { closeDialog(); PWPlugins.openPluginCenter(); };
   const upRow = body.querySelector('[data-set="update"]');
   if(upRow && typeof PWUpdates !== 'undefined') upRow.onclick = () => PWUpdates.checkAndShow();
+  const agRow = body.querySelector('[data-set="agent"]');
+  if(agRow && typeof PWAgent !== 'undefined') agRow.onclick = () => { closeDialog(); PWAgent.open(); PWAgent.openConfig(); };
   $('#themeCur').onclick = () => $('#setTheme').classList.toggle('open');
   body.querySelector('[data-set="export"]').onclick = () => { closeDialog(); exportData(); };
   body.querySelector('[data-set="import"]').onclick = () => { closeDialog(); $('#dataPick').click(); };
@@ -1522,6 +1525,7 @@ function openAbout(){
     '<b>像素工坊</b> v' + APP_VERSION + '<br>' +
     '纹理 / 动画贴图的收纳与绘制。数据保存在本机浏览器（localStorage），不上传。<br><br>' +
     '常用操作：双击卡片打开编辑器 · 右键重命名 / 删除 / 一键换色 · 拖入 PNG 直接导入 · 编辑器顶栏「保存回仓库」<br><br>' +
+    '0.17.0：AI 助手（接入你的大模型 API key）· 工具化换色 / 材质色阶变种 / 像素绘制 / 资源包导出 · 本地 LLM 代理与同意门控<br>' +
     '0.16.1：修复原生取色器弹窗 · Blockbench / Endesga 默认色板 · 变种工坊 6 色阶与自定义增删 · 一键换色材质色卡<br>' +
     '0.16.0：本地素材内容包（Create / 原版）· Create 多分支与 OBJ/MTL 3D 预览 · 旋转缩放与可拉伸预览 · 一键启动脚本<br>' +
     '0.15.0：彩色渐变叠加支持 2–8 个自定义色标并自动保存 · 设置新增 GitHub 检查更新<br>' +
