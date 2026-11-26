@@ -41,6 +41,26 @@ jobs:
             node --check "$f"
           done
 
+      - name: Check plugin inline JavaScript syntax
+        run: |
+          python - <<'EOF'
+          import re, subprocess, tempfile, os
+          from pathlib import Path
+          html = Path("plugins/create-texture/plugin.html").read_text(encoding="utf-8")
+          scripts = re.findall(r'<script[^>]*>(.*?)</script>', html, re.DOTALL)
+          for i, code in enumerate(scripts):
+              if not code.strip():
+                  continue
+              with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8') as f:
+                  f.write(code)
+                  tmp = f.name
+              try:
+                  subprocess.run(['node', '--check', tmp], check=True)
+              finally:
+                  os.unlink(tmp)
+          print(f"Plugin inline JS OK ({len(scripts)} script blocks)")
+          EOF
+
       - name: Start server and smoke test homepage
         run: |
           python serve.py > /tmp/clastar-server.log 2>&1 &

@@ -15,6 +15,11 @@ const PWShortcuts = (() => {
     {id:'editor.eraser',      group:'画布工具', scope:'editor', label:'橡皮',   desc:'动画 / 自定义纹理编辑器', def:'e'},
     {id:'editor.bucket',      group:'画布工具', scope:'editor', label:'油漆桶', desc:'动画 / 自定义纹理编辑器', def:'g'},
     {id:'editor.picker',      group:'画布工具', scope:'editor', label:'吸管',   desc:'动画 / 自定义纹理编辑器', def:'i'},
+    {id:'editor.line',        group:'画布工具', scope:'editor', label:'直线',   desc:'动画 / 自定义纹理编辑器', def:'l'},
+    {id:'editor.rect',        group:'画布工具', scope:'editor', label:'矩形',   desc:'动画 / 自定义纹理编辑器', def:'r'},
+    {id:'editor.ellipse',     group:'画布工具', scope:'editor', label:'椭圆',   desc:'动画 / 自定义纹理编辑器', def:'o'},
+    {id:'editor.move',        group:'画布工具', scope:'editor', label:'移动',   desc:'动画 / 自定义纹理编辑器', def:'v'},
+    {id:'editor.select',      group:'画布工具', scope:'editor', label:'选择',   desc:'动画 / 自定义纹理编辑器', def:'m'},
     {id:'editor.prevFrame',   group:'动画',     scope:'editor', label:'上一帧', desc:'动画编辑器',             def:','},
     {id:'editor.nextFrame',   group:'动画',     scope:'editor', label:'下一帧', desc:'动画编辑器',             def:'.'},
     {id:'editor.play',        group:'动画',     scope:'editor', label:'播放 / 暂停', desc:'动画编辑器',       def:'space'},
@@ -182,12 +187,15 @@ const PWShortcuts = (() => {
     try{
       if(!fr || !fr.contentDocument) return;
       const d = fr.contentDocument;
-      const map = t.kind === 'ctex'
-        ? { pencil:'editor.brush', eraser:'editor.eraser', fill:'editor.bucket', pick:'editor.picker' }
-        : { pencil:'editor.brush', eraser:'editor.eraser', bucket:'editor.bucket', picker:'editor.picker' };
-      const selector = t.kind === 'ctex' ? '#tools [data-tool]' : '#toolSeg [data-v]';
+      const isTexUnified = (t.kind === 'ctex' || t.kind === 'tex');
+      const map = isTexUnified
+        ? { pencil:'editor.brush', eraser:'editor.eraser', fill:'editor.bucket', pick:'editor.picker',
+            line:'editor.line', rect:'editor.rect', ellipse:'editor.ellipse', move:'editor.move', select:'editor.select' }
+        : { pencil:'editor.brush', eraser:'editor.eraser', bucket:'editor.bucket', picker:'editor.picker',
+            line:'editor.line', rect:'editor.rect', ellipse:'editor.ellipse', move:'editor.move', select:'editor.select' };
+      const selector = isTexUnified ? '#tools [data-tool]' : '#toolSeg [data-v]';
       d.querySelectorAll(selector).forEach(btn => {
-        const key = t.kind === 'ctex' ? btn.dataset.tool : btn.dataset.v;
+        const key = isTexUnified ? btn.dataset.tool : btn.dataset.v;
         const id = map[key];
         if(!id) return;
         const base = btn.dataset.pwBaseTitle !== undefined ? btn.dataset.pwBaseTitle : (btn.getAttribute('title') || btn.textContent.trim());
@@ -206,24 +214,30 @@ const PWShortcuts = (() => {
         b.title = base ? base + ' (' + display(id) + ')' : '快捷键 ' + display(id);
       };
       tip('#undo', 'editor.undo'); tip('#redo', 'editor.redo');
+      tip('#btnUndo', 'editor.undo'); tip('#btnRedo', 'editor.redo');
     }catch(_){}
   }
 
-  /* 自定义纹理编辑器没有内建工具快捷键，这里补一层 */
+  /* 为自定义纹理（及动画编辑器拓展工具）补充工具快捷键 */
   function bindFrame(fr, t){
-    if(!fr || t.kind !== 'ctex') return;
+    if(!fr || (t.kind !== 'ctex' && t.kind !== 'tex' && t.kind !== 'anim')) return;
     try{
       const w = fr.contentWindow;
       if(w.__pwShortcutBound) return;
       w.__pwShortcutBound = true;
+      const isTexUnified = (t.kind === 'ctex' || t.kind === 'tex');
+      const toolMap = isTexUnified
+        ? { 'editor.brush':'pencil', 'editor.eraser':'eraser', 'editor.bucket':'fill', 'editor.picker':'pick',
+            'editor.line':'line', 'editor.rect':'rect', 'editor.ellipse':'ellipse', 'editor.move':'move', 'editor.select':'select' }
+        : { 'editor.line':'line', 'editor.rect':'rect', 'editor.ellipse':'ellipse', 'editor.move':'move', 'editor.select':'select' };
+      const selFmt = isTexUnified ? '#tools [data-tool="' : '#toolSeg [data-v="';
       w.addEventListener('keydown', e => {
         if(e.defaultPrevented || editableTarget(e.target)) return;
         const combo = comboFromEvent(e);
         if(!combo) return;
-        const toolMap = { 'editor.brush':'pencil', 'editor.eraser':'eraser', 'editor.bucket':'fill', 'editor.picker':'pick' };
         for(const [id, tool] of Object.entries(toolMap)){
           if(keyFor(id) === combo){
-            const btn = w.document.querySelector('#tools [data-tool="' + tool + '"]');
+            const btn = w.document.querySelector(selFmt + tool + '"]');
             if(btn){ e.preventDefault(); btn.click(); }
             return;
           }

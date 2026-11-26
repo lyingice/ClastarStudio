@@ -18,7 +18,7 @@
 - 工作区与作品保存在浏览器 `localStorage`，可随时导出资源包备份。
 - 所有文件都在本地运行，适合个人创作与局域网调试。
 
-当前版本：**v0.17.0**<br>
+当前版本：**v0.18.0**<br>
 运行方式：`python serve.py`，打开 `http://127.0.0.1:8766/`。
 
 ## 功能亮点
@@ -115,11 +115,11 @@ local/vanilla/               素材库原版纹理目录
 ## 发行包
 
 
-从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.17.0 发行包。发行包是可直接运行的静态源码包：
+从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.18.0 发行包。发行包是可直接运行的静态源码包：
 
 ```bash
-unzip ClastarStudio-v0.17.0.zip
-cd ClastarStudio-v0.17.0
+unzip ClastarStudio-v0.18.0.zip
+cd ClastarStudio-v0.18.0
 python serve.py
 ```
 

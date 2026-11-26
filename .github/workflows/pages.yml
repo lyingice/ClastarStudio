@@ -13,6 +13,7 @@ on:
       - 'integrations/**'
       - 'src/**'
       - 'styles/**'
+      - 'tools/static_manifest.json'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -37,11 +38,18 @@ jobs:
 
       - name: Build static site
         run: |
-          mkdir -p _site
-          cp index.html manifest.json sw.js plugin.json icon-192.png icon-512.png _site/
-          cp -r plugins src styles integrations _site/
-          find _site -name '*.map' -delete
-          du -sh _site
+          python - <<'EOF'
+          import json, shutil
+          from pathlib import Path
+          m = json.loads(Path("tools/static_manifest.json").read_text(encoding="utf-8"))
+          site = Path("_site")
+          site.mkdir(exist_ok=True)
+          for f in m["root_files"]:
+              shutil.copy2(f, site / f)
+          for d in m["directories"]:
+              shutil.copytree(d, site / d, ignore=shutil.ignore_patterns("*.map"))
+          print(f"Built _site ({sum(1 for p in site.rglob('*') if p.is_file())} files)")
+          EOF
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

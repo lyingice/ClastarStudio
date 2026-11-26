@@ -26,3 +26,7 @@ Thumbs.db
 
 # 本地 Create 资产包（不上传 GitHub）
 /local/
+
+# Desktop build artifacts (Tauri)
+/desktop/dist/
+/desktop/target/

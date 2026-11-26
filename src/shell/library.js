@@ -636,49 +636,207 @@ document.addEventListener('click', e => {
   if(!e.target.closest('#ctx')) $('#ctx').classList.remove('on');
 });
 
-/* ---------------- 导入图片 ---------------- */
-function importImage(file){
-  if(!file || !/^image\//.test(file.type)){ toast('只支持图片文件'); return; }
-  if(!currentWS()){ toast('先新建一个工作区'); return; }
-  const url = URL.createObjectURL(file);
+/* ---------------- 缩略图与图像入库 ---------------- */
+function makeThumbDataURL(src, srcW, srcH){
+  const iw = srcW || src.naturalWidth || src.width || 16;
+  const ih = srcH || src.naturalHeight || src.height || 16;
+  const tc = document.createElement('canvas'); tc.width = tc.height = 16;
+  const tg = tc.getContext('2d'); tg.imageSmoothingEnabled = false;
+  tg.clearRect(0, 0, 16, 16);
+  const sc = Math.min(16 / Math.max(1, iw), 16 / Math.max(1, ih));
+  const dw = Math.max(1, Math.round(iw * sc)), dh = Math.max(1, Math.round(ih * sc));
+  tg.drawImage(src, 0, 0, iw, ih, Math.floor((16 - dw) / 2), Math.floor((16 - dh) / 2), dw, dh);
+  return tc.toDataURL('image/png');
+}
+
+function createCardFromImageElement(fileName, img, opts){
+  opts = opts || {};
+  if(!currentWS()){ toast('先新建一个工作区'); return null; }
+  const iw = img.naturalWidth || img.width || 16;
+  const ih = img.naturalHeight || img.height || 16;
+  const cap = 2048;
+  const sc = Math.min(1, cap / Math.max(iw, ih));
+  const fw = Math.max(1, Math.round(iw * sc));
+  const fh = Math.max(1, Math.round(ih * sc));
+  const fc = document.createElement('canvas');
+  fc.width = fw; fc.height = fh;
+  const fg = fc.getContext('2d'); fg.imageSmoothingEnabled = false;
+  fg.drawImage(img, 0, 0, fw, fh);
+  const full = fc.toDataURL('image/png');
+
+  const isAnimStrip = (opts.anim !== false) && (fh > fw) && (fh % fw === 0) && (fw <= 256);
+  const frames = isAnimStrip ? Math.round(fh / fw) : 1;
+  const frameH = isAnimStrip ? fw : fh;
+  const thumb = makeThumbDataURL(fc, fw, frameH);
+  const baseName = String(fileName || '图像').replace(/\.[a-z0-9]+$/i, '') || '图像';
+  const card = {
+    id: 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    name: baseName,
+    meta: (frames > 1 ? (fw + '×' + frameH + ' · ' + frames + ' 帧') : (fw + '×' + fh)) + ' · 刚刚',
+    badge: frames > 1 ? '动画' : '纹理',
+    anim: frames > 1,
+    texSize: { w: fw, h: frameH, frames },
+    thumb, full
+  };
+  if(!cats().length) cats().push({ id: uidWs(), name: '默认', open: true, cards: [] });
+  cats()[0].cards.unshift(card);
+  if(!opts.stayCurrent){
+    S.folder = null; S.query = '';
+  }
+  saveData();
+  if($('#catList')) refreshList();
+  if(opts.openEdit){
+    touchRecent(card);
+    newTab(card.anim ? 'anim' : 'tex', card.name, card);
+  }
+  return card;
+}
+
+function handleEditorLoadImageAction(d){
+  if(!d || !d.dataURL) return;
   const img = new Image();
   img.onload = () => {
-    /* 16×16 缩略图 */
-    const tc = document.createElement('canvas'); tc.width = tc.height = 16;
-    const tg = tc.getContext('2d'); tg.imageSmoothingEnabled = false;
-    tg.drawImage(img, 0, 0, 16, 16);
-    const thumb = tc.toDataURL();
-    /* 原图：普通纹理最大 128；竖向动画条带保留到 512，避免丢帧 */
-    const cap = img.height > img.width ? Math.min(512, Math.max(128, img.height)) : 128;
-    const sc = Math.min(1, cap / Math.max(img.width, img.height));
-    const fc = document.createElement('canvas');
-    fc.width = Math.max(1, Math.round(img.width * sc));
-    fc.height = Math.max(1, Math.round(img.height * sc));
-    const fg = fc.getContext('2d'); fg.imageSmoothingEnabled = false;
-    fg.drawImage(img, 0, 0, fc.width, fc.height);
-    const full = fc.toDataURL();
-
-    const frames = (img.height > img.width) ? Math.round(img.height / img.width) : 1;
-    const card = {
-      id: 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
-      name: file.name.replace(/\.[a-z0-9]+$/i, ''),
-      meta: img.width + '×' + img.height + (frames > 1 ? ' · ' + frames + ' 帧' : '') + ' · 刚刚',
-      badge: frames > 1 ? '动画' : '纹理',
-      anim: frames > 1,
-      thumb, full
-    };
-    if(!cats().length) cats().push({ id: uidWs(), name: '默认', open: true, cards: [] });
-    cats()[0].cards.unshift(card);
-    S.folder = null; S.query = '';
-    saveData();
-    const t = activeTab();
-    if(!t || t.kind !== 'home') newTab('home', '首页');
-    else renderContent();
-    toast('已导入 ' + file.name + '（' + img.width + '×' + img.height + (frames > 1 ? ' · ' + frames + ' 帧' : '') + '）');
-    URL.revokeObjectURL(url);
+    const isEdit = d.action === 'edit';
+    const card = createCardFromImageElement(d.name || 'image.png', img, {
+      stayCurrent: !isEdit,
+      openEdit: isEdit
+    });
+    if(card && !isEdit){
+      toast('已增添到当前工作区：' + card.name);
+    }
   };
-  img.onerror = () => { toast('这个文件读不出来'); URL.revokeObjectURL(url); };
-  img.src = url;
+  img.onerror = () => toast('图像读取失败');
+  img.src = d.dataURL;
+}
+
+function findTargetTextureEditorTab(){
+  const ok = x => x && x._frame && (x.kind === 'tex' || x.kind === 'ctex' || x.kind === 'anim');
+  const a = activeTab();
+  if(ok(a)) return a;
+  if(typeof S !== 'undefined' && S.lastEditor){
+    const last = S.tabs.find(x => x.id === S.lastEditor && ok(x));
+    if(last) return last;
+  }
+  return (typeof S !== 'undefined' && Array.isArray(S.tabs))
+    ? S.tabs.slice().reverse().find(ok)
+    : null;
+}
+
+function openShellLoadImageModal(fileName, dataURL, img){
+  const iw = img.naturalWidth || img.width || 16;
+  const ih = img.naturalHeight || img.height || 16;
+  const edTab = findTargetTextureEditorTab();
+  $('#dlgTitle').innerHTML = iconSVG('tex', 14) + '加载图像';
+  $('#dlgBody').innerHTML =
+    '<div class="li-head">' +
+      '<div class="li-thumb"><canvas id="shLiThumb" width="50" height="50"></canvas></div>' +
+      '<div class="li-meta">' +
+        '<div class="li-name">' + esc(fileName || 'image.png') + '</div>' +
+        '<div class="li-dim">' + iw + ' × ' + ih + ' 像素</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="li-sec">添加到项目</div>' +
+    '<div class="li-list">' +
+      '<button type="button" class="li-item" id="shLiLayer"' + (edTab ? '' : ' disabled') + '>' +
+        '<span class="li-ico">' + iconSVG('tex', 15) + '</span>' +
+        '<span class="li-txt"><b>作为图层添加</b><span>' + (edTab ? '添加到已打开的「' + esc(edTab.title) + '」新图层' : '需先打开一个纹理或动画标签页') + '</span></span>' +
+        '<span class="li-arr">›</span>' +
+      '</button>' +
+      '<button type="button" class="li-item" id="shLiRef"' + (edTab ? '' : ' disabled') + '>' +
+        '<span class="li-ico">' + iconSVG('shape', 15) + '</span>' +
+        '<span class="li-txt"><b>参考图像</b><span>' + (edTab ? '载入「' + esc(edTab.title) + '」的参考画布与调色盘' : '需先打开一个纹理或动画标签页') + '</span></span>' +
+        '<span class="li-arr">›</span>' +
+      '</button>' +
+      '<button type="button" class="li-item" id="shLiAdd">' +
+        '<span class="li-ico">' + iconSVG('plus', 15) + '</span>' +
+        '<span class="li-txt"><b>增添图像</b><span>作为新卡片存入当前工作区仓库（留在当前视图）</span></span>' +
+        '<span class="li-arr">›</span>' +
+      '</button>' +
+    '</div>' +
+    '<div class="li-sec">新建项目</div>' +
+    '<div class="li-list">' +
+      '<button type="button" class="li-item" id="shLiEdit">' +
+        '<span class="li-ico">' + iconSVG('brush', 15) + '</span>' +
+        '<span class="li-txt"><b>编辑图像</b><span>按原始尺寸创建新卡片并立即打开编辑</span></span>' +
+        '<span class="li-arr">›</span>' +
+      '</button>' +
+    '</div>';
+
+  const tc = $('#shLiThumb');
+  if(tc){
+    const tg = tc.getContext('2d'); tg.imageSmoothingEnabled = false;
+    const sc = Math.min(tc.width / Math.max(1, iw), tc.height / Math.max(1, ih));
+    const dw = Math.max(1, Math.round(iw * sc)), dh = Math.max(1, Math.round(ih * sc));
+    tg.drawImage(img, Math.floor((tc.width - dw) / 2), Math.floor((tc.height - dh) / 2), dw, dh);
+  }
+  dlgOkFn = null;
+  if($('#dlgOk')) $('#dlgOk').style.display = 'none';
+  if($('#dlgCancel')){ $('#dlgCancel').style.display = ''; $('#dlgCancel').textContent = '关闭'; }
+  $('#modal').classList.add('on');
+  paintIcons($('#modal'));
+
+  if($('#shLiLayer') && edTab){
+    $('#shLiLayer').onclick = () => {
+      closeDialog();
+      try{
+        const w = edTab._frame.contentWindow;
+        const im = new w.Image();
+        im.onload = () => {
+          w.importAsLayer(im, { fitMode: (iw > w.doc.w || ih > w.doc.h) ? 'expand' : 'keep', allFrames: true, name: String(fileName || '导入图层').replace(/\.[a-z0-9]+$/i, '') });
+          activateTab(edTab.id);
+          toast('已作为图层添加到「' + edTab.title + '」');
+        };
+        im.src = dataURL;
+      }catch(e){ toast('添加图层失败'); }
+    };
+  }
+  if($('#shLiRef') && edTab){
+    $('#shLiRef').onclick = () => {
+      closeDialog();
+      try{
+        const w = edTab._frame.contentWindow;
+        if(typeof w.rpLoadImage === 'function'){
+          w.rpLoadImage(dataURL, fileName || '参考图', null, { w: iw, h: ih });
+          if(typeof w.rpCenterShow === 'function') w.rpCenterShow(true);
+          activateTab(edTab.id);
+          toast('已载入为参考图像：' + fileName);
+        }
+      }catch(e){ toast('载入参考图失败'); }
+    };
+  }
+  if($('#shLiAdd')){
+    $('#shLiAdd').onclick = () => {
+      closeDialog();
+      const card = createCardFromImageElement(fileName, img, { stayCurrent: true, openEdit: false });
+      if(card){
+        const t = activeTab();
+        if(t && t.kind === 'home') renderContent();
+        toast('已增添到当前工作区：' + card.name + '（' + iw + '×' + ih + '）');
+      }
+    };
+  }
+  if($('#shLiEdit')){
+    $('#shLiEdit').onclick = () => {
+      closeDialog();
+      createCardFromImageElement(fileName, img, { stayCurrent: false, openEdit: true });
+    };
+  }
+}
+
+/* ---------------- 导入图片 ---------------- */
+function importImage(file){
+  if(!file || (!/^image\//.test(file.type) && !/\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name || ''))){ toast('只支持图片文件'); return; }
+  if(!currentWS()){ toast('先新建一个工作区'); return; }
+  const fr = new FileReader();
+  fr.onload = () => {
+    const dataURL = String(fr.result || '');
+    const img = new Image();
+    img.onload = () => openShellLoadImageModal(file.name || 'image.png', dataURL, img);
+    img.onerror = () => toast('这个文件读不出来');
+    img.src = dataURL;
+  };
+  fr.onerror = () => toast('文件读取失败');
+  fr.readAsDataURL(file);
 }
 
 /* ---------------- 拖拽 ---------------- */

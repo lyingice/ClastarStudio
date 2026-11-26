@@ -463,7 +463,7 @@ const PWAssets = (() => {
   }
   function editorForReference(){
     const active=activeTab();
-    const isRefEditor = t => t && t._frame && (t.kind === 'anim' || t.kind === 'tex');
+    const isRefEditor = t => t && t._frame && (t.kind === 'anim' || t.kind === 'tex' || t.kind === 'ctex');
     if(isRefEditor(active)) return active;
     const last=S.tabs.find(t=>t.id===S.lastEditor && isRefEditor(t));
     if(isRefEditor(last)) return last;

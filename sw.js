@@ -1,5 +1,5 @@
 /* 像素工坊 PWA：离线缓存。发布新版本时把 CACHE 的版本号一起改掉。 */
-const CACHE = 'pixel-workshop-v0.17.0';
+const CACHE = 'pixel-workshop-v0.18.0';
 const ASSETS = [
   './index.html',
   './styles/shell.css',
@@ -60,17 +60,22 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+      /* 只清理本应用旧版本缓存，不误删同域名下其他项目的 Cache Storage */
+      keys.filter(k => k.startsWith('pixel-workshop-') && k !== CACHE).map(k => caches.delete(k))
     )).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', event => {
   if(event.request.method !== 'GET') return;
+  /* local/ 素材包与 /api/ 代理不走 SW：前者是运行时可选内容，后者是动态接口 */
+  const path = new URL(event.request.url).pathname;
+  if(/\/(local|api)\//.test(path)) return;
   /* 页面导航走网络优先，避免开发时被旧缓存挡住；离线再回退缓存 */
   if(event.request.mode === 'navigate'){
     event.respondWith(
       fetch(event.request).then(resp => {
+        if(!resp.ok) return resp;
         try{ const copy = resp.clone(); caches.open(CACHE).then(c => c.put(event.request, copy)); }catch(e){}
         return resp;
       }).catch(() => caches.match(event.request).then(hit => hit || caches.match('./index.html')))
@@ -80,9 +85,10 @@ self.addEventListener('fetch', event => {
   /* 代码 / 样式 / 页面走网络优先：开发时改脚本不会被旧缓存锁死；离线再回退 */
   let sameOrigin = false;
   try{ sameOrigin = new URL(event.request.url).origin === location.origin; }catch(e){}
-  if(sameOrigin && /\.(?:js|css|html|json)$/i.test(new URL(event.request.url).pathname)){
+  if(sameOrigin && /\.(?:js|css|html|json)$/i.test(path)){
     event.respondWith(
       fetch(event.request).then(resp => {
+        if(!resp.ok) return resp;
         try{ const copy = resp.clone(); caches.open(CACHE).then(c => c.put(event.request, copy)); }catch(e){}
         return resp;
       }).catch(() => caches.match(event.request))
@@ -93,6 +99,7 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(hit => {
       if(hit) return hit;
       return fetch(event.request).then(resp => {
+        if(!resp.ok) return resp;
         try{
           if(sameOrigin){
             const copy = resp.clone();

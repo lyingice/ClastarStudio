@@ -1,0 +1,31 @@
+{
+  "productName": "像素工坊",
+  "version": "0.18.0",
+  "identifier": "com.clastar.pixelworkshop",
+  "build": {
+    "frontendDist": "dist",
+    "beforeBuildCommand": "py desktop/prepare_dist.py",
+    "beforeDevCommand": "py desktop/prepare_dist.py"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/icon.ico"],
+    "resources": {
+      "dist/": "dist/"
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "both",
+        "languages": ["SimpChinese", "English"],
+        "displayLanguageSelector": true
+      }
+    }
+  }
+}

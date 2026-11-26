@@ -255,7 +255,7 @@ function variantThumb(cv){
   return t.toDataURL('image/png');
 }
 function variantFullData(cv){
-  const cap = 256;
+  const cap = 2048;
   const s = Math.min(1, cap / Math.max(cv.width, cv.height));
   if(s >= 1) return cv.toDataURL('image/png');
   const c = document.createElement('canvas');

@@ -420,10 +420,10 @@ function embeddedColorPickerScript(){
 }
 
 function mountEditor(t, host){
-  /* 纹理 / 动画都用动画工作室（纹理 = 单帧） */
+  /* 传统纹理与自定义纹理统一使用新版可停靠纹理编辑器；动画使用动画工作室 */
   const kind = t.kind === 'color' ? 'color' : t.kind === 'block' ? 'block'
     : t.kind === 'composite' ? 'composite' : t.kind === 'entity' ? 'entity'
-    : t.kind === 'ctex' ? 'ctex' : 'anim';
+    : (t.kind === 'ctex' || t.kind === 'tex') ? 'ctex' : 'anim';
   const pane = document.createElement('div');
   pane.className = 'ed-pane on';
   pane.dataset.tab = t.id;
@@ -482,13 +482,22 @@ function mountEditor(t, host){
       try{
         const im = new Image();
         im.onload = () => {
-          try{ fr.contentWindow.importStrip(im); clearDirty(t); }catch(e){}
+          try{ fr.contentWindow.importStrip(im, t.payload.texSize); clearDirty(t); }catch(e){}
         };
         im.src = t.payload.full;
       }catch(e){}
     }
   });
 }
+
+/* ---------------- 编辑器内「加载图像」弹窗动作桥 ---------------- */
+window.addEventListener('message', e => {
+  const d = e.data;
+  if(!d || d.__pwAnim !== 1 || d.type !== 'load-image-action') return;
+  if(typeof handleEditorLoadImageAction === 'function'){
+    handleEditorLoadImageAction(d);
+  }
+});
 
 /* ---------------- 色彩拓展 ↔ 编辑器 桥 ---------------- */
 function colorTabFrame(){
@@ -501,7 +510,7 @@ function replyColor(msg){
 }
 function bridgeEditor(){
   let t = S.tabs.find(x => x.id === S.lastEditor && x._frame);
-  if(!t) t = S.tabs.slice().reverse().find(x => x._frame && (x.kind === 'tex' || x.kind === 'anim'));
+  if(!t) t = S.tabs.slice().reverse().find(x => x._frame && (x.kind === 'tex' || x.kind === 'anim' || x.kind === 'ctex'));
   if(!t) return null;
   try{ return t._frame.contentWindow.PW || null; }catch(e){ return null; }
 }
@@ -528,7 +537,7 @@ window.addEventListener('message', e => {
   const d = e.data;
   if(!d || d.__pwCtex !== 1) return;
   if(d.type === 'dirty'){
-    const ct = S.tabs.find(x => x.kind === 'ctex' && x._frame && x._frame.contentWindow === e.source);
+    const ct = S.tabs.find(x => (x.kind === 'ctex' || x.kind === 'tex') && x._frame && x._frame.contentWindow === e.source);
     if(ct) markDirty(ct);
   }
 });
@@ -536,7 +545,7 @@ window.addEventListener('message', e => {
   const d = e.data;
   if(!d || d.__pwBlock !== 1) return;
   if(d.type === 'dirty' && d.__pwCtex){
-    const ct = S.tabs.find(x => x.kind === 'ctex' && x._frame && x._frame.contentWindow === e.source);
+    const ct = S.tabs.find(x => (x.kind === 'ctex' || x.kind === 'tex') && x._frame && x._frame.contentWindow === e.source);
     if(ct) markDirty(ct);
     return;
   }
@@ -661,7 +670,7 @@ async function applyLibraryAsset(fr, t, asset){
     if(typeof w.loadImageFile === 'function') w.loadImageFile(f, w.doImport);
     return;
   }
-  if(t.kind === 'ctex'){
+  if(t.kind === 'ctex' || t.kind === 'tex'){
     const f = await assetFileInFrame(w, asset);
     if(typeof w.loadImage === 'function') w.loadImage(f);
     return;
@@ -1049,11 +1058,15 @@ function saveEditorTab(t){
       if(!hit){ toast('这张卡已经不在仓库里了'); return; }
       const c = hit.card;
       const fw = cv.width, fh = cv.height;
-      const th = document.createElement('canvas'); th.width = th.height = 16;
-      const tg = th.getContext('2d'); tg.imageSmoothingEnabled = false;
-      tg.drawImage(cv, 0, 0, fw, fh, 0, 0, 16, 16);
-      c.thumb = th.toDataURL();
-      const cap = 512;
+      c.thumb = (typeof makeThumbDataURL === 'function')
+        ? makeThumbDataURL(cv, fw, fh)
+        : (() => {
+            const th = document.createElement('canvas'); th.width = th.height = 16;
+            const tg = th.getContext('2d'); tg.imageSmoothingEnabled = false;
+            tg.drawImage(cv, 0, 0, fw, fh, 0, 0, 16, 16);
+            return th.toDataURL();
+          })();
+      const cap = 2048;
       const sc = Math.min(1, cap / Math.max(fw, fh));
       const fc = document.createElement('canvas');
       fc.width = Math.max(1, Math.round(fw * sc));
@@ -1135,14 +1148,21 @@ function saveEditorTab(t){
     if(!hit){ toast('这张卡已经不在仓库里了'); return; }
     const c = hit.card;
     const fw = cv.width, fh = cv.height;
-    const frameH = Math.min(fw, fh);
+    const edDoc = fr.contentWindow.doc;
+    const frames = Math.max(1, (edDoc && edDoc.frames) || (fh > fw && fh % fw === 0 ? Math.round(fh / fw) : 1));
+    const frameW = (edDoc && edDoc.w) || fw;
+    const frameH = (edDoc && edDoc.h) || (frames > 1 ? Math.round(fh / frames) : fh);
 
-    const th = document.createElement('canvas'); th.width = th.height = 16;
-    const tg = th.getContext('2d'); tg.imageSmoothingEnabled = false;
-    tg.drawImage(cv, 0, 0, fw, frameH, 0, 0, 16, 16);
-    c.thumb = th.toDataURL();
+    c.thumb = (typeof makeThumbDataURL === 'function')
+      ? makeThumbDataURL(cv, frameW, frameH)
+      : (() => {
+          const th = document.createElement('canvas'); th.width = th.height = 16;
+          const tg = th.getContext('2d'); tg.imageSmoothingEnabled = false;
+          tg.drawImage(cv, 0, 0, frameW, frameH, 0, 0, 16, 16);
+          return th.toDataURL();
+        })();
 
-    const cap = fh > fw ? 512 : 128;
+    const cap = 2048;
     const sc = Math.min(1, cap / Math.max(fw, fh));
     const fc = document.createElement('canvas');
     fc.width = Math.max(1, Math.round(fw * sc));
@@ -1151,9 +1171,10 @@ function saveEditorTab(t){
     fg.drawImage(cv, 0, 0, fc.width, fc.height);
     c.full = fc.toDataURL();
 
-    c.anim = fh > fw;
+    c.texSize = { w: frameW, h: frameH, frames };
+    c.anim = frames > 1;
     c.badge = c.anim ? '动画' : '纹理';
-    c.meta = fw + '×' + fh + ' · 刚刚';
+    c.meta = (frames > 1 ? (frameW + '×' + frameH + ' · ' + frames + ' 帧') : (fw + '×' + fh)) + ' · 刚刚';
     saveData();
     clearDirty(t);
     if($('#catList')) refreshList();
@@ -1169,53 +1190,27 @@ function revertEditorTab(t){
   mountEditor(t, eds);
 }
 
-/* 纹理模式：切成单帧，再把仓库里的贴图导成一个图层 */
+/* 纹理模式：用统一的可停靠纹理编辑器载入仓库贴图 / 模型彩绘数据 */
 function setupTextureMode(fr, t){
   try{
-    const d = fr.contentDocument, w = fr.contentWindow;
-    /* ---- 纯纹理：把动画相关的东西全收起来 ---- */
-    d.body.classList.add('tex-mode');
-    const ctitle = d.querySelector('[data-key="canvas"] .ph-title');
-    if(ctitle) ctitle.textContent = '画布';
-    ['frames','play','mcmeta'].forEach(k => {
-      const el = d.querySelector('[data-key="' + k + '"]');
-      if(el) el.classList.add('tex-off');       // 用 class，避免被侧栏自定义重置
-    });
-    d.querySelectorAll('.tb-zone').forEach(z => {
-      const cap = z.querySelector('.tb-cap');
-      if(cap && /帧|播放/.test(cap.textContent)) z.style.display = 'none';
-    });
-    d.querySelectorAll('.card').forEach(card => {
-      const h = card.querySelector('h3');
-      if(h && /动画预览|时间轴|条带预览/.test(h.textContent)) card.style.display = 'none';
-    });
-    const cp = d.querySelector('[data-key="canvas"]');
-    if(cp){
-      const frIn = d.getElementById('frames');
-      if(frIn && frIn.parentElement) frIn.parentElement.style.display = 'none';
-      const fq = d.getElementById('frameQuick'); if(fq) fq.style.display = 'none';
-      const im = d.getElementById('impModeSeg');
-      if(im && im.closest('.row')) im.closest('.row').style.display = 'none';
-      const ia = d.getElementById('impAllFrames');
-      if(ia && ia.closest('.chk')) ia.closest('.chk').style.display = 'none';
-      cp.querySelectorAll('.hint').forEach(hh => { if(/帧/.test(hh.textContent)) hh.style.display = 'none'; });
-    }
-    const fi = d.getElementById('frames');
-    if(fi && +fi.value !== 1){
-      fi.value = 1;
-      fi.dispatchEvent(new Event('input', {bubbles:true}));
-      clearDirty(t);            // 切单帧本身不算“用户改动”
-    }
+    const w = fr.contentWindow;
+    if(!w || !w.CT || typeof w.CT.load !== 'function') return;
     const bp = t.payload && t.payload.blockPaint;
-    if(bp && bp.size && bp.size !== 16 && typeof w.resizeDoc === 'function'){
-      try{ w.resizeDoc(bp.size, 1); clearDirty(t); }catch(e){}
-    }
+    const ts = t.payload && t.payload.texSize;
     const img = cardImage(t.payload);
-    if(img && typeof w.importAsLayer === 'function'){
-      const im = new w.Image();
-      im.onload = () => { try{ w.importAsLayer(im); }catch(e){} clearDirty(t); };
-      im.src = img;
-    }
+    const hasExplicitSize = !!((bp && bp.size) || (ts && ts.w && ts.h));
+    const initW = (bp && bp.size) ? bp.size : (ts && ts.w) ? ts.w : (hasExplicitSize ? 16 : 0);
+    const initH = (bp && bp.size) ? bp.size : (ts && ts.h) ? ts.h : (hasExplicitSize ? 16 : 0);
+    w.CT.load({
+      mode: 'tex',
+      w: initW,
+      h: initH,
+      full: img || '',
+      guide: t.payload && t.payload.guide,
+      layerName: (t.payload && t.payload.name) || '底图',
+      onLoad: () => clearDirty(t)
+    });
+    clearDirty(t);
   }catch(e){}
 }
 
@@ -1301,8 +1296,19 @@ function openNewDialog(catId){
     '<div class="subopts on" id="texSub">' +
       '<div class="subopt on" data-pick="tex"><b>传统纹理</b><span>16×16 贴图</span></div>' +
       '<div class="subopt" data-pick="ctex"><b>自定义纹理</b><span>自定画布宽高</span></div>' +
-      '<div class="custom-size" id="ctexSize"><label>宽 <input type="number" id="ctexW" min="1" max="512" value="16"></label>' +
-        '<label>高 <input type="number" id="ctexH" min="1" max="512" value="16"></label><span class="hint">像素</span><span class="hq" data-help="自定义纹理的画布宽高，范围 1–512 像素；传统纹理固定是 16×16。创建后在自定义纹理编辑器里绘制，保存回仓库会保留这个尺寸。">?</span></div>' +
+      '<div class="shell-res-wrap" id="ctexSize">' +
+        '<div class="custom-size"><label>宽 <input type="number" id="ctexW" min="1" max="2048" value="16"></label>' +
+        '<label>高 <input type="number" id="ctexH" min="1" max="2048" value="16"></label><span class="hint">像素</span><span class="hq" data-help="自定义纹理的画布宽高，范围 1–2048 像素（支持 16×16 到 1920×1080 等任意尺寸）；创建后在编辑器内也可随时调整大小或旋转翻转。">?</span></div>' +
+        '<div class="shell-presets" id="ctexPresets">' +
+          '<button type="button" class="shell-pill on" data-w="16" data-h="16">16 × 16</button>' +
+          '<button type="button" class="shell-pill" data-w="32" data-h="32">32 × 32</button>' +
+          '<button type="button" class="shell-pill" data-w="64" data-h="64">64 × 64</button>' +
+          '<button type="button" class="shell-pill" data-w="128" data-h="128">128 × 128</button>' +
+          '<button type="button" class="shell-pill" data-w="256" data-h="256">256 × 256</button>' +
+          '<button type="button" class="shell-pill" data-w="512" data-h="512">512 × 512</button>' +
+          '<button type="button" class="shell-pill" data-w="1920" data-h="1080">1920 × 1080</button>' +
+        '</div>' +
+      '</div>' +
     '</div>' +
     '<div class="opt" data-pick="anim"><div class="oi">' + iconSVG('anim',16) + '</div>' +
       '<div class="ot"><b>动画</b><span>16 帧（16×256），可改帧数</span></div></div>' +
@@ -1339,7 +1345,7 @@ function openNewDialog(catId){
     });
     $$('#dlgBody .subopt').forEach(s => s.classList.toggle('on', s.dataset.pick === pick));
     const cs = $('#ctexSize');
-    if(cs) cs.style.display = pick === 'ctex' ? 'flex' : 'none';
+    if(cs) cs.classList.toggle('on', pick === 'ctex');
     if(!dlgNameTouched && nameInp){
       const map = { tex:'新建纹理', ctex:'新建自定义纹理', anim:'新建动画', block:'新建方块',
         composite:'新建复合纹理方块', folder:'新建文件夹' };
@@ -1366,6 +1372,17 @@ function openNewDialog(catId){
     setPick(o.dataset.pick);
   });
   $$('#dlgBody .subopt').forEach(s => s.onclick = e => { e.stopPropagation(); setPick(s.dataset.pick); });
+  const syncCtexPills = () => {
+    const w = +($('#ctexW') && $('#ctexW').value) || 0, h = +($('#ctexH') && $('#ctexH').value) || 0;
+    $$('#ctexPresets .shell-pill').forEach(p => p.classList.toggle('on', +p.dataset.w === w && +p.dataset.h === h));
+  };
+  $$('#ctexPresets .shell-pill').forEach(p => p.onclick = () => {
+    if($('#ctexW')) $('#ctexW').value = p.dataset.w;
+    if($('#ctexH')) $('#ctexH').value = p.dataset.h;
+    syncCtexPills();
+  });
+  if($('#ctexW')) $('#ctexW').addEventListener('input', syncCtexPills);
+  if($('#ctexH')) $('#ctexH').addEventListener('input', syncCtexPills);
   setPick('tex');
   dlgOkFn = doCreate;
   $('#dlgOk').textContent = '创建';
@@ -1373,7 +1390,7 @@ function openNewDialog(catId){
   $('#modal').classList.add('on');
   paintIcons($('#modal'));
 }
-function closeDialog(){ $('#modal').classList.remove('on'); }
+function closeDialog(){ $('#modal').classList.remove('on'); if($('#dlgOk')) $('#dlgOk').style.display = ''; if($('#dlgCancel')) $('#dlgCancel').textContent = '取消'; }
 
 function doCreate(){
   const name = (($('#dlgName') && $('#dlgName').value.trim()) || '新建内容');
@@ -1393,8 +1410,8 @@ function doCreate(){
   if(dlgPick === 'folder'){
     card = { id:'f' + Date.now().toString(36), name, meta:'文件夹 · 0 项', badge:'文件夹', type:'folder', cards:[] };
   } else if(dlgPick === 'ctex'){
-    const w = Math.max(1, Math.min(512, parseInt(($('#ctexW') && $('#ctexW').value) || '16', 10) || 16));
-    const h = Math.max(1, Math.min(512, parseInt(($('#ctexH') && $('#ctexH').value) || '16', 10) || 16));
+    const w = Math.max(1, Math.min(2048, parseInt(($('#ctexW') && $('#ctexW').value) || '16', 10) || 16));
+    const h = Math.max(1, Math.min(2048, parseInt(($('#ctexH') && $('#ctexH').value) || '16', 10) || 16));
     card = { id:'n' + Date.now().toString(36), name, meta:w + '×' + h + ' · 自定义',
       badge:'纹理', type:'item', ctex:{w, h} };
   } else {
@@ -1525,6 +1542,7 @@ function openAbout(){
     '<b>像素工坊</b> v' + APP_VERSION + '<br>' +
     '纹理 / 动画贴图的收纳与绘制。数据保存在本机浏览器（localStorage），不上传。<br><br>' +
     '常用操作：双击卡片打开编辑器 · 右键重命名 / 删除 / 一键换色 · 拖入 PNG 直接导入 · 编辑器顶栏「保存回仓库」<br><br>' +
+    '0.18.0：传统纹理 / 自定义纹理 / 动画纹理统一可停靠编辑器布局 · 面板拖拽合并标签组 / 折叠 / 小窗口弹出缩放 · 画布绘画网格配置 · 顶栏 ⋯ 按钮显隐自定义 · 统一中性灰界面 · 桌面端（Tauri）<br>' +
     '0.17.0：AI 助手（接入你的大模型 API key）· 工具化换色 / 材质色阶变种 / 像素绘制 / 资源包导出 · 本地 LLM 代理与同意门控<br>' +
     '0.16.1：修复原生取色器弹窗 · Blockbench / Endesga 默认色板 · 变种工坊 6 色阶与自定义增删 · 一键换色材质色卡<br>' +
     '0.16.0：本地素材内容包（Create / 原版）· Create 多分支与 OBJ/MTL 3D 预览 · 旋转缩放与可拉伸预览 · 一键启动脚本<br>' +
