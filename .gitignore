@@ -31,3 +31,11 @@ Thumbs.db
 # Desktop build artifacts (Tauri)
 /desktop/dist/
 /desktop/target/
+
+# Android build artifacts
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/local.properties
+*.apk
+*.aab
