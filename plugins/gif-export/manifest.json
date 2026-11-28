@@ -1,0 +1,25 @@
+{
+  "id": "gif-export",
+  "name": "GIF 导出",
+  "version": "0.1.0",
+  "apiVersion": 1,
+  "description": "把仓库里的动画纹理（或本地动画 PNG 条带）逐帧编码成 GIF，支持帧间隔、循环次数与整数倍缩放。",
+  "author": "ClastarStudio",
+  "official": true,
+  "icon": "anim",
+  "permissions": [
+    "library.read",
+    "network",
+    "download"
+  ],
+  "tools": [
+    {
+      "id": "gif-export",
+      "name": "GIF 导出",
+      "title": "GIF 导出",
+      "icon": "anim",
+      "description": "把动画纹理逐帧导出为 GIF 文件"
+    }
+  ],
+  "entry": "plugin.html"
+}

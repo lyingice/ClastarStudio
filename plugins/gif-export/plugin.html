@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GIF 导出</title>
+<style>
+  :root{
+    --bg:#1a1a1a;--bg2:#242424;--bg3:#303030;--panel:#3a3a3a;
+    --line:#101010;--txt:#f2f2f2;--muted:#9a9a9a;--dim:#7d7d7d;
+    --accent:#4c9a2a;--accent2:#6fc244;--accentd:#2f6b1a;--warn:#f0b35b;--bad:#d85b5b;
+    --mono:ui-monospace,Consolas,"Cascadia Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg);color:var(--txt);overflow:hidden;
+    font:12.5px/1.5 "Segoe UI",system-ui,-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button,input,select{font:inherit;color:inherit}
+  button{cursor:pointer}
+  .app{height:100%;display:flex;flex-direction:column}
+  .tb{flex:0 0 44px;display:flex;align-items:center;gap:9px;padding:0 10px;background:#262626;border-bottom:2px solid var(--line)}
+  .tb .logo{width:24px;height:24px;display:grid;place-items:center;background:var(--accentd);border:2px solid var(--line);color:#fff;font-weight:700;font-size:9px;letter-spacing:.5px}
+  .tb h1{margin:0;font-size:13px;letter-spacing:.4px}
+  .tb .sub{font-size:9px;letter-spacing:2px;color:var(--dim);margin-top:1px}
+  .tb .right{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{font-size:9.5px;background:#2d2d2d;border:1px solid #151515;padding:2px 6px;color:#bdbdbd}
+  .btn{height:28px;padding:0 9px;background:#454545;border:2px solid var(--line);color:#eee;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .btn:hover{background:#545454}
+  .btn.pri{background:var(--accent);border-color:var(--accentd);color:#fff;font-weight:600}
+  .btn.pri:hover{background:var(--accent2)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.sm{height:24px;font-size:10.5px;padding:0 7px}
+  .layout{flex:1;min-height:0;display:grid;grid-template-columns:288px minmax(0,1fr);gap:8px;padding:8px;overflow:hidden}
+  .col{min-height:0;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+  .card{background:#2a2a2a;border:2px solid #111;box-shadow:inset 0 1px 0 #ffffff0f;padding:9px;min-width:0}
+  .card h2{margin:0 0 7px;font-size:10.5px;letter-spacing:.9px;color:#ddd;display:flex;align-items:center;gap:6px}
+  .card h2::before{content:'';width:4px;height:11px;background:var(--accent);flex:0 0 auto}
+  .card h2 span{margin-left:auto;font-size:9px;color:#888;font-weight:400;letter-spacing:0}
+  .hint{font-size:9.5px;line-height:1.7;color:#8d8d8d;margin:0}
+  .search{width:100%;height:27px;background:#202020;border:1px solid #111;color:#eee;padding:0 7px;outline:none;margin-bottom:5px}
+  .search:focus{border-color:var(--accent)}
+  .list{flex:1;min-height:80px;overflow:auto;display:flex;flex-direction:column;gap:3px;padding-right:2px}
+  .item{display:flex;align-items:center;gap:7px;padding:5px;background:#252525;border:1px solid #121212;cursor:pointer}
+  .item:hover{border-color:#7c9f62;background:#2e332b}
+  .item.on{border-color:var(--accent2);background:#394632;box-shadow:inset 0 0 0 1px var(--accent)}
+  .item img{width:34px;height:34px;object-fit:contain;image-rendering:pixelated;background:#191919;border:1px solid #111;flex:0 0 34px}
+  .item .ii{min-width:0;flex:1}
+  .item b{display:block;font-size:11px;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item span{display:block;font-size:9px;color:#8f8f8f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .preview-wrap{position:relative;flex:1;min-height:180px;display:grid;place-items:center;background-color:#191919;
+    background-image:linear-gradient(45deg,#242424 25%,transparent 25%,transparent 75%,#242424 75%),linear-gradient(45deg,#242424 25%,transparent 25%,transparent 75%,#242424 75%);
+    background-size:14px 14px;background-position:0 0,7px 7px;border:1px solid #111;overflow:hidden}
+  .preview-wrap canvas{image-rendering:pixelated;display:block}
+  .empty{padding:20px 12px;text-align:center;color:#888;font-size:10px;line-height:1.8}
+  .meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+  .stat{background:#242424;border:1px solid #111;padding:3px 7px;font-size:9.5px;color:#bbb}
+  .stat b{color:#f0f0f0;font-size:11px;margin-right:3px}
+  .row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px;font-size:10px;color:#aaa}
+  .row label{display:flex;align-items:center;gap:4px}
+  .row input[type=number]{width:62px;height:25px;background:#202020;border:1px solid #111;color:#eee;padding:0 5px;outline:none}
+  .row input[type=number]:focus{border-color:var(--accent)}
+  .row select{height:25px;background:#202020;border:1px solid #111;color:#eee;padding:0 4px;outline:none}
+  .row input[type=checkbox]{accent-color:var(--accent);margin:0}
+  .range{flex:1;min-width:90px}
+  .toast{position:fixed;left:50%;bottom:14px;transform:translate(-50%,10px);background:#2b2b2b;border:2px solid #111;color:#fff;padding:6px 12px;font-size:10.5px;opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;max-width:90%;z-index:50;text-align:center}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  .filebox{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px;border:2px dashed #555;background:#232323;cursor:pointer;text-align:center}
+  .filebox:hover{border-color:var(--accent);background:#262b22}
+  .filebox b{font-size:11px;color:#eee}
+  .filebox span{font-size:9px;color:#888}
+  .filebox input{display:none}
+  @media (max-width:820px){
+    .layout{grid-template-columns:minmax(0,1fr);grid-template-rows:220px minmax(0,1fr)}
+    .col.left{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="tb">
+    <div class="logo">GIF</div>
+    <div><h1>GIF 导出</h1><div class="sub">ANIMATED TEXTURE → GIF</div></div>
+    <span class="pill" id="hostState">连接宿主…</span>
+    <div class="right">
+      <span class="pill" id="sourceState">未选择动画</span>
+      <button class="btn pri" id="exportBtn" disabled>导出 GIF</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="col left">
+      <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <h2>1 · 仓库动画纹理 <span id="listCount">0</span></h2>
+        <input class="search" id="search" placeholder="搜索名称 / 工作区…" autocomplete="off">
+        <div class="list" id="list"><div class="hint" style="padding:8px">正在读取仓库…</div></div>
+      </div>
+      <div class="card">
+        <h2>2 · 本地动画 PNG</h2>
+        <label class="filebox" id="drop">
+          <input type="file" id="file" accept=".png,image/png">
+          <b>选择动画条带 PNG</b>
+          <span>竖向排列的动画帧，自动识别帧数</span>
+        </label>
+        <div class="row" style="margin:7px 0 0">
+          <label>帧数<input type="number" id="frameCount" min="1" max="512" value="1"></label>
+          <label>帧宽<input type="number" id="frameW" min="1" max="256" value="16"></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="col right">
+      <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <h2>预览 <span id="previewInfo">等待选择</span></h2>
+        <div class="preview-wrap" id="previewWrap"><div class="empty">选择左侧的动画纹理，或导入一张动画 PNG 条带。</div></div>
+        <div class="meta" id="meta"></div>
+      </div>
+      <div class="card">
+        <h2>导出参数</h2>
+        <div class="row">
+          <label>帧间隔 <input type="number" id="delay" min="10" max="5000" step="10" value="100"> ms</label>
+          <label>缩放 <select id="scale"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option><option value="6">6×</option><option value="8">8×</option><option value="10">10×</option><option value="16">16×</option></select></label>
+          <label><input type="checkbox" id="loop" checked> 无限循环</label>
+          <button class="btn sm" id="playBtn">暂停</button>
+        </div>
+        <div class="row" style="margin-bottom:0">
+          <span class="hint" id="exportHint">导出会用当前帧间隔与缩放重新编码每一帧；透明像素保留为 GIF 透明。</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var PLUGIN_ID = 'gif-export';
+  var seq = 0;
+  var pending = new Map();
+  var hostReady = false;
+  var readyResolve;
+  var ready = new Promise(function(res){ readyResolve = res; });
+
+  function q(s){ return document.querySelector(s); }
+  function toast(msg){
+    var t = q('#toast'); if(!t) return;
+    t.textContent = msg; t.classList.add('on');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ t.classList.remove('on'); }, 2600);
+  }
+  function call(method, params){
+    return ready.then(function(){
+      return new Promise(function(resolve, reject){
+        var requestId = ++seq;
+        pending.set(requestId, { resolve:resolve, reject:reject });
+        window.parent.postMessage({
+          __pwPluginHost:1, pluginId:PLUGIN_ID, type:'api', requestId:requestId,
+          method:method, params:params || {}
+        }, '*');
+      });
+    });
+  }
+  window.addEventListener('message', function(e){
+    var d = e.data;
+    if(!d || d.__pwPluginHost !== 1) return;
+    if(d.type === 'host-ready'){
+      hostReady = true;
+      readyResolve();
+      q('#hostState').textContent = '已连接 · ' + ((d.plugin && d.plugin.name) || '宿主');
+      loadList();
+      return;
+    }
+    if(d.type === 'api-result'){
+      var p = pending.get(d.requestId);
+      if(!p) return;
+      pending.delete(d.requestId);
+      if(d.ok) p.resolve(d.result);
+      else p.reject(new Error(d.error || '宿主 API 失败'));
+    }
+  });
+  window.parent.postMessage({ __pwPluginHost:1, pluginId:PLUGIN_ID, type:'ready' }, '*');
+
+  /* ---------------- 图像工具 ---------------- */
+  function imageOf(url){
+    return new Promise(function(resolve, reject){
+      var im = new Image();
+      im.onload = function(){ resolve(im); };
+      im.onerror = function(){ reject(new Error('图像加载失败')); };
+      im.src = url;
+    });
+  }
+  function readDataURL(file){
+    return new Promise(function(resolve, reject){
+      var fr = new FileReader();
+      fr.onload = function(){ resolve(String(fr.result || '')); };
+      fr.onerror = function(){ reject(new Error('读取文件失败')); };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  /* ---------------- GIF 编码 ---------------- */
+  /* 调色板 + LZW 打包，纯 JS 实现，无外部依赖 */
+  function buildPalette(frameList, allowTransparent){
+    var counts = new Map();
+    var hasAlpha = false;
+    for(var f = 0; f < frameList.length; f++){
+      var d = frameList[f];
+      for(var i = 0; i < d.length; i += 4){
+        if(d[i + 3] < 128){ hasAlpha = true; continue; }
+        var key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+    }
+    var sorted = [];
+    counts.forEach(function(v, k){ sorted.push([k, v]); });
+    sorted.sort(function(a, b){ return b[1] - a[1]; });
+    var maxColors = (hasAlpha && allowTransparent) ? 255 : 256;
+    var keep = sorted.slice(0, maxColors);
+    var palette = keep.map(function(e){
+      return [ (e[0] >> 16) & 255, (e[0] >> 8) & 255, e[0] & 255 ];
+    });
+    var indexOf = new Map();
+    keep.forEach(function(e, i){ indexOf.set(e[0], i); });
+    var matchPalette = palette.slice();
+    var transparentIndex = -1;
+    if(hasAlpha && allowTransparent){
+      transparentIndex = palette.length;
+      palette.push([0, 0, 0]);
+    }
+    if(sorted.length > maxColors){
+      for(var n = maxColors; n < sorted.length; n++){
+        var key2 = sorted[n][0];
+        var r = (key2 >> 16) & 255, g = (key2 >> 8) & 255, b = key2 & 255;
+        var best = 0, bestD = Infinity;
+        for(var k = 0; k < matchPalette.length; k++){
+          var dr = matchPalette[k][0] - r, dg = matchPalette[k][1] - g, db = matchPalette[k][2] - b;
+          var dist = dr * dr + dg * dg + db * db;
+          if(dist < bestD){ bestD = dist; best = k; }
+        }
+        indexOf.set(key2, best);
+      }
+    }
+    return { palette:palette, indexOf:indexOf, hasAlpha:hasAlpha, transparentIndex:transparentIndex };
+  }
+  function toIndices(rgba, indexOf, transparentIndex){
+    var out = new Uint8Array(rgba.length / 4);
+    for(var i = 0, j = 0; i < rgba.length; i += 4, j++){
+      if(rgba[i + 3] < 128){ out[j] = transparentIndex >= 0 ? transparentIndex : 0; continue; }
+      var key = (rgba[i] << 16) | (rgba[i + 1] << 8) | rgba[i + 2];
+      var idx = indexOf.get(key);
+      out[j] = idx === undefined ? 0 : idx;
+    }
+    return out;
+  }
+  function lzwEncode(indices, minCodeSize){
+    var clearCode = 1 << minCodeSize;
+    var eoiCode = clearCode + 1;
+    var codeSize = minCodeSize + 1;
+    var nextCode = eoiCode + 1;
+    var dict = new Map();
+    var out = [];
+    var cur = 0, curBits = 0;
+    function emit(code){
+      cur |= (code << curBits);
+      curBits += codeSize;
+      while(curBits >= 8){
+        out.push(cur & 0xff);
+        cur >>>= 8;
+        curBits -= 8;
+      }
+    }
+    emit(clearCode);
+    if(!indices.length){
+      emit(eoiCode);
+      if(curBits > 0) out.push(cur & 0xff);
+      return out;
+    }
+    var prefix = indices[0];
+    for(var i = 1; i < indices.length; i++){
+      var k = indices[i];
+      var key = (prefix << 8) | k;
+      var found = dict.get(key);
+      if(found !== undefined){ prefix = found; continue; }
+      emit(prefix);
+      /* 与解码端同步：先按当前位宽发码，再判断是否需要加宽，最后分配新表项 */
+      if(nextCode > ((1 << codeSize) - 1) && codeSize < 12) codeSize++;
+      if(nextCode < 4096){
+        dict.set(key, nextCode);
+        nextCode++;
+      }else{
+        emit(clearCode);
+        dict = new Map();
+        codeSize = minCodeSize + 1;
+        nextCode = eoiCode + 1;
+      }
+      prefix = k;
+    }
+    emit(prefix);
+    emit(eoiCode);
+    if(curBits > 0) out.push(cur & 0xff);
+    return out;
+  }
+  function encodeGif(opts){
+    var width = opts.width, height = opts.height;
+    var frames = opts.frames;
+    var delay = Math.max(2, Math.round(opts.delayCs));
+    var loop = opts.loop ? 0 : 1;
+    var built = buildPalette(frames, true);
+    var palette = built.palette;
+    if(!palette.length) palette = [[0, 0, 0]];
+    var palSize = 2;
+    while(palSize < palette.length) palSize <<= 1;
+    var palBits = Math.round(Math.log(palSize) / Math.log(2));
+    var bytes = [];
+    function u8(v){ bytes.push(v & 0xff); }
+    function u16(v){ bytes.push(v & 0xff, (v >>> 8) & 0xff); }
+    function str(s){ for(var i = 0; i < s.length; i++) bytes.push(s.charCodeAt(i) & 0xff); }
+    function raw(arr){ for(var i = 0; i < arr.length; i++) bytes.push(arr[i]); }
+
+    str('GIF89a');
+    u16(width); u16(height);
+    u8(0x80 | 0x70 | (palBits - 1));
+    u8(0);
+    u8(0);
+    for(var p = 0; p < palSize; p++){
+      var c = palette[p] || [0, 0, 0];
+      u8(c[0]); u8(c[1]); u8(c[2]);
+    }
+    /* Netscape 循环扩展 */
+    u8(0x21); u8(0xFF); u8(0x0B);
+    str('NETSCAPE2.0');
+    u8(0x03); u8(0x01); u16(loop); u8(0x00);
+
+    var minCodeSize = Math.max(2, palBits);
+    for(var f = 0; f < frames.length; f++){
+      var indices = toIndices(frames[f], built.indexOf, built.transparentIndex);
+      var disposal = built.hasAlpha ? 2 : 1;
+      u8(0x21); u8(0xF9); u8(0x04);
+      u8((disposal << 2) | (built.hasAlpha ? 1 : 0));
+      u16(delay);
+      u8(built.hasAlpha ? built.transparentIndex : 0);
+      u8(0x00);
+      u8(0x2C);
+      u16(0); u16(0); u16(width); u16(height);
+      u8(0x00);
+      u8(minCodeSize);
+      var data = lzwEncode(indices, minCodeSize);
+      for(var off = 0; off < data.length; off += 255){
+        var chunk = data.slice(off, off + 255);
+        u8(chunk.length);
+        raw(chunk);
+      }
+      u8(0x00);
+    }
+    u8(0x3B);
+    return new Uint8Array(bytes);
+  }
+  function bytesToBase64(bytes){
+    var bin = '';
+    var step = 0x8000;
+    for(var i = 0; i < bytes.length; i += step){
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + step));
+    }
+    return btoa(bin);
+  }
+
+  /* ---------------- 状态 ---------------- */
+  var items = [];
+  var current = null;         /* { name, strip, frameW, frameH, frameCount, fromCard } */
+  var frameCache = [];        /* 原始尺寸 RGBA 帧 */
+  var query = '';
+  var delayMs = 100;
+  var scale = 1;
+  var loopOn = true;
+  var playing = true;
+  var playIndex = 0;
+  var playTimer = null;
+
+  function frameCountOf(meta){
+    if(!meta) return 1;
+    return Math.max(1, Math.min(512, Math.round(+meta.frames || 1)));
+  }
+  function fmtMeta(meta){
+    if(!meta) return '单帧';
+    return (meta.w || 16) + '×' + (meta.h || 16) + ' · ' + frameCountOf(meta) + ' 帧';
+  }
+
+  function renderList(){
+    var box = q('#list');
+    if(!box) return;
+    var kw = query.trim().toLowerCase();
+    var list = items.filter(function(it){
+      if(!kw) return true;
+      return (it.name + ' ' + (it.workspace && it.workspace.name || '') + ' ' + (it.category || '')).toLowerCase().indexOf(kw) >= 0;
+    });
+    q('#listCount').textContent = list.length;
+    if(!list.length){
+      box.innerHTML = '<div class="hint" style="padding:8px">' +
+        (items.length ? '没有匹配的动画纹理。' : '仓库里还没有动画纹理；可以导入一张动画 PNG 条带，或先在编辑器里把 PNG 条带存成动画卡片。') + '</div>';
+      return;
+    }
+    var html = '';
+    for(var i = 0; i < list.length; i++){
+      var it = list[i];
+      var on = current && current.id === it.id ? ' on' : '';
+      var thumb = it.thumb ? '<img src="' + it.thumb + '" alt="">' : '<img src="" alt="" style="visibility:hidden">';
+      html += '<div class="item' + on + '" data-item="' + it.id + '">' + thumb +
+        '<div class="ii"><b>' + escapeHtml(it.name) + '</b><span>' +
+        escapeHtml(fmtMeta(it.texSize)) + ' · ' + escapeHtml((it.workspace && it.workspace.name) || '') + '</span></div></div>';
+    }
+    box.innerHTML = html;
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+    });
+  }
+
+  async function loadList(){
+    try{
+      var res = await call('library.listCards', { only:'anim', withThumb:true, limit:400 });
+      items = (res && res.cards) || [];
+      renderList();
+      q('#sourceState').textContent = items.length ? ('仓库动画 · ' + items.length) : '仓库里没有动画纹理';
+      if(items.length && !current) selectItem(items[0].id);
+    }catch(err){
+      toast('读取仓库失败：' + err.message);
+    }
+  }
+
+  async function selectItem(id){
+    var brief = null;
+    for(var i = 0; i < items.length; i++){ if(items[i].id === id){ brief = items[i]; break; } }
+    if(!brief) return;
+    try{
+      var res = await call('library.getCard', { id:id });
+      var card = res && res.card;
+      if(!card || !(card.full || card.thumb)){ toast('这张卡片没有图像数据'); return; }
+      var meta = card.texSize || brief.texSize || null;
+      var strip = card.full || card.thumb;
+      await loadStrip({
+        id:id, name:brief.name, strip:strip,
+        frameW: (meta && meta.w) || 0,
+        frameH: (meta && meta.h) || 0,
+        frameCount: frameCountOf(meta),
+        fromCard:true
+      });
+    }catch(err){
+      toast('读取卡片失败：' + err.message);
+    }
+  }
+
+  async function loadStrip(src){
+    var im;
+    try{ im = await imageOf(src.strip); }
+    catch(err){ toast('图像解析失败'); return; }
+    var w = Math.max(1, Math.round(src.frameW || im.naturalWidth));
+    var h = Math.max(1, Math.round(src.frameH || im.naturalWidth));
+    var naturalW = im.naturalWidth, naturalH = im.naturalHeight;
+    if(!src.frameW || !src.frameH){
+      if(h && naturalH % w === 0 && naturalH >= w){
+        h = w;
+        src.frameCount = Math.max(1, Math.round(naturalH / w));
+      }else{
+        w = naturalW; h = naturalH; src.frameCount = 1;
+      }
+    }
+    var frames = Math.max(1, Math.min(512, Math.round(src.frameCount || Math.round(naturalH / h) || 1)));
+    if(frames * h > naturalH && h > 0){
+      frames = Math.max(1, Math.floor(naturalH / h));
+    }
+    current = {
+      id:src.id || null, name:src.name, strip:src.strip,
+      frameW:w, frameH:h, frameCount:frames, fromCard:!!src.fromCard
+    };
+    q('#frameCount').value = frames;
+    q('#frameW').value = w;
+    await decodeFrames();
+    renderList();
+    q('#exportBtn').disabled = !frameCache.length;
+    q('#sourceState').textContent = current.name + ' · ' + w + '×' + h + ' · ' + frames + ' 帧';
+  }
+
+  async function decodeFrames(){
+    if(!current){ frameCache = []; return; }
+    var im = await imageOf(current.strip);
+    var fw = current.frameW, fh = current.frameH, n = current.frameCount;
+    var cv = document.createElement('canvas');
+    cv.width = fw; cv.height = fh;
+    var ctx = cv.getContext('2d', { willReadFrequently:true });
+    ctx.imageSmoothingEnabled = false;
+    var out = [];
+    for(var i = 0; i < n; i++){
+      var sy = i * fh;
+      if(sy + fh > im.naturalHeight) break;
+      ctx.clearRect(0, 0, fw, fh);
+      ctx.drawImage(im, 0, sy, fw, fh, 0, 0, fw, fh);
+      out.push(ctx.getImageData(0, 0, fw, fh).data);
+    }
+    frameCache = out;
+    playIndex = 0;
+    renderMeta();
+    renderPreview();
+    startPlay();
+  }
+
+  function renderMeta(){
+    var box = q('#meta');
+    if(!current || !frameCache.length){
+      box.innerHTML = '';
+      q('#previewInfo').textContent = '等待选择';
+      return;
+    }
+    var outW = current.frameW * scale, outH = current.frameH * scale;
+    box.innerHTML =
+      '<span class="stat"><b>' + current.frameW + '×' + current.frameH + '</b>单帧</span>' +
+      '<span class="stat"><b>' + frameCache.length + '</b>帧</span>' +
+      '<span class="stat"><b>' + outW + '×' + outH + '</b>输出</span>' +
+      '<span class="stat"><b>' + Math.round(1000 / Math.max(10, delayMs)) + '</b>fps</span>';
+    q('#previewInfo').textContent = current.name + ' · ' + frameCache.length + ' 帧';
+  }
+
+  function renderPreview(){
+    var wrap = q('#previewWrap');
+    if(!wrap) return;
+    if(!current || !frameCache.length){
+      wrap.innerHTML = '<div class="empty">选择左侧的动画纹理，或导入一张动画 PNG 条带。</div>';
+      return;
+    }
+    var cv = wrap.querySelector('canvas');
+    if(!cv){
+      wrap.innerHTML = '';
+      cv = document.createElement('canvas');
+      wrap.appendChild(cv);
+    }
+    var fw = current.frameW, fh = current.frameH;
+    cv.width = fw; cv.height = fh;
+    var box = wrap.getBoundingClientRect();
+    var maxW = Math.max(32, box.width - 24), maxH = Math.max(32, box.height - 24);
+    var z = Math.max(1, Math.min(Math.floor(maxW / fw), Math.floor(maxH / fh)));
+    cv.style.width = (fw * z) + 'px';
+    cv.style.height = (fh * z) + 'px';
+    var ctx = cv.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, fw, fh);
+    var fd = frameCache[playIndex % frameCache.length];
+    if(fd){
+      var tmp = ctx.createImageData(fw, fh);
+      tmp.data.set(fd);
+      ctx.putImageData(tmp, 0, 0);
+    }
+  }
+
+  function startPlay(){
+    stopPlay();
+    if(!frameCache.length) return;
+    if(!playing){ renderPreview(); return; }
+    playTimer = setInterval(function(){
+      if(!frameCache.length || !playing) return;
+      playIndex = (playIndex + 1) % frameCache.length;
+      renderPreview();
+    }, Math.max(20, delayMs));
+  }
+  function stopPlay(){
+    if(playTimer){ clearInterval(playTimer); playTimer = null; }
+  }
+
+  /* ---------------- 导出 ---------------- */
+  async function exportGif(){
+    if(!current || !frameCache.length){ toast('先选择一个动画纹理'); return; }
+    var btn = q('#exportBtn');
+    btn.disabled = true;
+    btn.textContent = '编码中…';
+    try{
+      var fw = current.frameW * scale, fh = current.frameH * scale;
+      if(fw < 1 || fh < 1 || fw > 2000 || fh > 2000) throw new Error('输出尺寸不合法（建议缩放 ≤ 16×）');
+      var frames = [];
+      var cv = document.createElement('canvas');
+      cv.width = fw; cv.height = fh;
+      var ctx = cv.getContext('2d', { willReadFrequently:true });
+      ctx.imageSmoothingEnabled = false;
+      for(var i = 0; i < frameCache.length; i++){
+        var src = document.createElement('canvas');
+        src.width = current.frameW; src.height = current.frameH;
+        var sctx = src.getContext('2d');
+        var tmp = sctx.createImageData(current.frameW, current.frameH);
+        tmp.data.set(frameCache[i]);
+        sctx.putImageData(tmp, 0, 0);
+        ctx.clearRect(0, 0, fw, fh);
+        ctx.drawImage(src, 0, 0, current.frameW, current.frameH, 0, 0, fw, fh);
+        frames.push(ctx.getImageData(0, 0, fw, fh).data);
+      }
+      var bytes = encodeGif({
+        width: fw, height: fh, frames: frames,
+        delayCs: Math.max(2, Math.round(delayMs / 10)),
+        loop: loopOn
+      });
+      var base64 = bytesToBase64(bytes);
+      var safe = String(current.name || 'animation').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60);
+      await call('download', {
+        mime:'image/gif',
+        base64:base64,
+        filename: safe + '.gif'
+      });
+      toast('已导出 ' + safe + '.gif（' + fw + '×' + fh + ' · ' + frames.length + ' 帧 · ' + Math.round(bytes.length / 1024) + ' KB）');
+    }catch(err){
+      toast('导出失败：' + err.message);
+    }
+    btn.disabled = false;
+    btn.textContent = '导出 GIF';
+  }
+
+  /* ---------------- 绑定 ---------------- */
+  q('#search').addEventListener('input', function(e){
+    query = e.target.value || '';
+    renderList();
+  });
+  q('#list').addEventListener('click', function(e){
+    var el = e.target.closest('[data-item]');
+    if(!el) return;
+    selectItem(el.dataset.item);
+  });
+  q('#delay').addEventListener('input', function(e){
+    delayMs = Math.max(10, Math.min(5000, +e.target.value || 100));
+    renderMeta();
+    if(playing) startPlay();
+  });
+  q('#scale').addEventListener('change', function(e){
+    scale = Math.max(1, Math.min(16, +e.target.value || 1));
+    renderMeta();
+    renderPreview();
+  });
+  q('#loop').addEventListener('change', function(e){
+    loopOn = !!e.target.checked;
+  });
+  q('#playBtn').addEventListener('click', function(){
+    playing = !playing;
+    q('#playBtn').textContent = playing ? '暂停' : '播放';
+    if(playing) startPlay(); else { stopPlay(); renderPreview(); }
+  });
+  q('#exportBtn').addEventListener('click', exportGif);
+  q('#file').addEventListener('change', async function(e){
+    var f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if(!f) return;
+    try{
+      var data = await readDataURL(f);
+      var im = await imageOf(data);
+      var w = im.naturalWidth, h = im.naturalHeight;
+      var frames = (h % w === 0 && h >= w) ? Math.round(h / w) : 1;
+      var fh = frames > 1 ? w : h;
+      await loadStrip({
+        id:null, name:f.name.replace(/\.[^.]+$/, ''), strip:data,
+        frameW:w, frameH:fh, frameCount:frames, fromCard:false
+      });
+      q('#frameCount').value = frames;
+      q('#frameW').value = w;
+      q('#exportBtn').disabled = !frameCache.length;
+      toast('已载入 ' + f.name + '（' + w + '×' + h + '，' + frames + ' 帧）');
+    }catch(err){
+      toast('读取失败：' + err.message);
+    }
+  });
+  q('#frameCount').addEventListener('change', async function(e){
+    if(!current) return;
+    current.frameCount = Math.max(1, Math.min(512, +e.target.value || 1));
+    await decodeFrames();
+    q('#exportBtn').disabled = !frameCache.length;
+  });
+  q('#frameW').addEventListener('change', async function(e){
+    if(!current) return;
+    current.frameW = Math.max(1, Math.min(256, +e.target.value || 16));
+    await decodeFrames();
+    q('#exportBtn').disabled = !frameCache.length;
+  });
+  var drop = q('#drop');
+  drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.style.borderColor = 'var(--accent)'; });
+  drop.addEventListener('dragleave', function(){ drop.style.borderColor = ''; });
+  drop.addEventListener('drop', function(e){
+    e.preventDefault();
+    drop.style.borderColor = '';
+    var f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(!f) return;
+    var dt = new DataTransfer();
+    dt.items.add(f);
+    q('#file').files = dt.files;
+    q('#file').dispatchEvent(new Event('change'));
+  });
+  window.addEventListener('resize', function(){ renderPreview(); });
+})();
+</script>
+</body>
+</html>

@@ -251,6 +251,7 @@ function sidebarBindQuick(){
   bind('quickImport', sidebarQuickImport);
   bind('quickZip', sidebarQuickZip);
   bind('quickPack', sidebarQuickPack);
+  bind('quickDshBridge', () => { closeDrawers(); if(typeof PWBridge !== 'undefined') PWBridge.openModal(); });
   bind('quickRecentAll', sidebarOpenRecentView);
   const recent = document.getElementById('quickRecent');
   if(recent){

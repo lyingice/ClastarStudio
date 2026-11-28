@@ -1,0 +1,5 @@
+- insert:
+    - id: clastar-assets
+      name: '@local/dsh-clastar-assets'
+      config:
+        bridgeDir: ''

@@ -1,7 +1,7 @@
 {
   "id": "create-texture",
   "name": "机械动力方块扩展",
-  "version": "0.5.0",
+  "version": "0.6.2",
   "apiVersion": 1,
   "description": "扫描机械动力模组 jar / 资源包，按方块族组织多分支模型与纹理，支持 3D / 动态预览、OBJ / MTL 只读预览、物品模型和分支纹理拆分。",
   "author": "ClastarStudio",

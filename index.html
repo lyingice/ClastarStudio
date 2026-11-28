@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="styles/assets.css">
 <link rel="stylesheet" href="styles/models.css">
 <link rel="stylesheet" href="styles/agent.css">
+<link rel="stylesheet" href="styles/tutorial.css">
 </head>
 <body>
 <div class="app">
@@ -35,8 +36,9 @@
       <div class="names"><b>像素工坊</b><i>PIXEL WORKSHOP</i></div>
     </div>
     <div class="tb-sep"></div>
-    <span class="chip" id="verChip">v0.18.0</span>
+    <span class="chip" id="verChip">v1.0.0</span>
     <div class="tb-right">
+      <button class="btn sm tb-tut" id="btnTutorial" data-tip="使用教程（新手引导与全功能手册）">教程</button>
       <button class="icon-btn" id="btnInfo" data-tip="关于">i</button>
       <button class="icon-btn" id="btnSet" data-tip="设置 / 数据">⚙</button>
     </div>
@@ -134,6 +136,7 @@
           <button class="nav sm" id="quickImport"><span class="ico" data-icon="tex" data-size="14"></span>导入 PNG</button>
           <button class="nav sm" id="quickZip"><span class="ico" data-icon="folder" data-size="14"></span>导入资源包 ZIP</button>
           <button class="nav sm" id="quickPack"><span class="ico" data-icon="box" data-size="14"></span>导出资源包</button>
+          <button class="nav sm" id="quickDshBridge"><span class="ico" data-icon="ai" data-size="14"></span>DSH 资产索引</button>
           <button class="nav sm" id="quickRecolor" data-ext-tool="recolor"><span class="ico" data-icon="brush" data-size="14"></span>一键换色</button>
           <button class="nav sm" id="quickVariant" data-ext-tool="variant-lab"><span class="ico" data-icon="shape" data-size="14"></span>变种工坊</button>
         </div>
@@ -264,6 +267,8 @@
 <script src="src/shell/agent-model.js"></script>
 <script src="src/shell/agent.js"></script>
 <script src="src/shell/agent-ui.js"></script>
+<script src="src/shell/dsh-bridge.js"></script>
+<script src="src/shell/tutorial.js"></script>
 <script src="src/shell/sidebar.js"></script>
 <script src="src/shell/init.js"></script>
 </body>

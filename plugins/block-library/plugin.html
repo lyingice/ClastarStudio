@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MC 方块素材库</title>
+<style>
+  :root{
+    --bg:#1a1a1a;--line:#101010;--txt:#f2f2f2;--dim:#7d7d7d;
+    --accent:#4c9a2a;--accent2:#6fc244;--accentd:#2f6b1a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--txt);overflow:hidden;
+    font:12.5px/1.5 "Segoe UI",system-ui,-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  button,input{font:inherit;color:inherit}
+  button{cursor:pointer}
+  .app{height:100%;display:flex;flex-direction:column}
+  .tb{flex:0 0 44px;display:flex;align-items:center;gap:9px;padding:0 10px;background:#262626;border-bottom:2px solid var(--line)}
+  .tb .logo{width:24px;height:24px;display:grid;place-items:center;background:var(--accentd);border:2px solid var(--line);color:#fff;font-weight:700;font-size:9px}
+  .tb h1{margin:0;font-size:13px;letter-spacing:.4px}
+  .tb .sub{font-size:9px;letter-spacing:2px;color:var(--dim);margin-top:1px}
+  .tb .right{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{font-size:9.5px;background:#2d2d2d;border:1px solid #151515;padding:2px 6px;color:#bdbdbd}
+  .btn{height:28px;padding:0 9px;background:#454545;border:2px solid var(--line);color:#eee;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .btn:hover{background:#545454}
+  .btn.pri{background:var(--accent);border-color:var(--accentd);color:#fff;font-weight:600}
+  .btn.pri:hover{background:var(--accent2)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.sm{height:24px;font-size:10.5px;padding:0 7px}
+  .layout{flex:1;min-height:0;display:grid;grid-template-columns:232px minmax(0,1fr);gap:8px;padding:8px;overflow:hidden}
+  .col{min-height:0;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+  .card{background:#2a2a2a;border:2px solid #111;box-shadow:inset 0 1px 0 #ffffff0f;padding:9px;min-width:0}
+  .card h2{margin:0 0 7px;font-size:10.5px;letter-spacing:.9px;color:#ddd;display:flex;align-items:center;gap:6px}
+  .card h2::before{content:'';width:4px;height:11px;background:var(--accent);flex:0 0 auto}
+  .card h2 span{margin-left:auto;font-size:9px;color:#888;font-weight:400;letter-spacing:0}
+  .hint{font-size:9.5px;line-height:1.7;color:#8d8d8d;margin:0}
+  .filebox{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 8px;border:2px dashed #555;background:#232323;cursor:pointer;text-align:center;margin-top:6px}
+  .filebox:hover{border-color:var(--accent);background:#262b22}
+  .filebox b{font-size:10.5px;color:#eee}
+  .filebox span{font-size:9px;color:#888}
+  .filebox input{display:none}
+  .src-line{display:flex;align-items:center;gap:5px;font-size:9.5px;color:#9fc885;margin-top:6px;min-height:15px;word-break:break-all}
+  .cat-list{flex:1;min-height:60px;overflow:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px}
+  .cat{display:flex;align-items:center;gap:6px;padding:5px 6px;background:#252525;border:1px solid #121212;cursor:pointer;font-size:10.5px;color:#ccc}
+  .cat:hover{background:#2e332b;border-color:#7c9f62}
+  .cat.on{background:#394632;border-color:var(--accent);color:#fff}
+  .cat b{margin-left:auto;font-size:9px;color:#8f8f8f;font-weight:400}
+  .cat.on b{color:#cfe9bc}
+  .field{display:flex;flex-direction:column;gap:3px;font-size:9.5px;color:#aaa;margin-bottom:6px}
+  .field input{height:26px;background:#202020;border:1px solid #111;color:#eee;padding:0 6px;outline:none}
+  .field input:focus{border-color:var(--accent)}
+  .grid-tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .search{flex:1;min-width:120px;height:27px;background:#202020;border:1px solid #111;color:#eee;padding:0 7px;outline:none}
+  .search:focus{border-color:var(--accent)}
+  .chip{height:24px;padding:0 7px;background:#373737;border:1px solid #151515;color:#bbb;font-size:9.5px}
+  .chip:hover{background:#454545;color:#fff}
+  .count{font-size:9.5px;color:#8f8f8f;margin-left:auto}
+  .grid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));grid-auto-rows:58px;gap:4px;align-content:start;padding:5px;background:#202020;border:1px solid #121212}
+  .slot{position:relative;display:grid;place-items:center;width:100%;height:58px;background:#2c2c2c;border:2px solid #141414;box-shadow:inset 1px 1px 0 #1b1b1b,inset -1px -1px 0 #3f3f3f;cursor:pointer;padding:1px;user-select:none;overflow:hidden}
+  .slot:hover{background:#383838;border-color:#7c9f62}
+  .slot.on{background:#394632;border-color:var(--accent2);box-shadow:inset 0 0 0 1px var(--accent)}
+  .slot img{width:52px;height:52px;object-fit:contain;image-rendering:pixelated;display:block;pointer-events:none}
+  .slot .ph{width:34px;height:34px;border:1px dashed #4a4a4a;display:grid;place-items:center;font-size:9px;color:#5f5f5f;pointer-events:none}
+  .slot .pick{position:absolute;right:0;top:0;width:13px;height:13px;display:none;place-items:center;background:var(--accent);color:#fff;font-size:9px;font-style:normal;line-height:1}
+  .slot.on .pick{display:grid}
+  .slot .mark{position:absolute;left:1px;bottom:1px;font-size:8px;font-style:normal;padding:0 2px;background:#2f4226;border:1px solid var(--accentd);color:#d7f2c2;pointer-events:none}
+  .empty{grid-column:1/-1;padding:24px 12px;text-align:center;color:#888;font-size:10px;line-height:1.8}
+  .tip{position:fixed;left:0;top:0;z-index:60;pointer-events:none;opacity:0;transition:opacity .1s;
+    background:#12122b;border:2px solid #3b3b8f;box-shadow:0 3px 12px #000a;padding:6px 9px;max-width:300px}
+  .tip.on{opacity:1}
+  .tip b{display:block;font-size:11.5px;color:#fff;margin-bottom:2px}
+  .tip .tid{display:block;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#9a9aff}
+  .tip .tmeta{display:block;font-size:9px;color:#c9c9c9;margin-top:2px}
+  .tip .tmod{display:block;font-size:8.5px;color:#8f8f8f;margin-top:1px}
+  .toast{position:fixed;left:50%;bottom:14px;transform:translate(-50%,10px);background:#2b2b2b;border:2px solid #111;color:#fff;padding:6px 12px;font-size:10.5px;opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;max-width:90%;z-index:70;text-align:center}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  @media (max-width:760px){
+    .layout{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+    .col.aside{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="tb">
+    <div class="logo">MC</div>
+    <div><h1>MC 方块素材库</h1><div class="sub">3D BLOCK LIBRARY</div></div>
+    <span class="pill" id="hostState">连接宿主…</span>
+    <div class="right">
+      <span class="pill" id="totalState">未载入方块</span>
+      <span class="pill" id="selState">已选 0</span>
+      <button class="btn sm" id="clearBtn">清空</button>
+      <button class="btn pri" id="importBtn" disabled>导入选中</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="col aside">
+      <div class="card">
+        <h2>1 · 方块来源</h2>
+        <button class="btn sm" id="localBtn" style="width:100%;justify-content:center">读取本地原版资源</button>
+        <label class="filebox" id="drop">
+          <input type="file" id="file" accept=".jar,.zip,application/zip,application/java-archive">
+          <b>选择 jar / 资源包 ZIP</b>
+          <span>只扫描 textures/block 下的 PNG</span>
+        </label>
+        <div class="src-line" id="srcState">正在检查本地原版资源…</div>
+      </div>
+      <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <h2>2 · 分类 <span id="catCount">0</span></h2>
+        <div class="cat-list" id="cats"></div>
+      </div>
+      <div class="card">
+        <h2>3 · 导入到</h2>
+        <label class="field">工作区<input id="wsName" value="原版方块"></label>
+        <label class="field">大类别<input id="catName" value="方块"></label>
+        <p class="hint" id="importHint">导入为可编辑的 3D 方块卡片（含顶/侧/底纹理槽）。</p>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <div class="grid-tools" style="margin-bottom:7px">
+          <input class="search" id="search" placeholder="搜索方块名称 / ID…" autocomplete="off">
+          <button class="chip" id="pickVisible">全选可见</button>
+          <button class="chip" id="pickNone">取消可见</button>
+          <span class="count" id="gridCount">0</span>
+        </div>
+        <div class="grid" id="grid"><div class="empty">正在读取本地原版方块…</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var PLUGIN_ID = 'block-library';
+  var seq = 0;
+  var pending = new Map();
+  var readyResolve;
+  var ready = new Promise(function(res){ readyResolve = res; });
+
+  function q(s){ return document.querySelector(s); }
+  function toast(msg){
+    var t = q('#toast'); if(!t) return;
+    t.textContent = msg; t.classList.add('on');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ t.classList.remove('on'); }, 2600);
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+    });
+  }
+  function imageOf(url){
+    return new Promise(function(resolve, reject){
+      var im = new Image();
+      im.onload = function(){ resolve(im); };
+      im.onerror = function(){ reject(new Error('图像加载失败')); };
+      im.src = url;
+    });
+  }
+  function call(method, params){
+    return ready.then(function(){
+      return new Promise(function(resolve, reject){
+        var requestId = ++seq;
+        pending.set(requestId, { resolve:resolve, reject:reject });
+        window.parent.postMessage({
+          __pwPluginHost:1, pluginId:PLUGIN_ID, type:'api', requestId:requestId,
+          method:method, params:params || {}
+        }, '*');
+      });
+    });
+  }
+  window.addEventListener('message', function(e){
+    var d = e.data;
+    if(!d || d.__pwPluginHost !== 1) return;
+    if(d.type === 'host-ready'){
+      readyResolve();
+      q('#hostState').textContent = '已连接 · ' + ((d.plugin && d.plugin.name) || '宿主');
+      boot();
+      return;
+    }
+    if(d.type === 'api-result'){
+      var p = pending.get(d.requestId);
+      if(!p) return;
+      pending.delete(d.requestId);
+      if(d.ok) p.resolve(d.result);
+      else p.reject(new Error(d.error || '宿主 API 失败'));
+    }
+  });
+  window.parent.postMessage({ __pwPluginHost:1, pluginId:PLUGIN_ID, type:'ready' }, '*');
+
+  /* ================= 中文名 ================= */
+  var WORDS = {
+    white:'白色', orange:'橙色', magenta:'品红', light_blue:'淡蓝', yellow:'黄色', lime:'黄绿',
+    pink:'粉红', gray:'灰色', light_gray:'淡灰', cyan:'青色', purple:'紫色', blue:'蓝色',
+    brown:'棕色', green:'绿色', red:'红色', black:'黑色',
+    oak:'橡木', spruce:'云杉', birch:'白桦', jungle:'丛林', acacia:'金合欢', dark_oak:'深色橡木',
+    mangrove:'红树', cherry:'樱花', bamboo:'竹', crimson:'绯红', warped:'诡异',
+    planks:'木板', log:'原木', wood:'木头', stem:'菌柄', hyphae:'菌核',
+    stairs:'楼梯', slab:'台阶', fence:'栅栏', gate:'栅栏门', door:'门', trapdoor:'活板门',
+    sign:'告示牌', wall:'墙', button:'按钮', pressure_plate:'压力板',
+    stone:'石头', cobblestone:'圆石', mossy:'苔石', smooth:'平滑', chiseled:'錾制',
+    cracked:'裂纹', polished:'磨制', cut:'切制', deepslate:'深板岩', tuff:'凝灰岩',
+    calcite:'方解石', dripstone:'滴水石', granite:'花岗岩', diorite:'闪长岩', andesite:'安山岩',
+    basalt:'玄武岩', blackstone:'黑石', sandstone:'砂岩', bricks:'砖', brick:'砖',
+    quartz:'石英', prismarine:'海晶石', purpur:'紫珀', mud:'泥', packed_mud:'泥坯',
+    terracotta:'陶瓦', glazed:'带釉', concrete:'混凝土', wool:'羊毛', carpet:'地毯',
+    glass:'玻璃', pane:'玻璃板', ice:'冰', frosted:'霜',
+    grass:'草', grass_block:'草方块', dirt:'泥土', path:'小径', farmland:'耕地', podzol:'灰化土',
+    mycelium:'菌丝体', gravel:'砂砾', sand:'沙子', clay:'黏土', snow:'雪', moss:'苔藓',
+    leaves:'树叶', sapling:'树苗', flower:'花', fern:'蕨', vine:'藤蔓', mushroom:'蘑菇',
+    wheat:'小麦', carrot:'胡萝卜', potato:'马铃薯', beetroot:'甜菜根', melon:'西瓜', pumpkin:'南瓜',
+    kelp:'海带', seagrass:'海草', lily:'睡莲', cactus:'仙人掌', sugar_cane:'甘蔗',
+    azalea:'杜鹃', roots:'根', sprout:'苗', petal:'花瓣', wart:'疣', nether_wart:'下界疣',
+    ore:'矿石', raw:'粗', block:'块', coal:'煤', iron:'铁', gold:'金',
+    copper:'铜', diamond:'钻石', emerald:'绿宝石', lapis:'青金石', redstone:'红石',
+    netherite:'下界合金', amethyst:'紫水晶', ancient_debris:'远古残骸', debris:'残骸',
+    nether:'下界', soul:'灵魂', magma:'岩浆', end:'末地', chorus:'紫颂', nylium:'菌岩',
+    shroomlight:'菌光体', gilded:'镶金', respawn_anchor:'重生锚', lodestone:'磁石',
+    torch:'火把', lantern:'灯笼', chain:'锁链', candle:'蜡烛', campfire:'营火', lamp:'灯',
+    glowstone:'荧石', beacon:'信标', conduit:'潮涌核心', anvil:'铁砧', cauldron:'炼药锅',
+    bell:'钟', banner:'旗帜', painting:'画', item_frame:'物品展示框', flower_pot:'花盆',
+    armor_stand:'盔甲架', brewing:'酿造', enchanting:'附魔', furnace:'熔炉', smoker:'烟熏炉',
+    blast:'高炉', grindstone:'砂轮', stonecutter:'切石机', smithing:'锻造台', hopper:'漏斗',
+    dropper:'投掷器', dispenser:'发射器', observer:'侦测器', piston:'活塞', lever:'拉杆',
+    tripwire:'绊线', rail:'铁轨', target:'标靶', scaffolding:'脚手架', ladder:'梯子',
+    chest:'箱子', barrel:'木桶', crafting_table:'工作台', bookshelf:'书架', lectern:'讲台',
+    cartography_table:'制图台', fletching_table:'制箭台', loom:'织布机', composter:'堆肥桶',
+    beehive:'蜂箱', bee_nest:'蜂巢', note_block:'音符盒', jukebox:'唱片机',
+    iron_bars:'铁栏杆', cobweb:'蜘蛛网', spawner:'刷怪笼', water:'水', lava:'岩浆', fire:'火',
+    barrier:'屏障', command_block:'命令方块', bedrock:'基岩', obsidian:'黑曜石', sponge:'海绵',
+    tnt:'TNT', hay:'干草', honey:'蜂蜜', slime:'黏液', honeycomb:'蜜脾', dried_kelp:'干海带',
+    top:'顶', bottom:'底', side:'侧', front:'正面', end_top:'端面', inside:'内侧',
+    sculk:'幽匿', moss_block:'苔藓块', moss_carpet:'苔藓地毯', vine_plant:'藤'
+  };
+  function cnName(id){
+    var parts = String(id).split('_');
+    var out = '', i = 0;
+    while(i < parts.length){
+      var two = parts[i] + '_' + (parts[i + 1] || '');
+      if(WORDS[two]){ out += WORDS[two]; i += 2; continue; }
+      out += WORDS[parts[i]] || parts[i];
+      i += 1;
+    }
+    return out || id;
+  }
+
+  /* ================= 分类 ================= */
+  var CATS = [
+    { id:'all', label:'全部' },
+    { id:'wood', label:'木材' },
+    { id:'stone', label:'石材' },
+    { id:'ore', label:'矿物金属' },
+    { id:'wool', label:'羊毛织品' },
+    { id:'plant', label:'植物草地' },
+    { id:'glass', label:'玻璃透明' },
+    { id:'nether', label:'下界末地' },
+    { id:'deco', label:'装饰照明' },
+    { id:'other', label:'其他' }
+  ];
+  var RULES = [
+    ['wool', /(wool|carpet|concrete|terracotta|_glazed|_bed$)/],
+    ['glass', /(glass|_ice$)/],
+    ['deco', /(torch|lantern|chain|candle|campfire|lamp|glowstone|sea_lantern|beacon|conduit|anvil|cauldron|^bell$|banner|painting|item_frame|flower_pot|armor_stand|brewing|enchanting|furnace|smoker|blast_furnace|grindstone|stonecutter|smithing|hopper|dropper|dispenser|observer|piston|lever|_button$|pressure_plate|tripwire|_rail$|redstone_|_bars$|_pane$|_plate$|spawner|cobweb|target|_sign$)/],
+    ['ore', /(_ore$|_ore_|^raw_|^coal_|^coal$|^iron_|^gold_|^diamond_|^emerald_|^lapis_|^redstone_|^copper_|^netherite_|^amethyst_|^quartz_|ancient_debris)/],
+    ['nether', /(nether|soul_|magma|crimson|warped|^end_|purpur|chorus|nylium|shroomlight|basalt|blackstone|gilded|respawn_anchor|lodestone|_wart)/],
+    ['plant', /(leaves|sapling|flower|^grass|fern|_vine$|mushroom|wheat|carrot|potato|beetroot|melon|pumpkin|kelp|seagrass|lily_pad|cactus|sugar_cane|moss|azalea|_roots$|_sprout$|petal|^dirt$|podzol|mycelium|farmland|_path$|^sand$|gravel|clay|snow|hay_|honey|cocoa|^bamboo$|bamboo_shoot)/],
+    ['wood', /(planks|_log$|_log_|_wood$|_stem$|hyphae|stairs|slab|fence|_door$|trapdoor|^oak|^spruce|^birch|^jungle|^acacia|^dark_oak|^mangrove|^cherry|barrel|crafting_table|bookshelf|ladder|lectern|cartography|fletching|smithing_table|loom|composter|beehive|bee_nest|scaffolding|note_block|jukebox|chest|_wall$|_table$)/],
+    ['stone', /(stone|deepslate|tuff|calcite|dripstone|granite|diorite|andesite|cobble|mossy|brick|sandstone|prismarine|_mud|packed_mud|smooth|obsidian|bedrock|sponge|terracotta|_block$)/]
+  ];
+  function classify(name){
+    var n = String(name || '').toLowerCase();
+    for(var i = 0; i < RULES.length; i++){ if(RULES[i][1].test(n)) return RULES[i][0]; }
+    return 'other';
+  }
+  function catLabel(id){
+    for(var i = 0; i < CATS.length; i++){ if(CATS[i].id === id) return CATS[i].label; }
+    return id;
+  }
+
+  /* ================= 方块模型（与方块编辑器 MODELS 对应） ================= */
+  function box(from, to, map){
+    function pick(dir, fb){ return map[dir] || fb || null; }
+    return { from:from, to:to, faces:{
+      north:{slot:pick('north', map.side || map.all)},
+      south:{slot:pick('south', map.side || map.all)},
+      east: {slot:pick('east',  map.side || map.all)},
+      west: {slot:pick('west',  map.side || map.all)},
+      up:   {slot:pick('up',    map.top  || map.all)},
+      down: {slot:pick('down',  map.bottom || map.side || map.all)}
+    }};
+  }
+  var MODELS = {
+    cube_all:{els:[box([0,0,0],[16,16,16],{all:'all'})]},
+    cube_bottom_top:{els:[box([0,0,0],[16,16,16],{top:'top',side:'side',bottom:'bottom'})]},
+    cube_column:{els:[box([0,0,0],[16,16,16],{top:'top',side:'side',bottom:'bottom'})]},
+    leaves:{els:[box([0,0,0],[16,16,16],{all:'all'})]},
+    slab:{els:[box([0,0,0],[16,8,16],{top:'top',side:'side',bottom:'bottom'})]},
+    slab_top:{els:[box([0,8,0],[16,16,16],{top:'top',side:'side',bottom:'bottom'})]},
+    stairs:{els:[
+      box([0,0,0],[16,8,16],{top:'top',side:'side',bottom:'bottom'}),
+      box([0,8,8],[16,16,16],{top:'top',side:'side',bottom:'bottom'})
+    ]},
+    fence:{els:(function(){
+      var els = [box([6,0,6],[10,16,10],{side:'side',top:'top'})];
+      [6,12].forEach(function(y){
+        els.push(box([7,y,0],[9,y+3,6],{all:'side'}));
+        els.push(box([7,y,10],[9,y+3,16],{all:'side'}));
+        els.push(box([0,y,7],[6,y+3,9],{all:'side'}));
+        els.push(box([10,y,7],[16,y+3,9],{all:'side'}));
+      });
+      return els;
+    })()},
+    wall:{els:[
+      box([4,0,4],[12,16,12],{side:'side',top:'top'}),
+      box([4,0,0],[12,14,4],{all:'side'}),
+      box([4,0,12],[12,14,16],{all:'side'}),
+      box([0,0,4],[4,14,12],{all:'side'}),
+      box([12,0,4],[16,14,12],{all:'side'})
+    ]},
+    pane:{els:[
+      box([7,0,0],[9,16,16],{all:'pane'}),
+      box([0,0,7],[16,16,9],{all:'pane'})
+    ]},
+    carpet:{els:[box([0,0,0],[16,1,16],{all:'all'})]},
+    snow:{els:[box([0,0,0],[16,2,16],{all:'all'})]},
+    trapdoor:{els:[box([0,0,0],[16,3,16],{all:'all'})]},
+    door:{els:[box([0,0,0],[3,16,16],{top:'top',side:'side',bottom:'bottom'})]},
+    torch:{els:[box([7,0,7],[9,10,9],{all:'all'})]},
+    button:{els:[box([5,0,6],[11,2,10],{all:'all'})]},
+    pressure_plate:{els:[box([1,0,1],[15,1,15],{all:'all'})]},
+    cross:{planes:[
+      {slot:'cross', points:[[0,16,8],[16,16,8],[16,0,8],[0,0,8]], rotateY:45},
+      {slot:'cross', points:[[0,16,8],[16,16,8],[16,0,8],[0,0,8]], rotateY:-45}
+    ]},
+    crop:{planes:[
+      {slot:'crop', points:[[0,16,4],[16,16,4],[16,0,4],[0,0,4]]},
+      {slot:'crop', points:[[0,16,12],[16,16,12],[16,0,12],[0,0,12]]},
+      {slot:'crop', points:[[4,16,0],[4,16,16],[4,0,16],[4,0,0]]},
+      {slot:'crop', points:[[12,16,0],[12,16,16],[12,0,16],[12,0,0]]}
+    ]}
+  };
+
+  var FACE_SUFFIXES = ['_top_on','_front_on','_side_on','_inner','_outer',
+    '_stage0','_stage1','_stage2','_stage3','_stage4','_stage5','_stage6','_stage7',
+    '_front','_back','_top','_bottom','_side','_end','_on','_lit'];
+  function splitTexture(name){
+    for(var i = 0; i < FACE_SUFFIXES.length; i++){
+      var s = FACE_SUFFIXES[i];
+      if(name.length > s.length && name.slice(-s.length) === s){
+        var slot = s.slice(1);
+        if(/^stage\d$/.test(slot)) slot = 'stage';
+        return { base:name.slice(0, -s.length), slot:slot };
+      }
+    }
+    return { base:name, slot:'main' };
+  }
+
+  var CROSS_RE = /(_coral$|_coral_fan$|_coral_wall_fan$|^amethyst_cluster$|_amethyst_bud$|^sea_pickle$|^chorus_flower$|^brown_mushroom$|^red_mushroom$|^crimson_fungus$|^warped_fungus$|^glow_berries$|^big_dripleaf|^small_dripleaf|_sapling$|_flower$|^dandelion$|^poppy$|^blue_orchid$|^allium$|^azure_bluet$|^oxeye_daisy$|^cornflower$|^lily_of_the_valley$|^wither_rose$|^torchflower$|^sunflower|^lilac|^rose_bush$|^peony$|^grass$|^fern$|^dead_bush$|^short_grass$|^tall_grass$|^large_fern$|_bush$|^sweet_berry_bush$|^nether_sprouts$|^warped_roots$|^crimson_roots$|^seagrass$|^tall_seagrass$|^kelp$|^kelp_plant$|^sugar_cane$|^bamboo_stalk$|^hanging_roots$|^glow_lichen$|^soul_fire$|^fire_0$|^fire_1$|campfire_fire$|^sculk_vein$|^vine$|^weeping_vines$|^twisting_vines$|^cave_vines|^moss_carpet$|^pink_petals|^pitcher_crop$|^attached_[a-z_]*_stem$|^cobweb$|^leaf_litter)/;
+  var CROP_RE = /^(wheat|carrots|potatoes|beetroots|sweet_berry_bush|nether_wart|torchflower_crop)/;
+
+  /* 由纹理组推导 (model, slotMap) */
+  function buildModel(group, texLookup){
+    var name = group.base;
+    var S = group.slots;
+    function shared(baseName){ try{ return texLookup ? (texLookup(baseName) || null) : null; }catch(_){ return null; } }
+    function first(list){
+      for(var i = 0; i < list.length; i++){ if(S[list[i]]) return S[list[i]]; }
+      return null;
+    }
+    var main = S.main || null;
+    var top = S.top || S.end || null;
+    var bottom = S.bottom || null;
+    var side = S.side || null;
+
+    /* 部件方块（台阶/楼梯/栅栏/板/地毯…）通常没有自己的纹理，用本体材质 */
+    function partTex(suffix){
+      var own = first(['side','main']);
+      if(own) return own;
+      return shared(name.slice(0, name.length - suffix.length));
+    }
+    if(S.stage || (CROP_RE.test(name) && main)) return { model:'crop', map:{ crop:S.stage || main } };
+    if(CROSS_RE.test(name) && main) return { model:'cross', map:{ cross:main } };
+    if(/_pane$/.test(name)){
+      var paneTex = first(['side','main']) || shared(name.replace(/_pane$/, ''));
+      return { model:'pane', map:{ pane: paneTex || top } };
+    }
+    if(/_leaves$/.test(name)) return { model:'leaves', map:{ all: main || top } };
+    if(/_door$/.test(name) && (top || bottom)) return { model:'door', map:{ top: top || main, bottom: bottom || main, side: side || top || main } };
+    if(/_trapdoor$/.test(name)){
+      var tdTex = main || shared(name.replace(/_trapdoor$/, ''));
+      return { model:'trapdoor', map:{ all: tdTex || top } };
+    }
+    if(/(^|_)(candle|candle_cake)$/.test(name)) return { model:'cross', map:{ cross: main || top } };
+    if(/(^|_)(torch|wall_torch|soul_torch|soul_wall_torch|redstone_torch|redstone_wall_torch|copper_torch|lever|tripwire_hook)$/.test(name)) return { model:'torch', map:{ all: main || top } };
+    if(/_button$/.test(name)) return { model:'button', map:{ all: partTex('_button') || top } };
+    if(/_pressure_plate$/.test(name)) return { model:'pressure_plate', map:{ all: partTex('_pressure_plate') || top } };
+    if(/_carpet$/.test(name)) return { model:'carpet', map:{ all: partTex('_carpet') } };
+    if(/^lily_pad$/.test(name)) return { model:'carpet', map:{ all: main } };
+    if(/^snow$/.test(name)) return { model:'snow', map:{ all: main } };
+    if(/_slab$/.test(name)) { var sl = partTex('_slab'); return { model:'slab', map:{ top: sl, side: sl, bottom: sl } }; }
+    if(/_stairs$/.test(name)) { var st = partTex('_stairs'); return { model:'stairs', map:{ top: st, side: st, bottom: st } }; }
+    if(/_fence$/.test(name)) { var fe = partTex('_fence'); return { model:'fence', map:{ side: fe, top: top || fe } }; }
+    if(/_wall$/.test(name)) { var wa = partTex('_wall'); return { model:'wall', map:{ side: wa, top: top || wa } }; }
+
+    if(top && (side || main)){
+      var isColumn = !side && /(_log$|_wood$|_stem$|_hyphae$|^basalt$|_pillar$|^bamboo_block$|^bone_block$|^hay_block$|^quartz_pillar$|^purpur_pillar$)/.test(name);
+      var slotMap = { top:top, side: side || main, bottom: bottom || (isColumn ? top : (main || top)) };
+      if(name === 'grass_block' && !bottom) slotMap.bottom = 'assets/minecraft/textures/block/dirt.png';
+      return { model: isColumn ? 'cube_column' : 'cube_bottom_top', map: slotMap };
+    }
+    if(!main && side) return { model:'cube_all', map:{ all:side } };
+    if(main) return { model:'cube_all', map:{ all:main } };
+    return { model:'cube_all', map:{ all: top || side || null } };
+  }
+
+  /* ================= 3D 渲染 ================= */
+  var BOX_FACES = {
+    north:[[1,1,0],[0,1,0],[0,0,0],[1,0,0]],
+    south:[[0,1,1],[1,1,1],[1,0,1],[0,0,1]],
+    west: [[0,1,0],[0,1,1],[0,0,1],[0,0,0]],
+    east: [[1,1,1],[1,1,0],[1,0,0],[1,0,1]],
+    up:   [[0,1,0],[1,1,0],[1,1,1],[0,1,1]],
+    down: [[0,0,1],[1,0,1],[1,0,0],[0,0,0]]
+  };
+  var FACE_ORDER = ['north','south','west','east','up','down'];
+  var YAW = -33, PITCH = 22;
+
+  function cross3(a, b){ return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+  function faceBright(pts){
+    var a = [pts[3][0]-pts[0][0], pts[3][1]-pts[0][1], pts[3][2]-pts[0][2]];
+    var b = [pts[1][0]-pts[0][0], pts[1][1]-pts[0][1], pts[1][2]-pts[0][2]];
+    var n = cross3(a, b);
+    var len = Math.hypot(n[0], n[1], n[2]) || 1;
+    var ny = n[1] / len, nx = n[0] / len, nz = n[2] / len;
+    if(Math.abs(ny) > 0.5) return ny > 0 ? 1 : 0.55;
+    if(Math.abs(nx) > Math.abs(nz)) return nx > 0 ? 0.74 : 0.66;
+    return nz > 0 ? 0.82 : 0.62;
+  }
+  function rotateY(p, deg, ox, oz){
+    var a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+    var x = p[0] - ox, z = p[2] - oz;
+    return [x * c + z * s + ox, p[1], -x * s + z * c + oz];
+  }
+  function textureAlpha(im){
+    if(im.__alpha !== undefined) return im.__alpha;
+    var n = 20;
+    try{
+      var c = document.createElement('canvas');
+      c.width = n; c.height = n;
+      var g = c.getContext('2d', { willReadFrequently:true });
+      g.drawImage(im, 0, 0, n, n);
+      var d = g.getImageData(0, 0, n, n).data;
+      var clear = 0;
+      for(var i = 3; i < d.length; i += 4){ if(d[i] < 128) clear++; }
+      im.__alpha = clear / (n * n);
+    }catch(_){ im.__alpha = 0; }
+    return im.__alpha;
+  }
+  function render3D(it, size){
+    var md = MODELS[it.model] || MODELS.cube_all;
+    var seeThrough = false;
+    if(md.els){
+      for(var sk in (it.texImgs || {})){
+        if(textureAlpha(it.texImgs[sk]) > 0.06){ seeThrough = true; break; }
+      }
+    }
+    var cv = document.createElement('canvas');
+    cv.width = size; cv.height = size;
+    var ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, size, size);
+    var faces = [];
+    (md.els || []).forEach(function(el){
+      FACE_ORDER.forEach(function(dir){
+        var f = el.faces[dir];
+        if(!f || !f.slot) return;
+        var tex = it.texImgs && it.texImgs[f.slot];
+        if(!tex) return;
+        var pts = BOX_FACES[dir].map(function(v){
+          return [el.from[0] + (el.to[0] - el.from[0]) * v[0],
+                  el.from[1] + (el.to[1] - el.from[1]) * v[1],
+                  el.from[2] + (el.to[2] - el.from[2]) * v[2]];
+        });
+        faces.push({ pts:pts, tex:tex, dbl:seeThrough, slot:f.slot });
+      });
+    });
+    (md.planes || []).forEach(function(pl){
+      var tex = it.texImgs && it.texImgs[pl.slot];
+      if(!tex) return;
+      var pts = pl.points.map(function(p){
+        return pl.rotateY ? rotateY(p, pl.rotateY, 8, 8) : p.slice();
+      });
+      faces.push({ pts:pts, tex:tex, dbl:true, slot:pl.slot });
+    });
+    if(!faces.length) return cv.toDataURL('image/png');
+
+    var cy = Math.cos(YAW * Math.PI / 180), sy = Math.sin(YAW * Math.PI / 180);
+    var cp = Math.cos(PITCH * Math.PI / 180), sp = Math.sin(PITCH * Math.PI / 180);
+    var mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
+    faces.forEach(function(f){
+      f.pts.forEach(function(p){
+        for(var i = 0; i < 3; i++){ if(p[i] < mn[i]) mn[i] = p[i]; if(p[i] > mx[i]) mx[i] = p[i]; }
+      });
+    });
+    var ccx = (mn[0] + mx[0]) / 2, ccy = (mn[1] + mx[1]) / 2, ccz = (mn[2] + mx[2]) / 2;
+    var radius = Math.hypot(mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]) / 2 || 8;
+    var pad = Math.max(2, Math.round(size * 0.05));
+    var scale = (size - pad * 2) / (2 * radius * 0.9);
+    function view(p){
+      var x = p[0] - ccx, y = p[1] - ccy, z = p[2] - ccz;
+      var X = x * cy + z * sy, Z = -x * sy + z * cy;
+      return [X, y * cp - Z * sp, y * sp + Z * cp];
+    }
+    function proj(v){ return [size / 2 + v[0] * scale, size / 2 - v[1] * scale, v[2]]; }
+
+    var list = [];
+    faces.forEach(function(f){
+      var n = cross3(
+        [f.pts[3][0]-f.pts[0][0], f.pts[3][1]-f.pts[0][1], f.pts[3][2]-f.pts[0][2]],
+        [f.pts[1][0]-f.pts[0][0], f.pts[1][1]-f.pts[0][1], f.pts[1][2]-f.pts[0][2]]
+      );
+      var Z = -n[0] * sy + n[2] * cy;
+      var Z2 = n[1] * sp + Z * cp;
+      if(!f.dbl && Z2 <= 1e-4) return;
+      var pp = f.pts.map(function(p){ return proj(view(p)); });
+      var z = (pp[0][2] + pp[1][2] + pp[2][2] + pp[3][2]) / 4;
+      var a = it.animSlots && it.animSlots[f.slot];
+      list.push({ poly:pp, tex:f.tex, bright:faceBright(f.pts), z:z, dbl:f.dbl, frameH: a ? a.w : 0 });
+    });
+    list.sort(function(a, b){ return a.z - b.z; });
+
+    function path(poly){
+      ctx.beginPath();
+      ctx.moveTo(poly[0][0], poly[0][1]);
+      for(var i = 1; i < 4; i++) ctx.lineTo(poly[i][0], poly[i][1]);
+      ctx.closePath();
+    }
+    function drawTex(poly, img, frameH){
+      var iw = img.naturalWidth || img.width;
+      var ih = frameH || img.naturalHeight || img.height;
+      if(!iw || !ih) return false;
+      var s0 = [0,0], s1 = [iw,0], s2 = [0,ih];
+      var d0 = poly[0], d1 = poly[1], d2 = poly[3];
+      var den = (s1[0]-s0[0])*(s2[1]-s0[1]) - (s2[0]-s0[0])*(s1[1]-s0[1]);
+      if(Math.abs(den) < 1e-6) return false;
+      var a = ((d1[0]-d0[0])*(s2[1]-s0[1]) - (d2[0]-d0[0])*(s1[1]-s0[1])) / den;
+      var b = ((d1[1]-d0[1])*(s2[1]-s0[1]) - (d2[1]-d0[1])*(s1[1]-s0[1])) / den;
+      var c = ((d2[0]-d0[0])*(s1[0]-s0[0]) - (d1[0]-d0[0])*(s2[0]-s0[0])) / den;
+      var d = ((d2[1]-d0[1])*(s1[0]-s0[0]) - (d1[1]-d0[1])*(s2[0]-s0[0])) / den;
+      ctx.save();
+      path(poly); ctx.clip();
+      ctx.transform(a, b, c, d, d0[0]-a*s0[0]-c*s0[1], d0[1]-b*s0[0]-d*s0[1]);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0);
+      ctx.restore();
+      return true;
+    }
+    list.forEach(function(f){
+      var ok = drawTex(f.poly, f.tex, f.frameH);
+      if(!ok){
+        ctx.save(); path(f.poly); ctx.fillStyle = '#6d6d6d'; ctx.fill(); ctx.restore();
+        return;
+      }
+      if(f.bright < 0.999){
+        ctx.save(); path(f.poly);
+        ctx.fillStyle = 'rgba(0,0,0,' + ((1 - f.bright) * 0.5).toFixed(3) + ')';
+        ctx.fill(); ctx.restore();
+      }
+    });
+    return cv.toDataURL('image/png');
+  }
+
+  /* ================= 状态 ================= */
+  var items = [];
+  var byId = new Map();
+  var source = null;
+  var activeCat = 'all';
+  var query = '';
+  var selected = new Set();
+  var loading = false;
+
+  var thumbCache = new Map();
+  var thumbQueue = [];
+  var thumbRunning = false;
+
+  function queueThumbs(list){
+    list.forEach(function(it){
+      if(!it.thumb3d && it.texImgs && thumbQueue.indexOf(it) < 0) thumbQueue.push(it);
+    });
+    pumpThumbs();
+  }
+  function pumpThumbs(){
+    if(thumbRunning) return;
+    thumbRunning = true;
+    (function step(){
+      var budget = 0;
+      while(thumbQueue.length && budget < 16){
+        var it = thumbQueue.shift();
+        if(it.thumb3d || !it.texImgs) continue;
+        try{
+          var url = render3D(it, 96);
+          if(url && url.length > 260){
+            it.thumb3d = url;
+            var el = q('#grid [data-slot="' + cssEsc(it.id) + '"]');
+            if(el){
+              var ph = el.querySelector('.ph');
+              if(ph){
+                var im = document.createElement('img');
+                im.src = url;
+                im.alt = '';
+                ph.replaceWith(im);
+              }
+            }
+          }
+        }catch(_){}
+        budget++;
+      }
+      if(thumbQueue.length){
+        setTimeout(step, 0);
+      }else{
+        thumbRunning = false;
+      }
+    })();
+  }
+  function cssEsc(s){
+    return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/["\\]/g, '\\$&');
+  }
+
+  /* ================= 来源 ================= */
+  async function loadLocalVanilla(){
+    q('#srcState').textContent = '读取本地原版资源清单…';
+    try{
+      var res = await call('net.fetch', { url:'local/vanilla/catalog.json', maxBytes: 64 * 1024 * 1024 });
+      var text = new TextDecoder('utf-8').decode(new Uint8Array(res.buffer));
+      var data = JSON.parse(text);
+      var list = (data.items || []).filter(function(it){ return it && it.category === 'block' && it.path; });
+      if(!list.length) throw new Error('清单里没有方块纹理');
+      source = { kind:'local', label:data.source || '', mod:'Minecraft ' + (data.version || '原版') };
+      applyItems(list.map(function(it){
+        return {
+          name: String(it.name || '').replace(/\.png$/i, ''),
+          path: it.path, ns: (it.namespace || 'minecraft'),
+          w: +it.width || 16, h: +it.height || 16,
+          mcmeta: it.mcmeta || null
+        };
+      }), source.mod);
+    }catch(err){
+      q('#srcState').textContent = '没有本地原版资源包：请用下方按钮导入 jar / ZIP';
+      renderEmpty('没有本地原版资源。可以在项目根目录放好 local/vanilla，或导入一个 jar / 资源包 ZIP。');
+    }
+  }
+  async function loadZip(file){
+    q('#srcState').textContent = '读取 ' + file.name + '…';
+    try{
+      var buf = await file.arrayBuffer();
+      var res = await call('zip.read', { buffer:buf });
+      var entries = (res && res.entries) || [];
+      var re = /^assets\/([^/]+)\/textures\/block\/(.+)\.png$/i;
+      var seen = new Set(), list = [];
+      entries.forEach(function(e){
+        var m = re.exec(e.name);
+        if(!m) return;
+        var ns = m[1].toLowerCase(), name = m[2].replace(/\//g, '_');
+        var id = ns + ':' + name;
+        if(seen.has(id)) return;
+        seen.add(id);
+        list.push({ name:name, path:e.name, ns:ns, w:16, h:16, mcmeta:null });
+      });
+      if(!list.length) throw new Error('这个包里没有 textures/block 下的 PNG');
+      source = { kind:'zip', label:file.name, archiveId:res.archiveId, mod:file.name };
+      applyItems(list, file.name);
+    }catch(err){
+      q('#srcState').textContent = '读取失败：' + err.message;
+      toast('读取失败：' + err.message);
+    }
+  }
+
+  /* 纹理列表 → 3D 方块列表 */
+  function applyItems(textures, label){
+    var groups = new Map();
+    textures.forEach(function(t){
+      var sp = splitTexture(t.name);
+      var key = t.ns + ':' + sp.base;
+      var g = groups.get(key);
+      if(!g){
+        g = { id:key, base:sp.base, ns:t.ns, slots:{}, meta:{} };
+        groups.set(key, g);
+      }
+      if(g.slots[sp.slot]) return;
+      g.slots[sp.slot] = t.path;
+      g.meta[sp.slot] = t;
+    });
+    var byBase = {};
+    groups.forEach(function(g){ byBase[g.ns + '|' + g.base] = g; });
+    var out = [];
+    /* 这些是贴图零件（破坏进度、覆盖层、红石线、叶尖等），不是独立方块 */
+    var SKIP_RE = /^(destroy_stage_\d+|debug2?|[a-z_]*_overlay|redstone_dust_line\d+|redstone_dust_dot|redstone_dust_cross|bamboo_singleleaf|big_dripleaf_tip|pink_petals_stem|.*_side_overlay)$/;
+    groups.forEach(function(g){
+      if(SKIP_RE.test(g.base)) return;
+      var built = buildModel(g, function(baseName){
+        var gg = byBase[g.ns + '|' + baseName];
+        if(!gg) return null;
+        return gg.slots.all || gg.slots.main || gg.slots.side || gg.slots.top || null;
+      });
+      var map = {};
+      Object.keys(built.map).forEach(function(k){ if(built.map[k]) map[k] = built.map[k]; });
+      if(!Object.keys(map).length) return;
+      var pathMeta = {};
+      Object.keys(g.meta).forEach(function(k){ if(g.meta[k] && g.meta[k].path) pathMeta[g.meta[k].path] = g.meta[k]; });
+      var animSlots = {};
+      Object.keys(map).forEach(function(slot){
+        var m = pathMeta[map[slot]];
+        if(!m || !m.mcmeta || !m.mcmeta.animation) return;
+        var w = +m.w || 16, h = +m.h || 16;
+        if(w <= 0 || h <= w || h % w !== 0) return;
+        animSlots[slot] = {
+          w: w, frames: Math.max(1, Math.round(h / w)),
+          frametime: Math.max(1, +(m.mcmeta.animation.frametime) || 1),
+          mcmeta: m.mcmeta
+        };
+      });
+      var firstAnimSlot = Object.keys(animSlots)[0] || null;
+      var frames = firstAnimSlot ? animSlots[firstAnimSlot].frames : 1;
+      var useAnim = !!firstAnimSlot;
+      out.push({
+        id: g.id,
+        name: g.base,
+        ns: g.ns,
+        cat: classify(g.base),
+        model: built.model,
+        map: map,
+        texPaths: Object.keys(map).map(function(k){ return map[k]; }).filter(function(v, i, a){ return a.indexOf(v) === i; }),
+        texImgs: null,
+        anim: useAnim && frames > 1,
+        frames: frames,
+        animSlots: animSlots,
+        animSlot: firstAnimSlot,
+        mcmeta: useAnim ? animSlots[firstAnimSlot].mcmeta : null,
+        animPath: firstAnimSlot ? map[firstAnimSlot] : null,
+        thumb3d: null
+      });
+    });
+    out.sort(function(a, b){ return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
+    items = out;
+    byId = new Map(out.map(function(it){ return [it.id, it]; }));
+    selected.clear();
+    thumbCache.clear();
+    thumbQueue.length = 0;
+    q('#srcState').textContent = label + ' · ' + out.length + ' 个方块';
+    q('#totalState').textContent = '已载入 ' + out.length + ' 个方块';
+    renderCats();
+    renderGrid();
+    renderSel();
+    loadAll();
+  }
+  function renderEmpty(msg){
+    q('#grid').innerHTML = '<div class="empty">' + escapeHtml(msg) + '</div>';
+    q('#gridCount').textContent = '0';
+    q('#totalState').textContent = '未载入方块';
+  }
+
+  /* ================= 纹理 / 渲染数据 ================= */
+  function countsByCat(){
+    var m = Object.create(null);
+    items.forEach(function(it){ m[it.cat] = (m[it.cat] || 0) + 1; });
+    return m;
+  }
+  function renderCats(){
+    var counts = countsByCat(), total = items.length;
+    q('#catCount').textContent = CATS.length;
+    var html = '';
+    CATS.forEach(function(c){
+      var n = c.id === 'all' ? total : (counts[c.id] || 0);
+      html += '<div class="cat' + (activeCat === c.id ? ' on' : '') + '" data-cat="' + c.id + '">' +
+        '<span>' + escapeHtml(c.label) + '</span><b>' + n + '</b></div>';
+    });
+    q('#cats').innerHTML = html;
+  }
+  function filtered(){
+    var kw = query.trim().toLowerCase();
+    return items.filter(function(it){
+      if(activeCat !== 'all' && it.cat !== activeCat) return false;
+      if(!kw) return true;
+      return (it.id + ' ' + it.name + ' ' + cnName(it.name)).toLowerCase().indexOf(kw) >= 0;
+    });
+  }
+  function renderGrid(){
+    var list = filtered();
+    q('#gridCount').textContent = list.length;
+    if(!list.length){
+      q('#grid').innerHTML = '<div class="empty">没有匹配的方块。</div>';
+      return;
+    }
+    var html = '';
+    for(var i = 0; i < list.length; i++){
+      var it = list[i];
+      var on = selected.has(it.id);
+      html += '<button type="button" class="slot' + (on ? ' on' : '') + '" data-slot="' + escapeHtml(it.id) + '">' +
+        (it.thumb3d ? '<img src="' + it.thumb3d + '" alt="">' : '<span class="ph">…</span>') +
+        '<i class="pick">' + (on ? '✓' : '') + '</i>' +
+        (it.anim ? '<i class="mark">动</i>' : '') +
+      '</button>';
+    }
+    q('#grid').innerHTML = html;
+    queueThumbs(list);
+  }
+
+  async function ensureTextures(list){
+    if(!source) return;
+    var want = [];
+    var wantSet = new Set();
+    list.forEach(function(it){
+      if(it.texImgs) return;
+      it.texPaths.forEach(function(p){ if(p && !wantSet.has(p)){ wantSet.add(p); want.push(p); } });
+    });
+    if(!want.length) return;
+    var chunkSize = source.kind === 'local' ? 300 : 220;
+    var map = {};
+    for(var i = 0; i < want.length; i += chunkSize){
+      var chunk = want.slice(i, i + chunkSize);
+      try{
+        if(source.kind === 'local'){
+          var res = await call('assets.fetchTextures', { paths: chunk });
+          Object.assign(map, (res && res.textures) || {});
+        }else{
+          var got = await call('zip.dataURLs', { archiveId:source.archiveId, names: chunk });
+          Object.assign(map, got || {});
+        }
+      }catch(err){
+        toast('纹理读取失败：' + err.message);
+        break;
+      }
+    }
+    for(var n = 0; n < list.length; n++){
+      var it = list[n];
+      if(it.texImgs) continue;
+      var imgs = {}, any = false;
+      for(var slot in it.map){
+        var path = it.map[slot];
+        var data = map[path];
+        if(!data) continue;
+        try{ imgs[slot] = await imageOf(data); any = true; }catch(_){}
+      }
+      it.texData = {};
+      for(var s2 in it.map){ if(map[it.map[s2]]) it.texData[s2] = map[it.map[s2]]; }
+      it.texImgs = any ? imgs : null;
+    }
+  }
+  async function loadAll(){
+    if(loading) return;
+    loading = true;
+    try{
+      var i = 0;
+      while(i < items.length){
+        var slice = items.slice(i, i + 90);
+        await ensureTextures(slice);
+        queueThumbs(slice);
+        i += 90;
+        await new Promise(function(r){ setTimeout(r, 0); });
+      }
+    }finally{
+      loading = false;
+    }
+  }
+
+  /* ================= 选中 ================= */
+  function renderSel(){
+    q('#selState').textContent = '已选 ' + selected.size;
+    q('#importBtn').disabled = !selected.size;
+  }
+  function toggleSlot(id){
+    if(selected.has(id)) selected.delete(id); else selected.add(id);
+    var el = q('#grid [data-slot="' + cssEsc(id) + '"]');
+    if(el){
+      var on = selected.has(id);
+      el.classList.toggle('on', on);
+      var pick = el.querySelector('.pick');
+      if(pick) pick.textContent = on ? '✓' : '';
+    }
+    renderSel();
+  }
+
+  /* ================= 导入 ================= */
+  async function importSelected(){
+    var picked = items.filter(function(it){ return selected.has(it.id); });
+    if(!picked.length){ toast('先勾选要导入的方块'); return; }
+    if(picked.length > 150){ toast('一次最多导入 150 个方块，请分批'); return; }
+    var btn = q('#importBtn');
+    btn.disabled = true; btn.textContent = '导入中…';
+    try{
+      await ensureTextures(picked);
+      queueThumbs(picked);
+      var wsName = (q('#wsName').value || '').trim() || '原版方块';
+      var catName = (q('#catName').value || '').trim() || '方块';
+      var cards = [], skipped = 0;
+      for(var i = 0; i < picked.length; i++){
+        var it = picked[i];
+        if(!it.texImgs){ skipped++; continue; }
+        var tex = {};
+        Object.keys(it.map).forEach(function(slot){
+          if(it.texData && it.texData[slot]) tex[slot] = it.texData[slot];
+        });
+        if(!Object.keys(tex).length){ skipped++; continue; }
+        var thumb = null;
+        try{ thumb = render3D(it, 128); }catch(_){}
+        var card = {
+          name: it.name,
+          meta: 'Minecraft · ' + catLabel(it.cat) + ' · 3D 方块 · ' + it.model,
+          badge: 'MC',
+          type: 'item',
+          block: { model: it.model, custom: null, textures: tex }
+        };
+        if(thumb) card.thumb = thumb;
+        var animSlotKeys = Object.keys(it.animSlots || {});
+        if(animSlotKeys.length){
+          var mcmeta = {};
+          animSlotKeys.forEach(function(slot){ mcmeta[slot] = it.animSlots[slot].mcmeta.animation; });
+          card.block.mcmeta = mcmeta;
+        }
+        if(it.anim && it.texData && it.animSlot){
+          var strip = it.texData[it.animSlot];
+          if(strip){
+            card.full = strip;
+            card.anim = true;
+            card.texSize = { w: it.animSlots[it.animSlot].w, h: it.animSlots[it.animSlot].w, frames: it.frames };
+            card.mcmeta = it.mcmeta || null;
+            card.meta += ' · 动画 ' + it.frames + ' 帧';
+          }
+        }
+        cards.push(card);
+      }
+      if(!cards.length) throw new Error('选中的方块没有读到纹理');
+      var res = await call('library.addCards', {
+        workspaceName: wsName,
+        categoryName: catName,
+        cards: cards
+      });
+      q('#importHint').textContent = '已导入 ' + res.added + ' 个 3D 方块到「' + wsName + ' / ' + catName + '」' +
+        (skipped ? '，' + skipped + ' 个缺少纹理被跳过' : '') + '。';
+      toast('已导入 ' + res.added + ' 个 3D 方块');
+      selected.clear();
+      renderGrid();
+      renderSel();
+    }catch(err){
+      toast('导入失败：' + err.message);
+      q('#importHint').textContent = '导入失败：' + err.message;
+    }
+    btn.disabled = !selected.size;
+    btn.textContent = '导入选中';
+  }
+
+  /* ================= 提示框 ================= */
+  var tipEl = null;
+  function showTip(it, x, y){
+    if(!tipEl) tipEl = q('#tip');
+    var slots = Object.keys(it.map).map(function(k){ return k; }).join(' / ');
+    tipEl.innerHTML = '<b>' + escapeHtml(cnName(it.name)) + '</b>' +
+      '<span class="tid">' + escapeHtml(it.id) + '</span>' +
+      '<span class="tmeta">' + escapeHtml(catLabel(it.cat)) + ' · ' + escapeHtml(it.model) +
+      ' · 槽位 ' + escapeHtml(slots) + (it.anim ? ' · 动画 ' + it.frames + ' 帧' : '') + '</span>' +
+      '<span class="tmod">' + escapeHtml(source ? source.mod : '') + '</span>';
+    tipEl.classList.add('on');
+    var r = tipEl.getBoundingClientRect();
+    tipEl.style.left = Math.min(window.innerWidth - r.width - 8, x + 14) + 'px';
+    tipEl.style.top = Math.min(window.innerHeight - r.height - 8, Math.max(8, y - 10)) + 'px';
+  }
+  function hideTip(){ if(tipEl) tipEl.classList.remove('on'); }
+
+  /* ================= 启动 ================= */
+  async function boot(){
+    renderCats();
+    renderGrid();
+    renderSel();
+    await loadLocalVanilla();
+  }
+
+  q('#localBtn').addEventListener('click', loadLocalVanilla);
+  q('#file').addEventListener('change', function(e){
+    var f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if(f) loadZip(f);
+  });
+  var drop = q('#drop');
+  drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.style.borderColor = 'var(--accent)'; });
+  drop.addEventListener('dragleave', function(){ drop.style.borderColor = ''; });
+  drop.addEventListener('drop', function(e){
+    e.preventDefault();
+    drop.style.borderColor = '';
+    var f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) loadZip(f);
+  });
+  q('#cats').addEventListener('click', function(e){
+    var el = e.target.closest('[data-cat]');
+    if(!el) return;
+    activeCat = el.dataset.cat;
+    renderCats();
+    renderGrid();
+  });
+  q('#search').addEventListener('input', function(e){
+    query = e.target.value || '';
+    renderGrid();
+  });
+  q('#grid').addEventListener('click', function(e){
+    var el = e.target.closest('[data-slot]');
+    if(!el) return;
+    toggleSlot(el.dataset.slot);
+  });
+  q('#grid').addEventListener('mousemove', function(e){
+    var el = e.target.closest('[data-slot]');
+    if(!el){ hideTip(); return; }
+    var it = byId.get(el.dataset.slot);
+    if(it) showTip(it, e.clientX, e.clientY);
+  });
+  q('#grid').addEventListener('mouseleave', hideTip);
+  q('#pickVisible').addEventListener('click', function(){
+    var list = filtered();
+    list.forEach(function(it){ selected.add(it.id); });
+    renderGrid();
+    renderSel();
+  });
+  q('#pickNone').addEventListener('click', function(){
+    filtered().forEach(function(it){ selected.delete(it.id); });
+    renderGrid();
+    renderSel();
+  });
+  q('#clearBtn').addEventListener('click', function(){
+    selected.clear();
+    renderGrid();
+    renderSel();
+  });
+  q('#importBtn').addEventListener('click', importSelected);
+  window.addEventListener('resize', hideTip);
+})();
+</script>
+</body>
+</html>

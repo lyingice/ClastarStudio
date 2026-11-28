@@ -39,6 +39,7 @@ fn main() {
             .title("像素工坊 · PIXEL WORKSHOP")
             .inner_size(1280.0, 800.0)
             .min_inner_size(900.0, 600.0)
+            .disable_drag_drop_handler()
             .build()?;
 
             Ok(())

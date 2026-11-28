@@ -153,6 +153,7 @@ function init(){
   };
   $('#btnSet').onclick = openSettings;
   bindBlockPreview();
+  if($('#btnTutorial')) $('#btnTutorial').onclick = () => { if(typeof PWTutorial !== 'undefined') PWTutorial.openManual(); };
   $('#btnInfo').onclick = openAbout;
   $('#dataPick').onchange = e => {
     const f = e.target.files && e.target.files[0];
@@ -160,6 +161,7 @@ function init(){
     e.target.value = '';
   };
   $('#stripHint').textContent = '新建标签页，或点这里回到首页';
+  if(typeof PWTutorial !== 'undefined') setTimeout(() => PWTutorial.maybePromptFirstRun(), 180);
 
 }
 init();

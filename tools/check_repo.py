@@ -40,6 +40,10 @@ required = [
     "plugin.json", "plugins/catalog.json",
     "plugins/create-texture/manifest.json",
     "plugins/create-texture/plugin.html",
+    "plugins/gif-export/manifest.json",
+    "plugins/gif-export/plugin.html",
+    "plugins/block-library/manifest.json",
+    "plugins/block-library/plugin.html",
     "styles/shell.css", "icon-192.png", "icon-512.png",
 ]
 for rel in required:

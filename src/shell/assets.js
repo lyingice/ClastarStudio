@@ -537,5 +537,108 @@ const PWAssets = (() => {
     });
   }
 
-  return {open, mount, init, ensureLocal, localAssets: localCards, ensureWorkspace, allCards, useAsReference, importLoose, importArchive};
+  const pluginTexCache = new Map();
+  async function blobToDataURL(blob){
+    return await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result || ''));
+      fr.onerror = () => reject(fr.error || new Error('读取失败'));
+      fr.readAsDataURL(blob);
+    });
+  }
+  async function resolveTextures(paths){
+    await ensureLocal();
+    const want = [...new Set((Array.isArray(paths) ? paths : []).map(x => String(x || '').trim()).filter(Boolean))].slice(0, 400);
+    const out = {};
+    if(!want.length) return out;
+    /* localCards() 返回 { card, cat } 包装，必须取 .card.ref（旧实现直接读 c.ref 导致永远匹配不到） */
+    const localMap = new Map();
+    localCards().forEach(entry => {
+      const card = entry && entry.card;
+      if(card && card.ref && card.ref.path && card.ref.localURL) localMap.set(card.ref.path, card);
+    });
+    const customMap = new Map();
+    for(const w of WS){
+      if(!w.assetLibrary) continue;
+      for(const cat of (w.cats || [])){
+        for(const c of (cat.cards || [])){
+          if(c.ref && c.ref.path && !customMap.has(c.ref.path)) customMap.set(c.ref.path, c);
+        }
+      }
+    }
+    const pending = [];
+    for(const p of want){
+      if(pluginTexCache.has(p)){
+        const cached = pluginTexCache.get(p);
+        if(cached) out[p] = cached;
+        continue;
+      }
+      const lc = localMap.get(p);
+      if(lc && lc.ref && lc.ref.localURL){
+        pending.push({ path:p, url:lc.ref.localURL });
+        continue;
+      }
+      const cc = customMap.get(p);
+      if(cc && (cc.full || cc.thumb)){
+        const data = cc.full || cc.thumb;
+        pluginTexCache.set(p, data);
+        out[p] = data;
+      }
+    }
+    await Promise.all(pending.map(async item => {
+      try{
+        const res = await fetch(item.url);
+        if(!res.ok){ pluginTexCache.set(item.path, null); return; }
+        const data = await blobToDataURL(await res.blob());
+        pluginTexCache.set(item.path, data);
+        out[item.path] = data;
+      }catch(_){ pluginTexCache.set(item.path, null); }
+    }));
+    return out;
+  }
+  async function importPluginTextures(items){
+    const list = Array.isArray(items) ? items.slice(0, 800) : [];
+    const w = workspace();
+    let added = 0, dup = 0, failed = 0;
+    for(const item of list){
+      if(!item || !item.path || !item.data) continue;
+      try{
+        const path = String(item.path).replace(/\\/g, '/');
+        const cls = classify(path);
+        const ns = item.namespace || cls.namespace || 'mod';
+        if(exists(w, ns, path)){ dup++; continue; }
+        let thumb = item.data, full = item.data, width = +item.width || 16, height = +item.height || 16;
+        try{
+          const blob = await (await fetch(item.data)).blob();
+          const im = await imageOfBlob(blob);
+          const rec = encodeImage(im, 256);
+          thumb = rec.thumb; full = rec.full; width = rec.w; height = rec.h;
+        }catch(_){}
+        const name = item.name || path.split('/').pop().replace(/\.png$/i, '');
+        const catSlug = item.category || cls.category || 'block';
+        const card = {
+          id:'a' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+          name,
+          meta:`${width}×${height} · ${ns} · ${CAT_LABEL[catSlug] || catSlug}`,
+          badge:'素材',
+          type:'item',
+          thumb, full,
+          ref:{
+            namespace:ns, path, category:catSlug, group:cls.group || '模组',
+            source:item.source || '机械动力扩展', width, height,
+            addedAt:Date.now(), favorite:false, mcmeta:item.mcmeta || null
+          }
+        };
+        addCard(w, cls.group || '模组', card);
+        added++;
+      }catch(_){ failed++; }
+    }
+    if(added > 0){
+      saveData();
+      if(page && page.isConnected) render(page);
+    }
+    return { added, dup, failed, total:list.length };
+  }
+
+  return {open, mount, init, ensureLocal, localAssets: localCards, ensureWorkspace, allCards, useAsReference, importLoose, importArchive, resolveTextures, importPluginTextures};
 })();

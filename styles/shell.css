@@ -154,14 +154,19 @@
   .card.add:hover .thumb{border-color:var(--accent)}
   .opt .caret{margin-left:auto;color:#9a9a9a;font-size:11px;transition:transform .15s}
   .opt.sub-open .caret{transform:rotate(180deg)}
-  .subopts{display:none;margin:-4px 0 8px 46px}
-  .subopts.on{display:block}
-  .subopt{display:flex;align-items:center;gap:8px;padding:7px 9px;background:#333;border:2px solid #151515;
-    margin-top:4px;cursor:pointer}
-  .subopt:hover{background:#3e3e3e}
-  .subopt.on{border-color:var(--accent);background:#414141;box-shadow:inset 3px 0 0 var(--accent)}
-  .subopt b{font-size:11.5px;color:#eee}
-  .subopt span{font-size:10.5px;color:#9a9a9a;margin-left:auto}
+  .subopts{display:none;margin:-2px 0 10px 0}
+  .subopts.on{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .subopts .shell-res-wrap{grid-column:1 / -1;margin-top:2px}
+  .subopt{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    gap:6px;padding:10px 6px;aspect-ratio:1 / 1;background:#333;border:2px solid #151515;
+    margin-top:0;cursor:pointer;min-width:0;box-sizing:border-box}
+  .subopt:hover{background:#3e3e3e;border-color:#5e5e5e}
+  .subopt.on{border-color:var(--accent);background:#414141;box-shadow:inset 0 0 0 1px #4c9a2a44}
+  .subopt .sub-ico{font-style:normal;width:30px;height:30px;display:grid;place-items:center;
+    background:#262626;border:2px solid #101010;color:#bdbdbd;flex:0 0 auto}
+  .subopt.on .sub-ico{color:var(--accent2);border-color:#264618}
+  .subopt b{font-size:11.5px;color:#eee;line-height:1.25;max-width:100%;word-break:break-word}
+  .subopt span{font-size:10px;color:#9a9a9a;margin-left:0;line-height:1.25;max-width:100%}
   .custom-size{display:none;align-items:center;gap:6px;margin-top:6px;padding:6px 8px;background:#2d2d2d;
     border:2px solid #151515;flex-wrap:wrap}
   .custom-size label{display:flex;align-items:center;gap:4px;font-size:10.5px;color:#bbb}
@@ -497,3 +502,19 @@
   .li-item .li-txt b{display:block;font-size:12.5px;font-weight:600}
   .li-item .li-txt span{display:block;font-size:11px;opacity:.78;margin-top:1px}
   .li-item .li-arr{flex:0 0 auto;opacity:.75;font-size:14px}
+
+  /* ---------- DSH / MCP 资产索引桥接弹窗 ---------- */
+  .dsh-status{padding:8px 10px;font-size:11.5px;line-height:1.5;border:1px solid #3c3c3c;background:#242424;color:#d6d6d6;word-break:break-all}
+  .dsh-status.ok{border-color:#4c9a2a;background:#1f2c1a;color:#dcf5cf}
+  .dsh-status.static{border-color:#505050;background:#272727;color:#c9cdd4}
+  .dsh-status code{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#fff;background:#141414;padding:1px 5px}
+  .dsh-toolbar{display:flex;gap:8px;align-items:center;margin:10px 0 8px}
+  .dsh-toolbar input{flex:1;min-width:0;padding:6px 9px;background:#1e1e1e;border:1px solid #3c3c3c;color:#f2f2f2;font-size:12px}
+  .dsh-list{max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+  .dsh-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 8px;background:#252525;border:1px solid #343434}
+  .dsh-row:hover{border-color:#4c9a2a}
+  .dsh-row-meta{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+  .dsh-row-meta b{font-size:12px;color:#f2f2f2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dsh-row-meta code{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#8be263;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dsh-row-meta span{font-size:10.5px;color:var(--fg2)}
+  .dsh-code{width:100%;box-sizing:border-box;background:#161616;border:1px solid #3c3c3c;color:#e5e5e5;padding:8px 10px;font:12px/1.45 ui-monospace,Consolas,monospace;resize:vertical}

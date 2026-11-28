@@ -6,8 +6,11 @@ Serves the static app and exposes an optional same-origin proxy at
 """
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from functools import partial
+import base64
 import json
 import os
+import pathlib
+import shutil
 import threading
 import time
 import urllib.error
@@ -33,6 +36,7 @@ HOP_BY_HOP_HEADERS = {
     'keep-alive', 'te', 'trailer', 'upgrade',
 }
 MAX_BODY_BYTES = 8 * 1024 * 1024
+DSH_MAX_BODY_BYTES = 32 * 1024 * 1024
 UPSTREAM_TIMEOUT = 180
 RATE_LIMIT = 120
 RATE_WINDOW = 60.0
@@ -48,6 +52,48 @@ def _is_loopback(host):
 
 def _lan_proxy_enabled():
     return os.environ.get('CLASTAR_LLM_PROXY_ALLOW_LAN', '').strip() == '1'
+
+
+def _dsh_bridge_dir():
+    raw = os.environ.get('CLASTAR_DSH_BRIDGE_DIR', '').strip()
+    if raw:
+        return pathlib.Path(raw).expanduser().resolve()
+    return (pathlib.Path.home() / '.clastar-studio' / 'dsh-bridge').resolve()
+
+
+def _safe_bridge_relpath(raw):
+    if not isinstance(raw, str):
+        return None
+    norm = raw.replace('\\', '/').strip()
+    if not norm or norm.startswith('/') or ':' in norm or '\x00' in norm:
+        return None
+    parts = [p for p in norm.split('/') if p]
+    if not parts or any(p in ('.', '..') for p in parts):
+        return None
+    return pathlib.PurePosixPath(*parts).as_posix()
+
+
+def _dsh_status():
+    root_dir = _dsh_bridge_dir()
+    idx_file = root_dir / 'index.json'
+    out = {
+        'ok': True,
+        'dir': str(root_dir),
+        'indexExists': idx_file.is_file(),
+        'assetsCount': 0,
+        'modelsCount': 0,
+        'generatedAt': None,
+    }
+    if idx_file.is_file():
+        try:
+            data = json.loads(idx_file.read_text(encoding='utf-8'))
+            counts = data.get('counts') or {}
+            out['assetsCount'] = counts.get('assets', len(data.get('assets') or []))
+            out['modelsCount'] = counts.get('models', len(data.get('models') or []))
+            out['generatedAt'] = data.get('generatedAt')
+        except Exception:
+            pass
+    return out
 
 
 def _allowed_hosts():
@@ -177,7 +223,8 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.flush()
 
     def do_GET(self):
-        if urllib.parse.urlsplit(self.path).path == '/api/llm/health':
+        path = urllib.parse.urlsplit(self.path).path
+        if path == '/api/llm/health':
             loopback = _is_loopback(self.bound_host)
             lan_enabled = _lan_proxy_enabled()
             self._send_json(200, {
@@ -188,14 +235,21 @@ class Handler(SimpleHTTPRequestHandler):
                 'lanEnabled': lan_enabled,
             })
             return
+        if path == '/api/dsh/health':
+            self._send_json(200, _dsh_status())
+            return
+        if path == '/api/dsh/assets':
+            self._handle_dsh_get()
+            return
         super().do_GET()
 
     def do_OPTIONS(self):
-        if urllib.parse.urlsplit(self.path).path != '/api/llm':
+        path = urllib.parse.urlsplit(self.path).path
+        if path not in ('/api/llm', '/api/dsh/assets'):
             self._send_json(404, {'error': 'not found'})
             return
         self.send_response(204)
-        self.send_header('Allow', 'POST, OPTIONS')
+        self.send_header('Allow', 'GET, POST, OPTIONS' if path == '/api/dsh/assets' else 'POST, OPTIONS')
         origin = self.headers.get('Origin')
         if origin:
             self.send_header('Access-Control-Allow-Origin', origin)
@@ -204,10 +258,14 @@ class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
         self._response_started = False
         try:
-            if urllib.parse.urlsplit(self.path).path != '/api/llm':
-                self._send_json(404, {'error': 'not found'})
+            path = urllib.parse.urlsplit(self.path).path
+            if path == '/api/llm':
+                self._handle_llm_proxy()
                 return
-            self._handle_llm_proxy()
+            if path == '/api/dsh/assets':
+                self._handle_dsh_sync()
+                return
+            self._send_json(404, {'error': 'not found'})
         except (BrokenPipeError, ConnectionResetError):
             pass
         except Exception:
@@ -216,6 +274,98 @@ class Handler(SimpleHTTPRequestHandler):
                     self._send_json(500, {'error': 'internal error'})
                 except Exception:
                     pass
+
+    def _handle_dsh_get(self):
+        if not _is_loopback(self.bound_host):
+            self._send_json(403, {'error': 'dsh bridge is restricted to loopback'})
+            return
+        idx_file = _dsh_bridge_dir() / 'index.json'
+        if not idx_file.is_file():
+            self._send_json(404, {'error': 'index not synced yet'})
+            return
+        try:
+            data = json.loads(idx_file.read_text(encoding='utf-8'))
+        except Exception:
+            self._send_json(500, {'error': 'failed to read index'})
+            return
+        self._send_json(200, {'ok': True, 'dir': str(_dsh_bridge_dir()), 'index': data})
+
+    def _handle_dsh_sync(self):
+        if not _is_loopback(self.bound_host):
+            self._send_json(403, {'error': 'dsh bridge is restricted to loopback'})
+            return
+        if not self._origin_ok():
+            self._send_json(403, {'error': 'origin mismatch'})
+            return
+        try:
+            length = int(self.headers.get('Content-Length') or 0)
+        except (TypeError, ValueError):
+            self._send_json(400, {'error': 'invalid content-length'})
+            return
+        if length < 0 or length > DSH_MAX_BODY_BYTES:
+            if length > DSH_MAX_BODY_BYTES:
+                self._discard_request_body(length, DSH_MAX_BODY_BYTES + 1024)
+                self._send_json(413, {'error': 'request body too large'})
+            else:
+                self._send_json(400, {'error': 'invalid content-length'})
+            return
+        raw = self.rfile.read(length) if length else b''
+        try:
+            payload = json.loads(raw.decode('utf-8'))
+        except (UnicodeDecodeError, ValueError):
+            self._send_json(400, {'error': 'invalid json'})
+            return
+        if not isinstance(payload, dict) or not isinstance(payload.get('index'), dict):
+            self._send_json(400, {'error': 'missing index object'})
+            return
+        files = payload.get('files') or []
+        if not isinstance(files, list):
+            self._send_json(400, {'error': 'files must be an array'})
+            return
+        root_dir = _dsh_bridge_dir()
+        files_dir = root_dir / 'files'
+        root_dir.mkdir(parents=True, exist_ok=True)
+        if payload.get('prune', True) and files_dir.exists():
+            shutil.rmtree(files_dir, ignore_errors=True)
+        files_dir.mkdir(parents=True, exist_ok=True)
+        written = 0
+        for item in files:
+            if not isinstance(item, dict):
+                continue
+            rel = _safe_bridge_relpath(item.get('path'))
+            if not rel:
+                self._send_json(400, {'error': 'invalid file path'})
+                return
+            dest = (files_dir / rel).resolve()
+            if files_dir.resolve() not in dest.parents:
+                self._send_json(400, {'error': 'invalid file path'})
+                return
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            enc = item.get('encoding') or 'utf8'
+            data = item.get('data') or ''
+            if enc == 'base64':
+                try:
+                    dest.write_bytes(base64.b64decode(str(data), validate=True))
+                except Exception:
+                    self._send_json(400, {'error': 'invalid base64 data'})
+                    return
+            else:
+                dest.write_text(str(data), encoding='utf-8')
+            written += 1
+        index_obj = payload['index']
+        index_tmp = root_dir / 'index.json.tmp'
+        index_final = root_dir / 'index.json'
+        index_tmp.write_text(json.dumps(index_obj, ensure_ascii=False, indent=2), encoding='utf-8')
+        os.replace(index_tmp, index_final)
+        counts = index_obj.get('counts') or {}
+        self._send_json(200, {
+            'ok': True,
+            'dir': str(root_dir),
+            'indexFile': str(index_final),
+            'writtenFiles': written,
+            'assetsCount': counts.get('assets', len(index_obj.get('assets') or [])),
+            'modelsCount': counts.get('models', len(index_obj.get('models') or [])),
+        })
 
     def _handle_llm_proxy(self):
         client_ip = self.client_address[0] if self.client_address else '?'

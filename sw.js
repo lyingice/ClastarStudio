@@ -1,5 +1,5 @@
 /* 像素工坊 PWA：离线缓存。发布新版本时把 CACHE 的版本号一起改掉。 */
-const CACHE = 'pixel-workshop-v0.18.0';
+const CACHE = 'pixel-workshop-v1.0.0';
 const ASSETS = [
   './index.html',
   './styles/shell.css',
@@ -12,6 +12,7 @@ const ASSETS = [
   './styles/assets.css',
   './styles/models.css',
   './styles/agent.css',
+  './styles/tutorial.css',
   './src/embedded/anim.js',
   './src/embedded/block.js',
   './src/embedded/color.js',
@@ -39,12 +40,18 @@ const ASSETS = [
   './src/shell/agent-model.js',
   './src/shell/agent.js',
   './src/shell/agent-ui.js',
+  './src/shell/dsh-bridge.js',
+  './src/shell/tutorial.js',
   './src/shell/sidebar.js',
   './src/shell/init.js',
   './plugin.json',
   './plugins/catalog.json',
   './plugins/create-texture/manifest.json',
   './plugins/create-texture/plugin.html',
+  './plugins/gif-export/manifest.json',
+  './plugins/gif-export/plugin.html',
+  './plugins/block-library/manifest.json',
+  './plugins/block-library/plugin.html',
   './integrations/blockbench/clastar-bridge.js',
   './manifest.json',
   './icon-192.png',

@@ -30,10 +30,30 @@ const UPSTREAM_TIMEOUT: Duration = Duration::from_secs(180);
 
 type RateMap = Mutex<HashMap<String, Vec<Instant>>>;
 
+const PREFERRED_PORTS: &[u16] = &[28766, 28767, 28768, 28769, 28770];
+
+fn bind_loopback_listener() -> Result<TcpListener, std::io::Error> {
+    if let Ok(raw) = std::env::var("CLASTAR_DESKTOP_PORT") {
+        if let Ok(p) = raw.trim().parse::<u16>() {
+            if p > 0 {
+                if let Ok(l) = TcpListener::bind(("127.0.0.1", p)) {
+                    return Ok(l);
+                }
+            }
+        }
+    }
+    for &p in PREFERRED_PORTS {
+        if let Ok(l) = TcpListener::bind(("127.0.0.1", p)) {
+            return Ok(l);
+        }
+    }
+    TcpListener::bind("127.0.0.1:0")
+}
+
 pub fn start(
     dist: PathBuf,
 ) -> Result<(u16, std::thread::JoinHandle<()>), Box<dyn std::error::Error + Send + Sync>> {
-    let listener = TcpListener::bind("127.0.0.1:0")?;
+    let listener = bind_loopback_listener()?;
     let port = listener.local_addr()?.port();
     let server = Server::from_listener(listener, None)?;
     let rate: RateMap = Mutex::new(HashMap::new());
@@ -47,6 +67,14 @@ pub fn start(
             } else if path == "/api/llm" && method == Method::Post {
                 proxy(req, &rate);
             } else if path == "/api/llm" && method == Method::Options {
+                preflight(req);
+            } else if path == "/api/dsh/health" && method == Method::Get {
+                dsh_health(req);
+            } else if path == "/api/dsh/assets" && method == Method::Get {
+                dsh_get(req);
+            } else if path == "/api/dsh/assets" && method == Method::Post {
+                dsh_sync(req);
+            } else if path == "/api/dsh/assets" && method == Method::Options {
                 preflight(req);
             } else if method == Method::Get || method == Method::Head {
                 serve_static(req, &dist, &path);
@@ -116,6 +144,7 @@ fn health(req: tiny_http::Request) {
     let hosts = allowed_hosts();
     let body = serde_json::json!({
         "ok": true,
+        "desktop": true,
         "proxy": true,
         "loopback": true,
         "allowHosts": hosts,
@@ -130,7 +159,7 @@ fn preflight(req: tiny_http::Request) {
         .find(|h| h.field.equiv("origin"))
         .map(|h| h.value.as_str().to_string());
     let mut resp = Response::empty(204)
-        .with_header(Header::from_bytes("Allow", "POST, OPTIONS").unwrap());
+        .with_header(Header::from_bytes("Allow", "GET, POST, OPTIONS").unwrap());
     if let Some(o) = origin {
         resp = resp.with_header(Header::from_bytes("Access-Control-Allow-Origin", o).unwrap());
     }
@@ -289,4 +318,235 @@ fn json_response(code: u16, body: &serde_json::Value) -> Response<std::io::Curso
         .with_header(Header::from_bytes("Content-Type", "application/json; charset=utf-8").unwrap())
         .with_header(Header::from_bytes("Content-Length", len.to_string()).unwrap())
         .with_header(Header::from_bytes("Cache-Control", "no-store").unwrap())
+}
+
+// ── /api/dsh/* 资产索引本地桥接 ─────────────────────────────────────────────
+const DSH_MAX_BODY: usize = 32 * 1024 * 1024;
+
+fn dsh_bridge_dir() -> PathBuf {
+    if let Ok(raw) = std::env::var("CLASTAR_DSH_BRIDGE_DIR") {
+        let trimmed = raw.trim();
+        if !trimmed.is_empty() {
+            return PathBuf::from(trimmed);
+        }
+    }
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .unwrap_or_else(|_| ".".to_string());
+    PathBuf::from(home).join(".clastar-studio").join("dsh-bridge")
+}
+
+fn safe_rel_path(raw: &str) -> Option<PathBuf> {
+    let norm = raw.replace('\\', "/");
+    let trimmed = norm.trim();
+    if trimmed.is_empty() || trimmed.starts_with('/') || trimmed.contains(':') || trimmed.contains('\0') {
+        return None;
+    }
+    let mut rel = PathBuf::new();
+    for seg in trimmed.split('/') {
+        if seg.is_empty() {
+            continue;
+        }
+        if seg == "." || seg == ".." {
+            return None;
+        }
+        rel.push(seg);
+    }
+    if rel.as_os_str().is_empty() { None } else { Some(rel) }
+}
+
+fn decode_b64(input: &str) -> Result<Vec<u8>, ()> {
+    let mut out = Vec::with_capacity(input.len() * 3 / 4);
+    let mut buf: u32 = 0;
+    let mut bits: u8 = 0;
+    for b in input.bytes() {
+        if b.is_ascii_whitespace() {
+            continue;
+        }
+        if b == b'=' {
+            break;
+        }
+        let val = match b {
+            b'A'..=b'Z' => b - b'A',
+            b'a'..=b'z' => b - b'a' + 26,
+            b'0'..=b'9' => b - b'0' + 52,
+            b'+' => 62,
+            b'/' => 63,
+            _ => return Err(()),
+        };
+        buf = (buf << 6) | (val as u32);
+        bits += 6;
+        if bits >= 8 {
+            bits -= 8;
+            out.push(((buf >> bits) & 0xFF) as u8);
+        }
+    }
+    Ok(out)
+}
+
+fn dsh_health(req: tiny_http::Request) {
+    let dir = dsh_bridge_dir();
+    let idx = dir.join("index.json");
+    let mut assets_count = 0usize;
+    let mut models_count = 0usize;
+    let mut generated_at = serde_json::Value::Null;
+    let index_exists = idx.is_file();
+    if index_exists {
+        if let Ok(text) = std::fs::read_to_string(&idx) {
+            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
+                assets_count = val["counts"]["assets"]
+                    .as_u64()
+                    .map(|n| n as usize)
+                    .unwrap_or_else(|| val["assets"].as_array().map(|a| a.len()).unwrap_or(0));
+                models_count = val["counts"]["models"]
+                    .as_u64()
+                    .map(|n| n as usize)
+                    .unwrap_or_else(|| val["models"].as_array().map(|a| a.len()).unwrap_or(0));
+                generated_at = val["generatedAt"].clone();
+            }
+        }
+    }
+    let body = serde_json::json!({
+        "ok": true,
+        "dir": dir.to_string_lossy(),
+        "indexExists": index_exists,
+        "assetsCount": assets_count,
+        "modelsCount": models_count,
+        "generatedAt": generated_at,
+    });
+    let _ = req.respond(json_response(200, &body));
+}
+
+fn dsh_get(req: tiny_http::Request) {
+    let dir = dsh_bridge_dir();
+    let idx = dir.join("index.json");
+    if !idx.is_file() {
+        let _ = req.respond(json_response(404, &serde_json::json!({"error": "index not synced yet"})));
+        return;
+    }
+    match std::fs::read_to_string(&idx).ok().and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok()) {
+        Some(val) => {
+            let _ = req.respond(json_response(200, &serde_json::json!({
+                "ok": true,
+                "dir": dir.to_string_lossy(),
+                "index": val,
+            })));
+        }
+        None => {
+            let _ = req.respond(json_response(500, &serde_json::json!({"error": "failed to read index"})));
+        }
+    }
+}
+
+fn dsh_sync(mut req: tiny_http::Request) {
+    let origin = header_val(&req, "origin");
+    let host = header_val(&req, "host");
+    if let Some(o) = &origin {
+        let expected = format!("http://{}", host.unwrap_or_default());
+        if o.trim_end_matches('/').to_lowercase() != expected.to_lowercase() {
+            let _ = req.respond(json_response(403, &serde_json::json!({"error": "origin mismatch"})));
+            return;
+        }
+    }
+    let mut raw = Vec::new();
+    if req.as_reader().take(DSH_MAX_BODY as u64 + 1).read_to_end(&mut raw).is_err() || raw.len() > DSH_MAX_BODY {
+        let _ = req.respond(json_response(413, &serde_json::json!({"error": "request body too large"})));
+        return;
+    }
+    let payload: serde_json::Value = match serde_json::from_slice(&raw) {
+        Ok(v) => v,
+        Err(_) => {
+            let _ = req.respond(json_response(400, &serde_json::json!({"error": "invalid json"})));
+            return;
+        }
+    };
+    if !payload["index"].is_object() {
+        let _ = req.respond(json_response(400, &serde_json::json!({"error": "missing index object"})));
+        return;
+    }
+    let dir = dsh_bridge_dir();
+    let files_dir = dir.join("files");
+    if std::fs::create_dir_all(&dir).is_err() {
+        let _ = req.respond(json_response(500, &serde_json::json!({"error": "failed to create bridge dir"})));
+        return;
+    }
+    let prune = payload["prune"].as_bool().unwrap_or(true);
+    if prune && files_dir.exists() {
+        let _ = std::fs::remove_dir_all(&files_dir);
+    }
+    if std::fs::create_dir_all(&files_dir).is_err() {
+        let _ = req.respond(json_response(500, &serde_json::json!({"error": "failed to create files dir"})));
+        return;
+    }
+    let mut written = 0usize;
+    if let Some(files) = payload["files"].as_array() {
+        for item in files {
+            let rel_str = match item["path"].as_str() {
+                Some(s) => s,
+                None => continue,
+            };
+            let rel = match safe_rel_path(rel_str) {
+                Some(p) => p,
+                None => {
+                    let _ = req.respond(json_response(400, &serde_json::json!({"error": "invalid file path"})));
+                    return;
+                }
+            };
+            let dest = files_dir.join(rel);
+            if let Some(parent) = dest.parent() {
+                if std::fs::create_dir_all(parent).is_err() {
+                    let _ = req.respond(json_response(500, &serde_json::json!({"error": "failed to create file parent"})));
+                    return;
+                }
+            }
+            let enc = item["encoding"].as_str().unwrap_or("utf8");
+            let data = item["data"].as_str().unwrap_or("");
+            if enc == "base64" {
+                let bytes = match decode_b64(data) {
+                    Ok(b) => b,
+                    Err(_) => {
+                        let _ = req.respond(json_response(400, &serde_json::json!({"error": "invalid base64 data"})));
+                        return;
+                    }
+                };
+                if std::fs::write(&dest, bytes).is_err() {
+                    let _ = req.respond(json_response(500, &serde_json::json!({"error": "write failed"})));
+                    return;
+                }
+            } else if std::fs::write(&dest, data.as_bytes()).is_err() {
+                let _ = req.respond(json_response(500, &serde_json::json!({"error": "write failed"})));
+                return;
+            }
+            written += 1;
+        }
+    }
+    let index_tmp = dir.join("index.json.tmp");
+    let index_final = dir.join("index.json");
+    let index_text = match serde_json::to_string_pretty(&payload["index"]) {
+        Ok(s) => s,
+        Err(_) => {
+            let _ = req.respond(json_response(500, &serde_json::json!({"error": "serialize index failed"})));
+            return;
+        }
+    };
+    if std::fs::write(&index_tmp, index_text).is_err() || std::fs::rename(&index_tmp, &index_final).is_err() {
+        let _ = req.respond(json_response(500, &serde_json::json!({"error": "write index failed"})));
+        return;
+    }
+    let assets_count = payload["index"]["counts"]["assets"]
+        .as_u64()
+        .map(|n| n as usize)
+        .unwrap_or_else(|| payload["index"]["assets"].as_array().map(|a| a.len()).unwrap_or(0));
+    let models_count = payload["index"]["counts"]["models"]
+        .as_u64()
+        .map(|n| n as usize)
+        .unwrap_or_else(|| payload["index"]["models"].as_array().map(|a| a.len()).unwrap_or(0));
+    let _ = req.respond(json_response(200, &serde_json::json!({
+        "ok": true,
+        "dir": dir.to_string_lossy(),
+        "indexFile": index_final.to_string_lossy(),
+        "writtenFiles": written,
+        "assetsCount": assets_count,
+        "modelsCount": models_count,
+    })));
 }

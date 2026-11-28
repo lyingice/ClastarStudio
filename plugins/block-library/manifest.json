@@ -1,0 +1,26 @@
+{
+  "id": "block-library",
+  "name": "MC 方块素材库",
+  "version": "0.2.0",
+  "apiVersion": 1,
+  "description": "读取本地原版资源或导入的 jar / ZIP，自动把方块纹理还原成等距 3D 方块（顶/侧/底/柱/门/植物/玻璃板等模型），多选后一键导入工作区作为可编辑的方块卡片。",
+  "author": "ClastarStudio",
+  "official": true,
+  "icon": "grid",
+  "permissions": [
+    "library.read",
+    "library.write",
+    "zip.read",
+    "network"
+  ],
+  "tools": [
+    {
+      "id": "block-library",
+      "name": "方块素材库",
+      "title": "MC 方块素材库",
+      "icon": "grid",
+      "description": "浏览原版 / 模组方块纹理并导入工作区"
+    }
+  ],
+  "entry": "plugin.html"
+}

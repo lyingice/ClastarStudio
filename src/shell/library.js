@@ -155,6 +155,7 @@ function homeHTML(){
       <p>工作区相当于一个项目 / 一个模组。建一个，然后在里面按大类别收纳贴图与动画。</p>
       <button class="btn pri" id="wsAddBig">＋ 新建工作区</button>
       ${(typeof PWExtensions === 'undefined' || PWExtensions.isEnabled('color-studio')) ? '<button class="btn" id="welColor" style="margin-left:8px">色彩拓展</button>' : ''}
+      <button class="btn" id="welTutorial" style="margin-left:8px">使用教程</button>
     </div>`;
   }
   const list = S.query.trim() ? cats() : cats();
@@ -333,11 +334,11 @@ function cardHTML(c){
   const badge = c.badge ? `<span class="badge">${esc(c.badge)}</span>` : '';
   const picked = S.selectMode && S.picked && S.picked.has(c.id);
   const pickbox = S.selectMode ? `<span class="pickbox ${picked ? 'on' : ''}" aria-hidden="true">✓</span>` : '';
-  if(c.block || c.armor || c.composite){
+  if(c.block || c.armor || c.composite || c.create){
     const isArmor = !!c.armor;
     const img = c.thumb ? `<img src="${c.thumb}" alt="" draggable="false">` : '';
     const empty = c.thumb ? '' : `<span class="thumb-empty-ico">${iconSVG(isArmor ? 'entity' : 'box',40)}</span>`;
-    return `<div class="card ${S.sel===c.id?'sel':''} ${picked ? 'picked' : ''} ${S.selectMode ? 'selecting' : ''}" data-card="${c.id}" data-type="${isArmor ? 'armor' : 'block'}">
+    return `<div class="card ${S.sel===c.id?'sel':''} ${picked ? 'picked' : ''} ${S.selectMode ? 'selecting' : ''}" data-card="${c.id}" data-type="${isArmor ? 'armor' : (c.create ? 'create' : 'block')}">
       <div class="thumb block-thumb">${img}${empty}${badge}${pickbox}</div>
       <div class="cname">${esc(c.name)}</div>
       <div class="cmeta">${esc(c.meta || '')}</div>
@@ -389,6 +390,7 @@ function bindHome(){
   if($('#catAddBig')) $('#catAddBig').onclick = () => newCategory();
   if($('#wsAddBig')) $('#wsAddBig').onclick = () => newWorkspace();
   if($('#welColor')) $('#welColor').onclick = openColorStudio;
+  if($('#welTutorial')) $('#welTutorial').onclick = () => { if(typeof PWTutorial !== 'undefined') PWTutorial.openManual(); };
   if($('#btnSelect')) $('#btnSelect').onclick = () => setSelectMode(!S.selectMode);
   if($('#msAll')) $('#msAll').onclick = () => {
     visiblePickIds().forEach(id => S.picked.add(id));
@@ -559,6 +561,9 @@ function openCtx(x, y, id){
     '<button data-act="open">' + iconSVG('tex',13) + '打开</button>' +
     (canRecolor ? '<button data-act="recolor">' + iconSVG('brush',13) + '一键换色</button>' : '') +
     (canVariant ? '<button data-act="variant">' + iconSVG('shape',13) + '变种工坊</button>' : '') +
+    (c.type !== 'folder' && typeof PWBridge !== 'undefined'
+      ? '<button data-act="dsh-ref">' + iconSVG('ai',13) + '复制 DSH 引用</button>'
+      : '') +
     '<button data-act="pick">' + iconSVG('select',13) + '加入多选</button>' +
     '<button data-act="ren">' + iconSVG('brush',13) + '重命名</button>' +
     '<button data-act="dup">' + iconSVG('plus',13) + '复制一份</button>' +
@@ -570,6 +575,7 @@ function openCtx(x, y, id){
     const act = btn.dataset.act;
     ctx.classList.remove('on');
     if(act === 'open') openCard(id);
+    if(act === 'dsh-ref' && typeof PWBridge !== 'undefined') PWBridge.copyRef(c.id);
     if(act === 'recolor') openRecolorTool(c.id);
     if(act === 'variant') openVariantLab(c.id);
     if(act === 'pick'){
@@ -882,7 +888,7 @@ function openCard(id){
   }
   if(c.model){ toast('模型编辑器已经移除（原型保留在 model_studio.html）'); return; }
   if(c.create && typeof PWPlugins !== 'undefined'){
-    PWPlugins.openTool(c.create.pluginId || 'create-texture', c.create.toolId || 'create-blocks', { cardId:c.id });
+    PWPlugins.openTool(c.create.pluginId || 'create-texture', c.create.toolId || 'create-blocks', { cardId:c.id, title:(c.create.zhName || c.name) });
     return;
   }
   if(c.composite){ openCompositePreview(c); return; }

@@ -5,4 +5,4 @@ contact_links:
     about: 请私下报告安全漏洞，不要在公开 issue 中披露细节。
   - name: Releases
     url: https://github.com/lyingice/ClastarStudio/releases
-    about: 下载 v0.18.0 发行包与查看发布说明。
+    about: 下载 v1.0.0 发行包与查看发布说明。

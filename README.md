@@ -18,7 +18,7 @@
 - 工作区与作品保存在浏览器 `localStorage`，可随时导出资源包备份。
 - 所有文件都在本地运行，适合个人创作与局域网调试。
 
-当前版本：**v0.18.0**<br>
+当前版本：**v1.0.0**<br>
 运行方式：`python serve.py`，打开 `http://127.0.0.1:8766/`。
 
 ## 功能亮点
@@ -62,6 +62,8 @@
 - **素材库**：独立存放原版 / 模组纹理，支持 PNG、文件夹、jar/ZIP 导入；按 namespace / 分类浏览，可设为编辑器参考图或复制到工作区。
 - **本地原版纹理**：从本机原版客户端 jar 生成 `local/vanilla`，自动加载 3000+ 张原版方块 / 物品 / 实体 / 界面纹理，不写入 GitHub。
 - **机械动力方块扩展**：本地内容包自动加载；解析 blockstate / multipart / item 模型，按独立分支切换 3D 预览与分支纹理；支持 OBJ / MTL 只读几何预览；可导入仓库或导出变种包。
+- **GIF 导出扩展**：把仓库里的动画卡片或本地动画条带编码成 GIF89a（纯 JS、无外部依赖），可调帧间隔、整数倍缩放与循环方式。
+- **MC 方块素材库扩展**：读取本地原版资源或导入 jar / ZIP，把方块纹理还原成等距 3D 方块，多选后直接导入工作区作为可编辑的方块卡片。
 - **本地内容包**：把 Create jar / 原版客户端 jar 放进 `local/inbox/`，用 `准备本地素材.bat` 一键生成，素材与插件均不上传资产。
 - **一键启动**：`启动像素工坊.bat` 自动启动本地服务并打开无边框 kiosk 窗口；`tools/create_shortcut.ps1` 可生成桌面快捷方式。
 - **检查更新**：设置中读取 GitHub 最新 Release，有新版本时可直接打开下载页。
@@ -115,11 +117,11 @@ local/vanilla/               素材库原版纹理目录
 ## 发行包
 
 
-从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v0.18.0 发行包。发行包是可直接运行的静态源码包：
+从 [Releases](https://github.com/lyingice/ClastarStudio/releases) 下载 v1.0.0 发行包。发行包是可直接运行的静态源码包：
 
 ```bash
-unzip ClastarStudio-v0.18.0.zip
-cd ClastarStudio-v0.18.0
+unzip ClastarStudio-v1.0.0.zip
+cd ClastarStudio-v1.0.0
 python serve.py
 ```
 
@@ -131,7 +133,7 @@ plugin.json             官方可选插件的仓库根清单
 manifest.json           PWA manifest
 sw.js                   PWA 离线缓存
 serve.py                本地静态服务器
-plugins/                官方可选插件包（机械动力方块扩展）
+plugins/                官方可选插件包（机械动力方块扩展 / GIF 导出 / MC 方块素材库）
 integrations/           Blockbench 桥接插件
 local/                  本地素材内容包（gitignore，不上传）
 tools/                  构建、启动、素材准备与仓库检查脚本
@@ -170,7 +172,10 @@ docs/                   架构与开发文档
 
 扩展中心入口在「设置 → 扩展中心」，也可以从左侧「工具」打开已安装的插件。
 
-- 当前官方可选插件：**机械动力方块扩展**（`plugins/create-texture/`）
+- 当前官方可选插件：
+  - **机械动力方块扩展**（`plugins/create-texture/`）
+  - **GIF 导出**（`plugins/gif-export/`）
+  - **MC 方块素材库**（`plugins/block-library/`）
 - 插件包：`plugin.json`（或 `manifest.json`）+ 自包含 `plugin.html`
 - 安装来源：GitHub 仓库根目录 `plugin.json`、raw 文件地址、release ZIP、本地 ZIP
 - 安装前显示权限；插件运行在 `sandbox` iframe 中，不能直接访问主页面 DOM 或 localStorage

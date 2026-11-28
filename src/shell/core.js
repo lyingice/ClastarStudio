@@ -22,7 +22,8 @@ const ICONS = {
   shape:  ["..####..",".#....#.","#......#","#......#","#......#","#......#",".#....#.","..####.."],
   eye:    ["..####..",".#....#.","#..##..#","#..##..#","#......#",".#....#.","..####..","........"],
   keyboard:["........","########","#.#.#..#","########","#.#.#..#","########","........","........"],
-  ai:["...##...","...##...","..####..","########","########","..####..","...##...","...##..."]
+  ai:["...##...","...##...","..####..","########","########","..####..","...##...","...##..."],
+  book:[".######.",".#.##.#.",".#.##.#.",".#.##.#.",".#.##.#.",".#.##.#.",".######.","........"]
 };
 function iconSVG(name, size){
   const art = ICONS[name] || ICONS.box;
@@ -42,7 +43,7 @@ function paintIcons(root){
 /* ============================================================
    数据
    ============================================================ */
-const APP_VERSION = '0.18.0';
+const APP_VERSION = '1.0.0';
 const THEMES = [
   {id:'grass',    name:'草原绿',  c:['#4c9a2a','#6fc244','#2f6b1a']},
   {id:'diamond',  name:'钻石蓝',  c:['#2fa8c9','#5fd2ee','#186f88']},
@@ -115,7 +116,7 @@ function applyTheme(id){
 /* ============================================================
    标签页
    ============================================================ */
-const TAB_ICON = { home:'home', tex:'tex', anim:'anim', ctex:'tex', block:'box', composite:'box', entity:'entity', color:'palette', recolor:'brush', variant:'shape', shortcuts:'keyboard', assets:'grid', models:'box', plugin:'box', plugins:'grid', recent:'grid', trash:'trash', agent:'ai' };
+const TAB_ICON = { home:'home', tex:'tex', anim:'anim', ctex:'tex', block:'box', composite:'box', entity:'entity', color:'palette', recolor:'brush', variant:'shape', shortcuts:'keyboard', assets:'grid', models:'box', plugin:'box', plugins:'grid', recent:'grid', trash:'trash', agent:'ai', tutorial:'book' };
 function newTab(kind, title, payload){
   const id = ++S.seq;
   const t = { id, kind, title: title || (kind === 'home' ? '首页' : '未命名'), payload: payload || null };
@@ -267,7 +268,7 @@ function renderContent(){
     return;
   }
 
-  if(t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin' || t.kind === 'agent'){
+  if(t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin' || t.kind === 'agent' || t.kind === 'tutorial'){
     document.querySelector('.workspace').classList.add('editing');
     document.body.classList.add('editing');
     repo.classList.remove('on');
@@ -282,6 +283,7 @@ function renderContent(){
       else if(t.kind === 'models') PWModels.mount(t, eds);
       else if(t.kind === 'plugins') PWPlugins.mountCenter(t, eds);
       else if(t.kind === 'agent') PWAgent.mount(t, eds);
+      else if(t.kind === 'tutorial' && typeof PWTutorial !== 'undefined') PWTutorial.mountCenter(t, eds);
       else PWPlugins.mount(t, eds);
     }
     return;
@@ -326,6 +328,13 @@ function normCard(c){
   if(c.ctex && typeof c.ctex === 'object') out.ctex = c.ctex;
   if(c.thumb) out.thumb = c.thumb;
   if(c.full) out.full = c.full;
+  if(c.texSize && typeof c.texSize === 'object'){
+    out.texSize = {
+      w: Math.max(1, +c.texSize.w || 16),
+      h: Math.max(1, +c.texSize.h || 16),
+      frames: Math.max(1, +c.texSize.frames || 1)
+    };
+  }
   if(c.packPath) out.packPath = String(c.packPath);
   if(c.packNs) out.packNs = String(c.packNs);
   if(c.mcmeta && typeof c.mcmeta === 'object') out.mcmeta = c.mcmeta;

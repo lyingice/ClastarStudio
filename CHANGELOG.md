@@ -2,6 +2,32 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/)。
 
+## [1.0.0] - 2026-11-28
+
+### 官方扩展生态
+
+- **GIF 导出**（`plugins/gif-export/`）：仓库动画卡片与本地动画条带直接编码为 GIF89a，纯 JS 实现（调色板量化 + 标准 LZW，零外部依赖）；支持帧间隔、1×–16× 整数倍缩放、无限循环 / 播放一次，透明像素保留。
+- **MC 方块素材库**（`plugins/block-library/`）：读取本地原版资源或导入 jar / ZIP，把方块纹理按 `_top/_bottom/_side/_end` 合并并推断模型，还原成 **755 个等距 3D 方块**；创造模式物品栏式网格、分类、搜索，多选后一键导入为可编辑的方块卡片。
+- 扩展中心目录、`plugins/README.md`、静态清单与仓库校验同步更新。
+
+### 方块编辑器支持动态纹理
+
+- `src/embedded/block.js` 自动识别竖向条带（`h > w && h % w === 0`），按 `mcmeta.frametime` 逐帧播放，只在帧切换时重绘。
+- 材质列表缩略图、材质预览与 3D 视图全部按当前帧取样；面板显示「16×16 · 3 帧」「3/3 帧 · 400 ms/帧」与暂停 / 播放按钮。
+- 「绘画」对动画材质打开动画纹理工作室逐帧编辑，「应用回方块」回写整条条带；`snapshot` / `loadBlock` 保存与恢复 `block.mcmeta`。
+
+### 3D 方块工作区
+
+- 工作区方块卡片支持等距 3D 缩略图；导入时写入 `block: { model, custom, textures }` 与 `mcmeta`，双击直接进方块编辑器继续改模型 / 换纹理。
+- 方块素材库模型修正：玻璃板跨方块复用本体玻璃纹理、按几何包围盒自适应缩放、火把 / 蜡烛 / 拉杆 / 蜘蛛网 / 睡莲 / 贴墙茎改用合适模型、过滤 20 个贴图零件、缩略图队列改 `setTimeout` 避免后台节流卡住。
+
+### 其他修复
+
+- `PWAssets.resolveTextures` 修正 `localCards()` 的 `{card, cat}` 包装读取，插件读取原版纹理不再恒为空。
+- `normCard` 保留 `texSize`，动画卡片重启后不再丢失帧数。
+- 新增宿主 API `library.listCards`（`only: 'anim' | 'image' | 'create'`）。
+- PWA 缓存升级到 `pixel-workshop-v1.0.0`。
+
 ## [0.18.0] - 2026-11-26
 
 ### 统一可停靠纹理与动画工作台

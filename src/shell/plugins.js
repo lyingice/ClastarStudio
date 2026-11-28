@@ -15,6 +15,20 @@ const PWPlugins = (() => {
       icon:'box',
       description:'扫描 Create 模组 jar / 资源包，按方块族组织多分支模型与纹理，支持 3D / 动态预览、OBJ / MTL 只读预览、物品模型和分支纹理拆分。',
       source:'plugin.json'
+    },
+    {
+      id:'gif-export',
+      name:'GIF 导出',
+      icon:'anim',
+      description:'把仓库里的动画纹理（或本地动画 PNG 条带）逐帧编码成 GIF，支持帧间隔、循环次数与整数倍缩放。',
+      source:'plugins/gif-export/manifest.json'
+    },
+    {
+      id:'block-library',
+      name:'MC 方块素材库',
+      icon:'grid',
+      description:'读取本地原版资源或导入的 jar / ZIP，自动还原成等距 3D 方块，多选后导入工作区作为可编辑的方块卡片。',
+      source:'plugins/block-library/manifest.json'
     }
   ];
   const ALLOWED_PERMISSIONS = new Set(['library.read','library.write','zip.read','download','network']);
@@ -215,13 +229,14 @@ const PWPlugins = (() => {
     if(!t){ toast('扩展工具不存在'); return; }
     const cardId = payload && payload.cardId || null;
     const exist = S.tabs.find(x => x.kind === 'plugin' && x.payload &&
-      x.payload.pluginId === pluginId && x.payload.toolId === toolId && !x.payload.cardId);
+      x.payload.pluginId === pluginId && x.payload.toolId === toolId &&
+      (cardId ? x.payload.cardId === cardId : !x.payload.cardId));
     if(exist){
       activateTab(exist.id);
-      if(cardId && exist._pluginFrame) sendEvent(exist, 'navigate', { cardId });
       return;
     }
-    newTab('plugin', t.title || t.name, { pluginId, toolId, cardId });
+    const tabTitle = (payload && payload.title) || t.title || t.name;
+    newTab('plugin', tabTitle, { pluginId, toolId, cardId });
   }
 
   function injectCSP(html){
@@ -343,6 +358,52 @@ const PWPlugins = (() => {
     if(!hit) return null;
     return { card:JSON.parse(JSON.stringify(hit.card)), workspace:{ id:hit.ws.id, name:hit.ws.name } };
   }
+  function updateCard(params){
+    const hit = params && params.id ? findCardAnywhere(params.id) : null;
+    if(!hit || !hit.card) throw new Error('工作区里找不到这张卡片');
+    const c = hit.card;
+    if(params.thumb) c.thumb = params.thumb;
+    if(params.full) c.full = params.full;
+    if(params.meta) c.meta = params.meta;
+    if(c.create && Array.isArray(params.slots)) c.create.slots = params.slots;
+    if(c.create && Array.isArray(params.branches)) c.create.branches = params.branches;
+    c.updatedAt = Date.now();
+    saveData();
+    renderWorkspaces();
+    if($('#catList')) refreshList();
+    renderStatus();
+    return { ok:true, id:c.id };
+  }
+  function listCards(params){
+    params = params || {};
+    const only = String(params.only || '');
+    const limit = Math.min(3000, Math.max(1, +params.limit || 1200));
+    const withThumb = !!params.withThumb;
+    const out = [];
+    const wsList = params.workspaceId
+      ? WS.filter(w => w.id === params.workspaceId)
+      : params.current ? [currentWS()].filter(Boolean) : WS;
+    const walk = (w, cat, cards) => {
+      for(const c of (cards || [])){
+        if(out.length >= limit) return;
+        if(c.type === 'folder'){ if(Array.isArray(c.cards)) walk(w, cat, c.cards); continue; }
+        if(only === 'anim' && !c.anim) continue;
+        if(only === 'image' && !(c.full || c.thumb)) continue;
+        if(only === 'create' && !c.create) continue;
+        out.push({
+          id:c.id, name:c.name, meta:c.meta || '', badge:c.badge || '',
+          anim:!!c.anim, texSize:c.texSize || null,
+          kind:c.create ? 'create' : c.armor ? 'armor' : c.composite ? 'composite' : c.block ? 'block' : c.ctex ? 'ctex' : c.anim ? 'anim' : 'tex',
+          thumb:withThumb ? (c.thumb || null) : null,
+          workspace:{ id:w.id, name:w.name }, category:cat.name
+        });
+      }
+    };
+    for(const w of wsList){
+      for(const cat of (w.cats || [])) walk(w, cat, cat.cards);
+    }
+    return { total:out.length, truncated:out.length >= limit, cards:out };
+  }
   function listLibrary(){
     return {
       current: currentWS() ? { id:currentWS().id, name:currentWS().name } : null,
@@ -439,13 +500,39 @@ const PWPlugins = (() => {
     if(method === 'toast'){ toast(String(params.message || '')); return true; }
     if(method === 'log'){ console.log('[plugin:' + p.manifest.id + ']', ...(params.args || [])); return true; }
     if(method === 'library.list'){ need(p, 'library.read'); return listLibrary(); }
+    if(method === 'library.listCards'){ need(p, 'library.read'); return listCards(params); }
     if(method === 'library.getCard'){ need(p, 'library.read'); return getCard(params.id); }
     if(method === 'library.addCards'){ need(p, 'library.write'); return addCards(params); }
+    if(method === 'library.updateCard'){ need(p, 'library.write'); return updateCard(params); }
+    if(method === 'create.editTexture'){
+      need(p, 'library.write');
+      if(typeof openCreatePaint !== 'function') throw new Error('画布编辑接口不可用');
+      openCreatePaint(t, params);
+      return true;
+    }
+    if(method === 'plugins.openTool'){
+      openTool(params.pluginId || p.manifest.id, params.toolId || 'create-blocks', params.payload || {});
+      return true;
+    }
     if(method === 'workspace.create'){ need(p, 'library.write'); return ensureWorkspace(params); }
     if(method === 'zip.read'){ need(p, 'zip.read'); return zipRead(params); }
     if(method === 'zip.textBatch'){ need(p, 'zip.read'); return zipTextBatch(params); }
     if(method === 'zip.dataURLs'){ need(p, 'zip.read'); return zipDataURLs(params); }
     if(method === 'net.fetch'){ need(p, 'network'); return netFetch(params); }
+    if(method === 'assets.fetchTextures'){
+      need(p, 'library.read');
+      if(typeof PWAssets === 'undefined' || !PWAssets.resolveTextures) return { textures:{} };
+      return { textures: await PWAssets.resolveTextures(params.paths || []) };
+    }
+    if(method === 'assets.syncTextures'){
+      need(p, 'library.write');
+      if(typeof PWAssets === 'undefined' || !PWAssets.importPluginTextures) throw new Error('素材库模块不可用');
+      return await PWAssets.importPluginTextures(params.items || []);
+    }
+    if(method === 'assets.openLibrary'){
+      if(typeof PWAssets !== 'undefined' && PWAssets.open) PWAssets.open();
+      return true;
+    }
     if(method === 'download'){
       need(p, 'download');
       const bytes = PWArchive.dataURLBytes('data:' + (params.mime || 'application/octet-stream') + ';base64,' + (params.base64 || ''));
@@ -650,6 +737,24 @@ const PWPlugins = (() => {
     });
   }
 
+  async function syncOfficialUpdates(){
+    for(const item of officialCatalog){
+      const old = installed[item.id];
+      if(!old) continue;
+      if(old.source !== item.source && !(old.manifest && old.manifest.official)) continue;
+      try{
+        const absolute = new URL(item.source, location.href).href;
+        const { manifest, manifestUrl } = await fetchManifest(absolute);
+        if(String(manifest.version) === String(old.manifest && old.manifest.version || '')) continue;
+        const entryUrl = new URL(manifest.entry, manifestUrl).href;
+        const html = await fetchText(entryUrl);
+        installed[item.id] = { manifest, html, source:item.source, enabled:old.enabled !== false, installedAt:Date.now() };
+        save();
+        refresh();
+        if(centerPane && centerPane.isConnected) renderCenter(centerPane);
+      }catch(_){}
+    }
+  }
   async function loadCatalog(){
     try{
       const res = await fetch('plugins/catalog.json', {cache:'no-store'});
@@ -661,6 +766,7 @@ const PWPlugins = (() => {
         if(centerPane) renderCenter(centerPane);
       }
     }catch(_){}
+    syncOfficialUpdates();
   }
 
   /* ---------------- 启动 ---------------- */

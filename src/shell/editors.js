@@ -733,10 +733,12 @@ function injectEditorActions(fr, t){
     const isBlockPaint = !!(t.payload && t.payload.blockPaint);
     const isArmorPaint = !!(t.payload && t.payload.armorPaint);
     const isCompositePaint = !!(t.payload && t.payload.compositePaint);
-    const isPaint = isBlockPaint || isArmorPaint || isCompositePaint;
-    const paintLabel = isCompositePaint ? '复合纹理' : isArmorPaint ? '盔甲' : '方块';
+    const isCreatePaint = !!(t.payload && t.payload.createPaint);
+    const isPaint = isBlockPaint || isArmorPaint || isCompositePaint || isCreatePaint;
+    const paintLabel = isCreatePaint ? '机械动力' : isCompositePaint ? '复合纹理' : isArmorPaint ? '盔甲' : '方块';
     const applyPaint = tt => {
-      if(isCompositePaint) applyPaintToComposite(tt);
+      if(isCreatePaint) applyPaintToCreate(tt);
+      else if(isCompositePaint) applyPaintToComposite(tt);
       else if(isArmorPaint) applyPaintToArmor(tt);
       else applyPaintToBlock(tt);
     };
@@ -949,16 +951,36 @@ function bindBlockPreview(){
 /* ---------------- 方块材质的绘画标签 ---------------- */
 function openBlockPaint(bt, d){
   if(!bt || !d) return;
+  const iw = Math.max(1, +d.width || 16);
+  const ih = Math.max(1, +d.height || 16);
+  /* 竖向条带（16×16×N）自动进动画编辑器，避免整条被压进单帧画布 */
+  const guessFrames = (ih > iw && ih % iw === 0) ? Math.round(ih / iw) : 1;
+  const frames = Math.max(1, +d.frames || guessFrames);
+  const isAnim = frames > 1 && ih === iw * frames;
+  const paintName = d.name || d.slot;
+  if(isAnim){
+    const existAnim = S.tabs.find(t => t.kind === 'anim' && t.payload && t.payload.blockPaint &&
+      t.payload.blockPaint.blockTab === bt.id && t.payload.blockPaint.slot === d.slot);
+    if(existAnim){ activateTab(existAnim.id); return; }
+    const payload = {
+      id:'paint' + Date.now().toString(36),
+      name:'绘画 · ' + paintName,
+      full:d.data,
+      texSize:{ w:iw, h:iw, frames },
+      blockPaint:{ blockTab:bt.id, slot:d.slot, name:paintName, size:iw, anim:true, frames }
+    };
+    newTab('anim', payload.name, payload);
+    return;
+  }
   const exist = S.tabs.find(t => t.kind === 'tex' && t.payload && t.payload.blockPaint &&
     t.payload.blockPaint.blockTab === bt.id && t.payload.blockPaint.slot === d.slot);
   if(exist){ activateTab(exist.id); return; }
-  const w = +d.width || 16, h = +d.height || 16;
-  const size = (w === h && w >= 8 && w <= 256) ? w : 16;
+  const size = (iw === ih && iw >= 8 && iw <= 256) ? iw : 16;
   const payload = {
     id:'paint' + Date.now().toString(36),
-    name:'绘画 · ' + (d.name || d.slot),
+    name:'绘画 · ' + paintName,
     full:d.data,
-    blockPaint:{ blockTab:bt.id, slot:d.slot, name:d.name || d.slot, size }
+    blockPaint:{ blockTab:bt.id, slot:d.slot, name:paintName, size }
   };
   newTab('tex', payload.name, payload);
 }
@@ -1044,6 +1066,51 @@ function applyPaintToComposite(t){
     activateTab(ct.id);
     closeTab(t.id, true);
     toast('已应用回复合方块：' + cp.name);
+  }catch(e){ toast('应用失败：' + (e && e.message || '未知错误')); }
+}
+
+/* ---------------- 机械动力卡片纹理的画布绘画标签 ---------------- */
+function openCreatePaint(pt, d){
+  if(!pt || !d) return;
+  const slotKey = String(d.slotKey || d.path || d.name || '');
+  const exist = S.tabs.find(t => t.kind && t.payload && t.payload.createPaint &&
+    t.payload.createPaint.pluginTab === pt.id && t.payload.createPaint.slotKey === slotKey);
+  if(exist){ activateTab(exist.id); return; }
+  const w = Math.max(1, Math.min(2048, +d.width || 16));
+  const h = Math.max(1, Math.min(2048, +d.height || 16));
+  const useCtex = (w !== 16 || h !== 16);
+  const label = d.name || slotKey || '纹理';
+  const payload = {
+    id:'paint' + Date.now().toString(36),
+    name:'绘画 · ' + label,
+    full:d.data,
+    createPaint:{ pluginTab:pt.id, cardId:d.cardId || null, slotKey, name:label, useCtex }
+  };
+  if(useCtex){
+    payload.ctex = { w, h };
+    newTab('ctex', payload.name, payload);
+  }else{
+    newTab('tex', payload.name, payload);
+  }
+}
+function applyPaintToCreate(t){
+  const fr = t._frame;
+  const cp = t.payload && t.payload.createPaint;
+  if(!fr || !cp) return;
+  const pt = S.tabs.find(x => x.id === cp.pluginTab);
+  if(!pt || !pt._pluginFrame){ toast('机械动力标签已经关闭，贴图没有应用'); return; }
+  try{
+    const cv = cp.useCtex ? fr.contentWindow.CT.buildStripCanvas() : fr.contentWindow.buildStripCanvas();
+    if(!cv) throw new Error('no canvas');
+    const url = cv.toDataURL('image/png');
+    pt._pluginFrame.contentWindow.postMessage({
+      __pwPluginHost:1, type:'create-texture-updated',
+      data:{ cardId:cp.cardId, slotKey:cp.slotKey, data:url }
+    }, '*');
+    clearDirty(t);
+    activateTab(pt.id);
+    closeTab(t.id, true);
+    toast('已应用回机械动力：' + cp.name);
   }catch(e){ toast('应用失败：' + (e && e.message || '未知错误')); }
 }
 
@@ -1294,8 +1361,8 @@ function openNewDialog(catId){
     '<div class="opt on sub-open" data-pick="tex" data-type="tex"><div class="oi">' + iconSVG('tex',16) + '</div>' +
       '<div class="ot"><b>纹理</b><span>像素贴图</span></div><span class="caret">▾</span></div>' +
     '<div class="subopts on" id="texSub">' +
-      '<div class="subopt on" data-pick="tex"><b>传统纹理</b><span>16×16 贴图</span></div>' +
-      '<div class="subopt" data-pick="ctex"><b>自定义纹理</b><span>自定画布宽高</span></div>' +
+      '<div class="subopt on" data-pick="tex"><i class="sub-ico">' + iconSVG('tex', 16) + '</i><b>传统纹理</b><span>16×16 贴图</span></div>' +
+      '<div class="subopt" data-pick="ctex"><i class="sub-ico">' + iconSVG('grid', 16) + '</i><b>自定义纹理</b><span>自定画布宽高</span></div>' +
       '<div class="shell-res-wrap" id="ctexSize">' +
         '<div class="custom-size"><label>宽 <input type="number" id="ctexW" min="1" max="2048" value="16"></label>' +
         '<label>高 <input type="number" id="ctexH" min="1" max="2048" value="16"></label><span class="hint">像素</span><span class="hq" data-help="自定义纹理的画布宽高，范围 1–2048 像素（支持 16×16 到 1920×1080 等任意尺寸）；创建后在编辑器内也可随时调整大小或旋转翻转。">?</span></div>' +
@@ -1315,18 +1382,18 @@ function openNewDialog(catId){
     '<div class="opt" data-pick="block" data-type="block"><div class="oi">' + iconSVG('box',16) + '</div>' +
       '<div class="ot"><b>方块</b><span>MC 方块模型 · 材质列表 + 3D 预览</span></div><span class="caret">▾</span></div>' +
     '<div class="subopts" id="blockSub">' +
-      '<div class="subopt on" data-pick="block"><b>普通方块</b><span>模型 + 材质列表 + 3D</span></div>' +
-      '<div class="subopt" data-pick="composite"><b>复合纹理方块</b><span>5 张连接纹理拼成 8×8</span></div>' +
+      '<div class="subopt on" data-pick="block"><i class="sub-ico">' + iconSVG('box', 16) + '</i><b>普通方块</b><span>模型 + 材质 + 3D</span></div>' +
+      '<div class="subopt" data-pick="composite"><i class="sub-ico">' + iconSVG('grid', 16) + '</i><b>复合纹理方块</b><span>5 张连接纹理 8×8</span></div>' +
     '</div>' +
     '<div class="opt" data-pick="entity" data-type="entity"><div class="oi">' + iconSVG('entity',16) + '</div>' +
       '<div class="ot"><b>实体</b><span>装备 / 生物纹理</span></div><span class="caret">▾</span></div>' +
     '<div class="subopts" id="entitySub">' +
-      '<div class="subopt on" data-pick="armor"><b>人形盔甲</b><span>64×32 · 2 张纹理</span></div>' +
-      '<div class="subopt" data-pick="wolf"><b>狼铠</b><span>64×32 · 整张纹理</span></div>' +
-      '<div class="subopt" data-pick="horse"><b>马铠</b><span>64×64 · 整张纹理</span></div>' +
-      '<div class="subopt" data-pick="nautilus"><b>鹦鹉螺铠</b><span>128×128 · 26.1+</span></div>' +
-      '<div class="subopt" data-pick="ghast"><b>快乐恶魂挽具</b><span>128×128 · 整张纹理</span></div>' +
-      '<div class="subopt" data-pick="elytra"><b>鞘翅</b><span>64×32 · 整张纹理</span></div>' +
+      '<div class="subopt on" data-pick="armor"><i class="sub-ico">' + iconSVG('entity', 15) + '</i><b>人形盔甲</b><span>64×32 · 2 张</span></div>' +
+      '<div class="subopt" data-pick="wolf"><i class="sub-ico">' + iconSVG('entity', 15) + '</i><b>狼铠</b><span>64×32 · 整张</span></div>' +
+      '<div class="subopt" data-pick="horse"><i class="sub-ico">' + iconSVG('entity', 15) + '</i><b>马铠</b><span>64×64 · 整张</span></div>' +
+      '<div class="subopt" data-pick="nautilus"><i class="sub-ico">' + iconSVG('entity', 15) + '</i><b>鹦鹉螺铠</b><span>128×128 · 26.1+</span></div>' +
+      '<div class="subopt" data-pick="ghast"><i class="sub-ico">' + iconSVG('entity', 15) + '</i><b>快乐恶魂挽具</b><span>128×128 · 整张</span></div>' +
+      '<div class="subopt" data-pick="elytra"><i class="sub-ico">' + iconSVG('entity', 15) + '</i><b>鞘翅</b><span>64×32 · 整张</span></div>' +
     '</div>' +
     '<div class="opt" data-pick="folder"><div class="oi">' + iconSVG('folder',16) + '</div>' +
       '<div class="ot"><b>文件夹</b><span>在大类别里再分一层</span></div></div>' +
@@ -1477,7 +1544,8 @@ function installRowHTML(){
 }
 function openSettings(){
   $('#dlgTitle').innerHTML = iconSVG('gear', 14) + '设置';
-  $('#dlgBody').innerHTML = (typeof PWShortcuts !== 'undefined' ? PWShortcuts.settingsRowHTML() : '') +
+  $('#dlgBody').innerHTML = (typeof PWTutorial !== 'undefined' ? PWTutorial.settingsRowHTML() : '') +
+    (typeof PWShortcuts !== 'undefined' ? PWShortcuts.settingsRowHTML() : '') +
     (typeof PWPlugins !== 'undefined' ? PWPlugins.settingsRowHTML() : '') +
     (typeof PWUpdates !== 'undefined' ? PWUpdates.rowHTML() : '') +
     (typeof PWAgent !== 'undefined' ? PWAgent.settingsRowHTML() : '') +
@@ -1496,6 +1564,8 @@ function openSettings(){
   renderThemePicker();
   if(typeof PWExtensions !== 'undefined') PWExtensions.bindSettings($('#dlgBody'));
   const body = $('#dlgBody');
+  const tutRow = body.querySelector('[data-set="tutorial"]');
+  if(tutRow && typeof PWTutorial !== 'undefined') tutRow.onclick = () => { closeDialog(); PWTutorial.openManual(); };
   const scRow = body.querySelector('[data-set="shortcuts"]');
   if(scRow && typeof PWShortcuts !== 'undefined') scRow.onclick = () => { closeDialog(); PWShortcuts.openShortcutCenter(); };
   const plRow = body.querySelector('[data-set="plugins"]');
@@ -1542,6 +1612,7 @@ function openAbout(){
     '<b>像素工坊</b> v' + APP_VERSION + '<br>' +
     '纹理 / 动画贴图的收纳与绘制。数据保存在本机浏览器（localStorage），不上传。<br><br>' +
     '常用操作：双击卡片打开编辑器 · 右键重命名 / 删除 / 一键换色 · 拖入 PNG 直接导入 · 编辑器顶栏「保存回仓库」<br><br>' +
+    '1.0.0：官方扩展「GIF 导出」「MC 方块素材库」· 方块编辑器支持动态纹理逐帧播放 · 原版方块 3D 化导入工作区 · 教程与首次启动引导<br>' +
     '0.18.0：传统纹理 / 自定义纹理 / 动画纹理统一可停靠编辑器布局 · 面板拖拽合并标签组 / 折叠 / 小窗口弹出缩放 · 画布绘画网格配置 · 顶栏 ⋯ 按钮显隐自定义 · 统一中性灰界面 · 桌面端（Tauri）<br>' +
     '0.17.0：AI 助手（接入你的大模型 API key）· 工具化换色 / 材质色阶变种 / 像素绘制 / 资源包导出 · 本地 LLM 代理与同意门控<br>' +
     '0.16.1：修复原生取色器弹窗 · Blockbench / Endesga 默认色板 · 变种工坊 6 色阶与自定义增删 · 一键换色材质色卡<br>' +
@@ -1565,11 +1636,17 @@ function openAbout(){
     '0.3.0：新增实体内容类 · 原版盔甲（64×32 双层 3D 预览）<br>' +
     '0.2.1：帮助按钮样式统一 · 长说明收进「?」<br>' +
     '0.2.0：主题移入设置 · 颜色/调色板拆分 · 自定义纹理 · 手机安装 · 新内容变体' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px">' +
+      '<button type="button" class="btn sm pri" id="aboutOpenTut">打开使用教程</button>' +
+      '<button type="button" class="btn sm" id="aboutOpenTour">5 步简易引导</button>' +
     '</div>';
   dlgOkFn = null;
   $('#dlgOk').textContent = '知道了';
   $('#dlgCancel').style.display = 'none';
   $('#modal').classList.add('on');
+  if($('#aboutOpenTut')) $('#aboutOpenTut').onclick = () => { closeDialog(); if(typeof PWTutorial !== 'undefined') PWTutorial.openManual(); };
+  if($('#aboutOpenTour')) $('#aboutOpenTour').onclick = () => { closeDialog(); if(typeof PWTutorial !== 'undefined') PWTutorial.startTour(); };
 }
 function exportData(){
   try{
@@ -1635,8 +1712,8 @@ function renderStatus(){
     $('#sbCount').innerHTML = `<b>${visibleCount()}</b> 项`;
   } else {
     $('#sbPath').innerHTML = `${ws ? esc(ws.name) + ' / ' : ''}<b>${esc(t.title)}</b>`;
-    $('#sbSel').textContent = t.kind === 'anim' ? '动画' : (t.kind === 'block' || t.kind === 'composite') ? '方块' : t.kind === 'entity' ? '实体' : t.kind === 'ctex' ? '自定义纹理' : (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin') ? '工具' : '纹理';
-    $('#sbCount').innerHTML = (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin') ? '<b>1</b> 个工具' : (t.kind === 'block' || t.kind === 'composite') ? '<b>1</b> 个方块' : t.kind === 'entity' ? '<b>1</b> 个实体' : '<b>1</b> 项';
+    $('#sbSel').textContent = t.kind === 'anim' ? '动画' : (t.kind === 'block' || t.kind === 'composite') ? '方块' : t.kind === 'entity' ? '实体' : t.kind === 'ctex' ? '自定义纹理' : t.kind === 'tutorial' ? '教程' : (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin' || t.kind === 'agent') ? '工具' : '纹理';
+    $('#sbCount').innerHTML = t.kind === 'tutorial' ? '<b>10</b> 个章节' : (t.kind === 'color' || t.kind === 'recolor' || t.kind === 'variant' || t.kind === 'shortcuts' || t.kind === 'assets' || t.kind === 'models' || t.kind === 'plugins' || t.kind === 'plugin' || t.kind === 'agent') ? '<b>1</b> 个工具' : (t.kind === 'block' || t.kind === 'composite') ? '<b>1</b> 个方块' : t.kind === 'entity' ? '<b>1</b> 个实体' : '<b>1</b> 项';
   }
   if(typeof renderQuickRail === 'function') renderQuickRail();
 }

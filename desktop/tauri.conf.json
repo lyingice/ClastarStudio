@@ -1,6 +1,6 @@
 {
   "productName": "像素工坊",
-  "version": "0.18.0",
+  "version": "1.0.0",
   "identifier": "com.clastar.pixelworkshop",
   "build": {
     "frontendDist": "dist",

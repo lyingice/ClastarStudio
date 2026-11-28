@@ -49,7 +49,7 @@ for f in src/shell/*.js src/embedded/*.js; do node --check "$f"; done
 
 提交 bug 前请先搜索已有 issue，并提供：
 
-- 产品版本（当前为 v0.18.0）
+- 产品版本（当前为 v1.0.0）
 - 浏览器与操作系统
 - 复现步骤、期望结果、实际结果
 - 控制台错误或最小复现数据（不要附真实个人工作区）

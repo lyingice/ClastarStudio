@@ -1,0 +1,38 @@
+{
+  "name": "@local/dsh-clastar-assets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH plugin for Clastar Studio (Pixel Workshop): right-sidebar asset browser with pixelated thumbnails, one-click ref insertion, and AI asset tools.",
+  "license": "MIT",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/cordis": "*"
+  }
+}

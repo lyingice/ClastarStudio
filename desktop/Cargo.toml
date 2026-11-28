@@ -1,6 +1,6 @@
 [package]
 name = "clastar-studio"
-version = "0.18.0"
+version = "1.0.0"
 description = "像素工坊 · PIXEL WORKSHOP — 本地优先 Minecraft 纹理工作台"
 edition = "2021"
 

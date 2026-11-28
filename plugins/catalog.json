@@ -7,6 +7,20 @@
       "icon": "box",
       "description": "扫描 Create 模组 jar / 资源包，按方块族组织多分支模型与纹理，支持 3D / 动态预览、物品模型和分支纹理拆分。",
       "source": "plugin.json"
+    },
+    {
+      "id": "gif-export",
+      "name": "GIF 导出",
+      "icon": "anim",
+      "description": "把仓库里的动画纹理（或本地动画 PNG 条带）逐帧编码成 GIF，支持帧间隔、循环次数与整数倍缩放。",
+      "source": "plugins/gif-export/manifest.json"
+    },
+    {
+      "id": "block-library",
+      "name": "MC 方块素材库",
+      "icon": "grid",
+      "description": "读取本地原版资源或导入的 jar / ZIP，自动还原成等距 3D 方块，多选后导入工作区作为可编辑的方块卡片。",
+      "source": "plugins/block-library/manifest.json"
     }
   ]
 }
