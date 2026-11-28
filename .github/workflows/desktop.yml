@@ -94,6 +94,24 @@ jobs:
           name: clastar-studio-portable-exe
           path: dist-release/ClastarStudio-*-portable.exe
 
+      - name: Attach to Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 像素工坊 ${{ github.ref_name }}
+          body: |
+            下载说明：
+
+            - ClastarStudio-${{ github.ref_name }}-setup.exe  —  Windows 安装包（NSIS，可选安装位置，中英文安装界面）
+            - ClastarStudio-${{ github.ref_name }}-portable.exe  —  免安装单文件，双击即用
+            - ClastarStudio-${{ github.ref_name }}.zip  —  静态源码包，解压后用 serve.py 或任意静态服务器打开
+
+            完整更新内容见仓库 CHANGELOG.md。
+          files: |
+            dist-release/ClastarStudio-*-setup.exe
+            dist-release/ClastarStudio-*-portable.exe
+            dist-release/ClastarStudio-*.zip
+
       - name: Drop legacy-named installer asset
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/github-script@v7
@@ -102,24 +120,12 @@ jobs:
             const tag = context.ref.replace('refs/tags/', '');
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            try {
-              const rel = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
-              for (const a of rel.data.assets) {
-                if (a.name.startsWith('_')) {
-                  await github.rest.repos.deleteReleaseAsset({ owner, repo, asset_id: a.id });
-                  core.info('removed legacy asset ' + a.name);
-                }
+            const rels = await github.rest.repos.listReleases({ owner, repo, per_page: 30 });
+            const rel = rels.data.find(function (r) { return r.tag_name === tag; });
+            if (!rel) { core.info('no release for ' + tag); return; }
+            for (const a of rel.assets) {
+              if (a.name.startsWith('_') || /^[0-9].*_x64-setup\.exe$/.test(a.name)) {
+                await github.rest.repos.deleteReleaseAsset({ owner, repo, asset_id: a.id });
+                core.info('removed legacy asset ' + a.name);
               }
-            } catch (e) {
-              core.info('no existing release for ' + tag + ', skipping cleanup');
             }
-      - name: Attach to Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          name: 像素工坊 ${{ github.ref_name }}
-          generate_release_notes: true
-          files: |
-            dist-release/ClastarStudio-*-setup.exe
-            dist-release/ClastarStudio-*-portable.exe
-            dist-release/ClastarStudio-*.zip
